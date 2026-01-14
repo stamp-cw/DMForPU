@@ -2,26 +2,18 @@
 """
 @File    : train.py
 @Author  : 18744
-@Time    : 2025/10/2 10:51
+@Time    : 2025/11/14 10:51
 @Description :
 """
-import math
 import os
-from collections import defaultdict
-
 import tqdm
 import torch
 import wandb
-
 from diffusion.diffusion_setup import DiffusionSetup
-from model.model_setup import ModelSetup
 from run.losses import LossFN
 from model.optimizer import OptimizerFN
-# from torch_ema import ExponentialMovingAverage
 from selector.data_selector import _DATA_LOADERS
 from selector.optimizer_selector import _OPTIMIZERS
-from functools import cached_property
-
 from utils.metrics import l1_metric, rmse_metric
 from utils.util import AverageMeter
 
@@ -74,8 +66,8 @@ class Trainer:
             # avg_eval_meter = AverageMeter()
             for batch_data in self.train_loader:
                 self.acc_batch += 1
-                batch_data = [self.data_loader.data_scaler(x).to(self.device) if hasattr(x, "to") else x for x in
-                              batch_data]
+                # batch_data = [self.data_loader.data_scaler(x).to(self.device) if hasattr(x, "to") else x for x in
+                #               batch_data]
                 # metrics_dict = self.epoch_fn(self.model, self.optimizer, self.ema, epoch, batch_data)
                 # metrics_dict = self.epoch_fn(self.model, self.optimizer, epoch, batch_data)
                 metrics_dict = self.epoch_fn(self.diffusion, self.optimizer, epoch, batch_data)
@@ -92,9 +84,9 @@ class Trainer:
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
         state_dict = {
-            'model': self.model.state_dict(),
+            'model': self.diffusion.model.state_dict(),
             # 'ema': self.ema.state_dict(),
-            'control_model': self.control_model.state_dict(),
+            'control_model': self.diffusion.control_model.state_dict(),
             'optimizer': self.optimizer.state_dict()
         }
         torch.save(state_dict, ckpt_file_path)
@@ -108,9 +100,9 @@ class Trainer:
 
     def _load_state(self):
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
-        self.model.load_state_dict(ckpt['model'])
+        self.diffusion.model.load_state_dict(ckpt['model'])
         # self.ema.load_state_dict(ckpt['ema'])
-        self.control_model.load_state_dict(ckpt['control_model'])
+        self.diffusion.control_model.load_state_dict(ckpt['control_model'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
     def _record_metrics(self, metrics, prefix, step):
@@ -212,9 +204,11 @@ class EpochFN:
         return self.epoch_fn(diffusion, optimizer, epoch, batch)
 
     def epoch_fn(self, diffusion, optimizer, epoch, batch):
-        wrapped, gt_unwrapped = batch
-        diffusion.setup_data(wrapped, gt_unwrapped)
-        unwrapped = diffusion.sample()
+        # wrapped, gt_unwrapped = batch
+        diffusion.setup_data(batch)
+        diffusion.sample()
+        pred_unwrapped = diffusion.pred_unwrapped
+        gt_unwrapped = diffusion.gt_unwrapped
         # list(diffusion.model.parameters()) + list(diffusion.control_model.parameters())
 
         if self.train:
@@ -229,7 +223,7 @@ class EpochFN:
 
         for k in self.metrics_keys:
             func = METRIC_FUNCS[k]
-            value = func(unwrapped, gt_unwrapped)
+            value = func(pred_unwrapped, gt_unwrapped)
             # self.metrics[k] = value.item() if not math.isnan(value) else 0.0
             self.metrics[k] = value.item()
 

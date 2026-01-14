@@ -107,11 +107,6 @@ def main():
             evaluator = Evaluator(config)
             evaluator.load_checkpoint()
             evaluator.evaluate()
-        # elif args.mode == 'prune':
-        #     from run.prune import Pruner
-        #     pruner = Pruner(config)
-        #     pruner.load_checkpoint()
-        #     pruner.prune()
         else:
             raise ValueError(f"Invalid mode: {args.mode}")
 
@@ -167,11 +162,7 @@ def unflatten_dict(flat_dict, sep="."):
     return result
 
 if __name__ == '__main__':
-    from Model.optimizer import AdamOptimizer,SGDOptimizer
+    from model.optimizer import AdamOptimizer,SGDOptimizer
     from run.losses import BCELossType
-    from Model.deponet.deponet import DepoNet
-    from Model.unet.unet_model import UNet
-    from Model.enet.enet import ENet
-    from Model.segnet.segnet import SegNet
-    from Model.rdeponet.rdeponet import RDepoNet
+    # from model.unet.unet_model import UNet
     main()

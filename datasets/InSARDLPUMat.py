@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import os
 from pathlib import Path
 from typing import Dict
 import scipy.io as sio
 import torch
-from PIL import Image
 from torch.utils.data import Dataset
 
 
