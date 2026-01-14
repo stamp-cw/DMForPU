@@ -1,0 +1,145 @@
+# Configuration for training and sampling
+seed: 42
+
+data:
+  name: InSARDLPU
+  image_size: 256
+  color_channels: 1
+  num_workers: 1
+#  random_flip: false
+#  centered: false
+#  uniform_dequantization: false
+#  is_fold: true
+#  fold: 0
+#  num_folds: 5
+
+#model:
+#
+#  name: UNet
+#  dropout: 0.1
+#  device: cuda
+#
+#  ema_rate: 0.999
+#
+#  in_channels: 3
+#  out_channels: 1
+#  bilinear: false
+
+model:
+  name: UNet
+  sample_size: 256
+  in_channels: 1
+  out_channels: 1
+  layers_per_block: 2
+  block_out_channels: [64, 128, 256, 512]
+
+controlnet_model:
+  name: ControlNet
+  in_channels: 1
+  conditioning_channels: 1
+  layers_per_block: 2
+  block_out_channels: [64, 128, 256, 512]
+
+diffusion:
+  name: GaussianDiffusion
+  custom_model: true
+  timesteps: 1000
+  beta_start: 0.0001
+  beta_end: 0.02
+  loss_type: mse
+
+#training:
+#  batch_size: 4
+#  device: cuda
+#  brand_new_epochs: 1000
+#  continue_training_epochs: 2000
+#  use_all_data: false
+#  snapshot_freq: 1
+#  snapshot_batch_size: 16
+#  eps: 1e-5
+#  log_freq: 1
+#  eval_freq: 1
+#  eval_save_least_epoch: 50
+#  best_evaluate_loss: 0.2
+#  snapshot_sampling: true
+#  reduce_mean: false
+
+training:
+  batch_size: 2
+  device: cuda
+  brand_new_epochs: 200
+  continue_training_epochs: 100
+#  use_all_data: false
+  snapshot_freq: 1
+  snapshot_batch_size: 2
+  log_freq: 1
+  eval_freq: 1
+  eval_save_least_epoch: 50
+  snapshot_sampling: true
+
+
+#
+#  image_size: 256       # use 256 for real runs
+#  num_epochs: 200        # increase for real training
+#  lr: 1.0e-4
+#  weight_decay: 0.01
+#  grad_accum_steps: 1
+#  log_interval: 1
+#  save_interval: 1
+#  fp16: false
+
+sampling:
+  device: cuda
+  batch_size: 128
+  eval: true
+  total_samples: 100
+  record_freq: 100
+  eps: 1e-5
+  out_threshold: 0.5
+
+optim:
+  optimizer: Adam
+  lr: 0.0001
+  weight_decay: 0
+  beta1: 0.9
+  eps: 1e-8
+  warmup: 2
+  grad_clip: 1.0
+  momentum: 0.9
+
+#loss_type:
+#  name: BCE
+#  alpha: 0.5
+#  beta: 0.5
+#  gamma: 0.1
+#  delta: 0.05
+
+loss_type:
+  name: PHY
+  lambda_phys: 0.5
+
+iio:
+  use_tensorboard: true
+  use_wandb: false
+  save_pth_to_wandb: false
+
+scheduler:
+  num_train_timesteps: 50
+
+metrics:
+  l1: true
+  rmse: true
+  wrap_l1: true
+  wrap_rmse: true
+
+
+#metrics:
+#  dice: true
+#  iou: true
+#  hd95: true
+#  kappa: true
+#  mcc: true
+
+#prune:
+#  method: l1_structured
+#  prune_ratio: 0.2

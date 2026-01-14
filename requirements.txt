@@ -1,0 +1,7 @@
+wandb
+tensorboard
+scipy
+matplotlib
+diffusers
+ml_collections
+torchvision
