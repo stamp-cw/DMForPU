@@ -28,7 +28,8 @@ class InSARDLPUMat(Dataset):
             target_transform (callable, optional):
             joint_transform (callable, optional):
         """
-        super().__init__(root, transform=transform, target_transform=target_transform)
+        # super().__init__(root, transform=transform, target_transform=target_transform)
+        super().__init__()
 
         assert split in ['train', 'test'], "split 必须是 'train' 或 'test'"
 

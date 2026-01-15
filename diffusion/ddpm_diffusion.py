@@ -15,13 +15,13 @@ class DDPMDiffusion:
             out_channels=config.model.out_channels,
             layers_per_block=config.model.layers_per_block,
             block_out_channels=tuple(config.model.block_out_channels),
-        )
+        ).to(self.device)
         self.control_model = ControlNetModel(
             in_channels=config.controlnet_model.in_channels,
             conditioning_channels=config.controlnet_model.conditioning_channels,
             layers_per_block=config.controlnet_model.layers_per_block,
             block_out_channels=tuple(config.controlnet_model.block_out_channels),
-        )
+        ).to(self.device)
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
 
         # self.scheduler.set_timesteps(config.diffusion.num_train_timesteps)
@@ -35,15 +35,15 @@ class DDPMDiffusion:
         self.control_model.eval()
 
     def setup_data(self, batch_dict):
-        self.wrapped = batch_dict["wrapped"]
-        self.gt_unwrapped = batch_dict["unwrapped"]
+        self.wrapped = batch_dict["wrapped"].to(self.device)
+        self.gt_unwrapped = batch_dict["unwrapped"].to(self.device)
 
 
     def sample(self):
-        self.noise = torch.randn_like(self.gt_unwrapped)
+        self.noise = torch.randn_like(self.gt_unwrapped).to(self.device)
         t_batch = torch.randint(0, self.scheduler.config.num_train_timesteps, (1,), device=self.device).long()
         t = t_batch.expand(self.wrapped.shape[0])
-        self.noisy = self.scheduler.add_noise(self.gt_unwrapped, self.noise, t)
+        self.noisy = self.scheduler.add_noise(self.gt_unwrapped, self.noise, t).to(self.device)
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
         encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim,
                                                                            device=self.device)
@@ -58,7 +58,7 @@ class DDPMDiffusion:
             self.noisy,
             t,
             encoder_hidden_states=encoder_hidden_states,
-            controlnet_cond=control_cond,
+            controlnet_cond=control_cond.to(self.device),
             return_dict=False,
         )
         self.noise_pred = self.model(

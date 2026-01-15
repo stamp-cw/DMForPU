@@ -39,7 +39,7 @@ diffusion:
   loss_type: mse
 
 training:
-  batch_size: 2
+  batch_size: 1
   device: cuda
   brand_new_epochs: 200
   continue_training_epochs: 100
@@ -53,7 +53,7 @@ training:
 
 sampling:
   device: cuda
-  batch_size: 4
+  batch_size: 2
   eval: true
   total_samples: 4
   record_freq: 1

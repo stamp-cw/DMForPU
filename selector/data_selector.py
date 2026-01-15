@@ -43,7 +43,7 @@ class BaseDataLoader:
     @property
     def transform(self, uniform_dequantization=False):
 
-        transform_list = []
+        # transform_list = []
         # # transform_list.append(transforms.Resize(
         # #     (self.config.data.image_size, self.config.data.image_size),
         # #     interpolation=transforms.InterpolationMode.BICUBIC))
@@ -88,12 +88,13 @@ class BaseDataLoader:
         # # # 随机遮挡
         # # transform_list.append(transforms.RandomErasing(p=0.5, scale=(0.02, 0.2), ratio=(0.3, 3.3), value='random'))
 
-        return transforms.Compose(transform_list)
+        # return transforms.Compose(transform_list)
+        return None
 
     @property
     def gt_transform(self, uniform_dequantization=False):
 
-        transform_list = []
+        # transform_list = []
         # # transform_list.append(transforms.Resize(
         # #     (self.config.data.image_size, self.config.data.image_size),
         # #     interpolation=transforms.InterpolationMode.BICUBIC))
@@ -105,12 +106,13 @@ class BaseDataLoader:
         # if uniform_dequantization:
         #     transform_list.append(transforms.Lambda(lambda x: (x * 255 + torch.rand_like(x)) / 256))
 
-        return transforms.Compose(transform_list)
+        # return transforms.Compose(transform_list)
+        return None
 
     @property
     def joint_transform(self):
 
-        transform_list = []
+        # transform_list = []
         # # 先调整到目标大小
         # transform_list.append(T.Resize(
         #     (self.config.data.image_size, self.config.data.image_size),
@@ -133,11 +135,12 @@ class BaseDataLoader:
         # # if uniform_dequantization:
         # #     transform_list.append(T.Lambda(lambda x: (x * 255 + torch.rand_like(x)) / 256))
 
-        return T.Compose(transform_list)
+        # return T.Compose(transform_list)
+        return None
 
     @property
     def eval_transform(self, uniform_dequantization=False):
-        transform_list = []
+        # transform_list = []
         # # transform_list.append(transforms.ColorJitter(contrast=0.2))
         # # 转为张量0-1
         # transform_list.append(transforms.ToTensor())
@@ -165,29 +168,32 @@ class BaseDataLoader:
         # # # 随机遮挡
         # # transform_list.append(transforms.RandomErasing(p=0.5, scale=(0.02, 0.2), ratio=(0.3, 3.3), value='random'))
 
-        return transforms.Compose(transform_list)
+        # return transforms.Compose(transform_list)
+        return None
 
     @property
     def eval_gt_transform(self, uniform_dequantization=False):
 
-        transform_list = []
+        # transform_list = []
         # transform_list.append(transforms.ToTensor())
         #
         # if uniform_dequantization:
         #     transform_list.append(transforms.Lambda(lambda x: (x * 255 + torch.rand_like(x)) / 256))
 
-        return transforms.Compose(transform_list)
+        # return transforms.Compose(transform_list)
+        return None
 
     @property
     def eval_joint_transform(self):
 
-        transform_list = []
+        # transform_list = []
         # # 先调整到目标大小
         # transform_list.append(T.Resize(
         #     (self.config.data.image_size, self.config.data.image_size),
         #     interpolation=T.InterpolationMode.BICUBIC))
 
-        return T.Compose(transform_list)
+        # return T.Compose(transform_list)
+        return None
 
 
 class DataLoaderRegistry(dict):
@@ -223,14 +229,16 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
         return InSARDLPUMat(root=self.config.io.in_dataset_path, split='train',
                     transform=self.transform,
                     target_transform=self.gt_transform,
-                    joint_transform=self.joint_transform)
+                    joint_transform=self.joint_transform
+                            )
 
     @cached_property
     def test_dataset(self):
         return InSARDLPUMat(root=self.config.io.in_dataset_path, split='test',
                     transform=self.eval_transform,
                     target_transform=self.eval_gt_transform,
-                    joint_transform=self.eval_joint_transform)
+                    joint_transform=self.eval_joint_transform
+                            )
 
     @cached_property
     def all_dataset(self):
