@@ -7,7 +7,8 @@ from selector.diffusion_selector import register_diffusion
 @register_diffusion(name='DDPMDiffusion')
 class DDPMDiffusion:
     def __init__(self, config):
-        self.device = config.trainning.device
+        # self.name = config.diffusion.name
+        self.device = config.training.device
         self.model = UNet2DConditionModel(
             sample_size=config.model.sample_size,
             in_channels=config.model.in_channels,
@@ -16,10 +17,10 @@ class DDPMDiffusion:
             block_out_channels=tuple(config.model.block_out_channels),
         )
         self.control_model = ControlNetModel(
-            in_channels=config.control_model.in_channels,
-            conditioning_channels=config.control_model.conditioning_channels,
-            layers_per_block=config.control_model.layers_per_block,
-            block_out_channels=tuple(config.control_model.block_out_channels),
+            in_channels=config.controlnet_model.in_channels,
+            conditioning_channels=config.controlnet_model.conditioning_channels,
+            layers_per_block=config.controlnet_model.layers_per_block,
+            block_out_channels=tuple(config.controlnet_model.block_out_channels),
         )
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
 

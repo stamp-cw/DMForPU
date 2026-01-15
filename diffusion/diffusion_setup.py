@@ -13,8 +13,8 @@ class DiffusionSetup:
         self.control_model = model_setup.control_model
 
     def _create_diffusion(self):
-        if self.config.diffusion.custom_diffusion:
+        if self.config.diffusion.custom_model:
             self._setup_model()
-            self.diffusion = _DIFFUSIONS[self.config.diffusion](self.config, self.model, self.control_model)
+            self.diffusion = _DIFFUSIONS[self.config.diffusion.name](self.config, self.model, self.control_model)
         else:
-            self.diffusion = _DIFFUSIONS[self.config.diffusion](self.config)
+            self.diffusion = _DIFFUSIONS[self.config.diffusion.name](self.config)
