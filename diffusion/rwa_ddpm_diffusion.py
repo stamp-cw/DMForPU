@@ -5,10 +5,11 @@ from selector.diffusion_selector import register_diffusion
 import tqdm
 
 
-@register_diffusion(name='DDPMDiffusion')
-class DDPMDiffusion:
+@register_diffusion(name='DFNDDPMDiffusion')
+class DFNDDPMDiffusion:
     def __init__(self, config):
         self.config = config
+        # self.name = config.diffusion.name
         self.device = config.training.device
         self.model = UNet2DConditionModel(
             sample_size=config.model.sample_size,
@@ -25,6 +26,8 @@ class DDPMDiffusion:
         ).to(self.device)
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
 
+        # self.scheduler.set_timesteps(config.diffusion.num_train_timesteps)
+
     def setup_train(self):
         self.model.train()
         self.control_model.train()
@@ -34,20 +37,24 @@ class DDPMDiffusion:
         self.control_model.eval()
 
     def setup_data(self, batch_dict):
-        # if self.config.data.use_fp16:
-        #     self.wrapped = batch_dict["wrapped_fp16"].to(self.device)
-        #     self.gt_unwrapped = batch_dict["unwrapped_fp16"].to(self.device)
-        # else:
-        self.wrapped = batch_dict["wrapped"].to(self.device)
-        self.gt_unwrapped = batch_dict["unwrapped"].to(self.device)
+        if self.config.data.use_fp16:
+            self.wrapped_cond = batch_dict["wrapped_cond_fp16"].to(self.device)
+            self.unwrapped_sub_wrapped_norm = batch_dict["unwrapped_sub_wrapped_norm_fp16"].to(self.device)
+            self.gt_unwrapped = batch_dict["unwrapped_fp16"].to(self.device)
+            self.wrapped = batch_dict["wrapped_fp16"].to(self.device)
+        else:
+            self.wrapped_cond = batch_dict["wrapped_cond"].to(self.device)
+            self.unwrapped_sub_wrapped_norm = batch_dict["unwrapped_sub_wrapped_norm"].to(self.device)
+            self.gt_unwrapped = batch_dict["unwrapped"].to(self.device)
+            self.wrapped = batch_dict["wrapped"].to(self.device)
 
     def train_sample(self, t):
-        self.noise = torch.randn_like(self.gt_unwrapped).to(self.device)
-        self.noisy = self.scheduler.add_noise(self.gt_unwrapped, self.noise, t).to(self.device)
+        self.noise = torch.randn_like(self.unwrapped_sub_wrapped_norm).to(self.device)
+        self.noisy = self.scheduler.add_noise(self.unwrapped_sub_wrapped_norm, self.noise, t).to(self.device)
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
         encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim,
                                                                            device=self.device)
-        control_cond = self.wrapped
+        control_cond = self.wrapped_cond
         B, C, H_latent, W_latent = self.noisy.shape
         downsample_factor = 2 ** (len(self.control_model.config.block_out_channels) - 1)
         control_cond = torch.nn.functional.interpolate(control_cond, size=(H_latent * downsample_factor,
@@ -67,12 +74,15 @@ class DDPMDiffusion:
             down_block_additional_residuals=ctrl_down,
             mid_block_additional_residual=ctrl_mid,
         ).sample
-        self.pred_unwrapped = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
+        # self.pred_unwrapped = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
+        self.pred_unwrapped_sub_wrapped_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
+        self.pred_unwrapped = self.wrapped + self.pred_unwrapped_sub_wrapped_norm * (torch.pi * self.config.data.scale_k)
+
 
     def infer_sample(self):
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
-        encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
-        control_cond = self.wrapped
+        encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped_norm.shape[0], 1, cross_dim, device=self.device)
+        control_cond = self.wrapped_cond
         x = torch.randn_like(self.wrapped).to(self.device)
         B, C, H_latent, W_latent = x.shape
         downsample_factor = 2 ** (len(self.control_model.config.block_out_channels) - 1)
@@ -97,8 +107,8 @@ class DDPMDiffusion:
                 mid_block_additional_residual=ctrl_mid,
             ).sample
             x = self.scheduler.step(self.noise_pred, t, x).prev_sample
-        self.pred_unwrapped = x
-
+        self.pred_unwrapped_sub_wrapped_norm = x
+        self.pred_unwrapped = self.wrapped + self.pred_unwrapped_sub_wrapped_norm * (torch.pi * self.config.data.scale_k)
 
     @property
     def optimize_parameters(self):

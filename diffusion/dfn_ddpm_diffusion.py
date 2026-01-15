@@ -37,16 +37,16 @@ class DFNDDPMDiffusion:
         self.control_model.eval()
 
     def setup_data(self, batch_dict):
-        if self.config.data.use_fp16:
-            self.wrapped_cond = batch_dict["wrapped_cond_fp16"].to(self.device)
-            self.unwrapped_sub_wrapped_norm = batch_dict["unwrapped_sub_wrapped_norm_fp16"].to(self.device)
-            self.gt_unwrapped = batch_dict["unwrapped_fp16"].to(self.device)
-            self.wrapped = batch_dict["wrapped_fp16"].to(self.device)
-        else:
-            self.wrapped_cond = batch_dict["wrapped_cond"].to(self.device)
-            self.unwrapped_sub_wrapped_norm = batch_dict["unwrapped_sub_wrapped_norm"].to(self.device)
-            self.gt_unwrapped = batch_dict["unwrapped"].to(self.device)
-            self.wrapped = batch_dict["wrapped"].to(self.device)
+        # if self.config.data.use_fp16:
+        #     self.wrapped_cond = batch_dict["wrapped_cond_fp16"].to(self.device)
+        #     self.unwrapped_sub_wrapped_norm = batch_dict["unwrapped_sub_wrapped_norm_fp16"].to(self.device)
+        #     self.gt_unwrapped = batch_dict["unwrapped_fp16"].to(self.device)
+        #     self.wrapped = batch_dict["wrapped_fp16"].to(self.device)
+        # else:
+        self.wrapped_cond = batch_dict["wrapped_cond"].to(self.device)
+        self.unwrapped_sub_wrapped_norm = batch_dict["unwrapped_sub_wrapped_norm"].to(self.device)
+        self.gt_unwrapped = batch_dict["unwrapped"].to(self.device)
+        self.wrapped = batch_dict["wrapped"].to(self.device)
 
     def train_sample(self, t):
         self.noise = torch.randn_like(self.unwrapped_sub_wrapped_norm).to(self.device)
@@ -77,11 +77,11 @@ class DFNDDPMDiffusion:
         # self.pred_unwrapped = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
         self.pred_unwrapped_sub_wrapped_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
         self.pred_unwrapped = self.wrapped + self.pred_unwrapped_sub_wrapped_norm * (torch.pi * self.config.data.scale_k)
-
+        self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
     def infer_sample(self):
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
-        encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped_norm.shape[0], 1, cross_dim, device=self.device)
+        encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
         control_cond = self.wrapped_cond
         x = torch.randn_like(self.wrapped).to(self.device)
         B, C, H_latent, W_latent = x.shape
@@ -109,6 +109,7 @@ class DFNDDPMDiffusion:
             x = self.scheduler.step(self.noise_pred, t, x).prev_sample
         self.pred_unwrapped_sub_wrapped_norm = x
         self.pred_unwrapped = self.wrapped + self.pred_unwrapped_sub_wrapped_norm * (torch.pi * self.config.data.scale_k)
+        self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
     @property
     def optimize_parameters(self):

@@ -12,7 +12,7 @@ data:
   color_channels: 1
   num_workers: 1
   scale_k: 5
-  use_fp16: true
+#  use_fp16: false
   method: diff_norm
 #  random_flip: false
 #  centered: false
@@ -41,7 +41,7 @@ diffusion:
   custom_model: false
   timesteps: 1000
   num_train_timesteps: 1000
-  num_infer_timesteps: 50
+  num_infer_timesteps: 10
   beta_start: 0.0001
   beta_end: 0.02
   loss_type: mse
@@ -58,7 +58,7 @@ training:
   eval_freq: 1
   eval_save_least_epoch: 50
   snapshot_sampling: true
-  amp: false
+  amp: true
 
 sampling:
   device: cuda

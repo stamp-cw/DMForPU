@@ -204,6 +204,12 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return os.path.join(self.out_sample_path,
                             f"{self.out_sample_filename_prefix}s_{start_image_count}_{end_image_count}.pt")
 
+    def generated_compare_pt_file_path(self, start_image_count, end_image_count):
+        if self.latest_generated_sample_num is None:
+            return None
+        return os.path.join(self.out_sample_path,
+                            f"{self.out_sample_filename_prefix}s_{start_image_count}_{end_image_count}.pt")
+
     def generated_eval_pt_file_path(self, start_image_count, end_image_count):
         if self.latest_generated_eval_num is None:
             return None

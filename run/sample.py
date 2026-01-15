@@ -38,8 +38,8 @@ class Sampler:
                 self.eval_iter = iter(self.eval_loader)
                 batch_dict = next(self.eval_iter)
             self._sample(batch_dict)
-            self._save_samples_pt()
-            self._save_samples_png()
+            # self._save_samples_pt()
+            # self._save_samples_png()
             self._update_stat()
 
     @property
@@ -70,8 +70,10 @@ class Sampler:
             pred_unwrapped = self.diffusion.pred_unwrapped
             wrapped = self.diffusion.wrapped
             gt_unwrapped = self.diffusion.gt_unwrapped
-            self._save_samples_and_preview(wrapped, gt_unwrapped, pred_unwrapped)
-            self._save_compare_png(wrapped, gt_unwrapped, pred_unwrapped)
+            diff_unwrapped = self.diffusion.diff_unwrapped
+            # self._save_samples_and_preview(wrapped, gt_unwrapped, pred_unwrapped)
+            self._save_compare_png(wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped)
+            self._save_compare_pt(wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped)
             self.samples = pred_unwrapped
 
     @cached_property
@@ -79,23 +81,30 @@ class Sampler:
         # return self.data_loader.eval_loader
         return self.data_loader.test_loader
 
-    def _save_samples_pt(self):
-        self.samples = torch.clamp(self.samples.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
-        self.samples = self.samples.reshape(
-            (-1, self.config.data.image_size, self.config.data.image_size, self.config.data.color_channels))
-        pt_path = self.config.io.generated_sample_pt_file_path(self.saved_samples,
+    def _save_compare_pt(self, wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped):
+        pt_path = self.config.io.generated_compare_pt_file_path(self.saved_samples,
                                                                self.saved_samples + self.temp_batch_size)
-        torch.save(self.samples, pt_path)
+        torch.save({"wrapped":wrapped, "gt_unwrapped": gt_unwrapped, "pred_unwrapped": pred_unwrapped, "diff_unwrapped": diff_unwrapped}, pt_path)
         self.logger.info(f"Saved {self.temp_batch_size} samples to {pt_path}")
 
-    def _save_samples_png(self):
-        samples = self.samples.permute(0, 3, 1, 2)
-        for _, img_array in enumerate(samples):
-            img = ToPILImage()(img_array)
-            img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
-            img.save(img_path)
-        self.logger.info(
-            f"Saved {self.samples.shape[0]} samples as PNG images in folder: {self.config.io.out_raw_sample_path}")
+
+    # def _save_samples_pt(self):
+    #     self.samples = torch.clamp(self.samples.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
+    #     self.samples = self.samples.reshape(
+    #         (-1, self.config.data.image_size, self.config.data.image_size, self.config.data.color_channels))
+    #     pt_path = self.config.io.generated_sample_pt_file_path(self.saved_samples,
+    #                                                            self.saved_samples + self.temp_batch_size)
+    #     torch.save(self.samples, pt_path)
+    #     self.logger.info(f"Saved {self.temp_batch_size} samples to {pt_path}")
+    #
+    # def _save_samples_png(self):
+    #     samples = self.samples.permute(0, 3, 1, 2)
+    #     for _, img_array in enumerate(samples):
+    #         img = ToPILImage()(img_array)
+    #         img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
+    #         img.save(img_path)
+    #     self.logger.info(
+    #         f"Saved {self.samples.shape[0]} samples as PNG images in folder: {self.config.io.out_raw_sample_path}")
 
     def load_checkpoint(self):
         self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
@@ -109,16 +118,16 @@ class Sampler:
         data_loader = BaseDataLoader(self.config)
         return data_loader.data_inverse_scaler(x)
 
-    def _save_compare_png(self, wrapped, gt_unwrapped, pred_unwrapped):
+    def _save_compare_png(self, wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped):
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
         compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size)
         # pred_unwrapped = self.data_inverse_scaler(pred_unwrapped)
-        pred_unwrapped = torch.clamp(pred_unwrapped * 2 - 1,0,1)
-        titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped"]
-        imgs = [_to_numpy_2d(wrapped), _to_numpy_2d(gt_unwrapped), _to_numpy_2d(pred_unwrapped)]
-        fig, axes = plt.subplots(1, 3, figsize=(12, 4))
-        cmaps = ["twilight", "turbo", "turbo"]
+        # pred_unwrapped = torch.clamp(pred_unwrapped * 2 - 1,0,1)
+        titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped"]
+        imgs = [_to_numpy_2d(wrapped), _to_numpy_2d(gt_unwrapped), _to_numpy_2d(pred_unwrapped), _to_numpy_2d(diff_unwrapped)]
+        fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+        cmaps = ["twilight", "turbo", "turbo", "inferno"]
         for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):
             im = ax.imshow(img, cmap=cmap)
             ax.set_title(title)
@@ -128,63 +137,63 @@ class Sampler:
         fig.savefig(compare_png_path, dpi=200)
         plt.close(fig)
 
-    def _save_samples_and_preview(self, raw_images, label_images, mask_images):
-        self.samples = mask_images
-        self.samples = torch.clamp(self.samples.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
-        samples_to_visualize = self.samples[:min(36, len(self.samples))]
-        # visualize_samples_file_path = self.config.io.sample_pdf_file_path(0)
-        visualize_samples_file_path = self.config.io.generated_sample_pdf_file_path(self.saved_samples,
-                                                                                    self.saved_samples + self.temp_batch_size,
-                                                                                    0)
-        samples_grid_format = samples_to_visualize.permute(0, 3, 1, 2)
-        grid_tensor = make_grid(samples_grid_format, nrow=int(len(samples_to_visualize) ** 0.5))
-        grid_image = ToPILImage()(grid_tensor.cpu())
-        grid_image.save(visualize_samples_file_path, format='PDF')
-
-        new_raw_images = torch.clamp(raw_images.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
-        raw_to_visualize = new_raw_images[:min(36, len(self.samples))]
-        # visualize_raw_file_path = self.config.io.sample_pdf_file_path(1)
-        visualize_raw_file_path = self.config.io.generated_sample_pdf_file_path(self.saved_samples,
-                                                                                self.saved_samples + self.temp_batch_size,
-                                                                                1)
-        raw_grid_format = raw_to_visualize.permute(0, 3, 1, 2)
-        grid_tensor = make_grid(raw_grid_format, nrow=int(len(raw_to_visualize) ** 0.5))
-        grid_image = ToPILImage()(grid_tensor.cpu())
-        grid_image.save(visualize_raw_file_path, format='PDF')
-
-        new_label_images = torch.clamp(label_images.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
-        label_to_visualize = new_label_images[:min(36, len(self.samples))]
-        # visualize_label_file_path = self.config.io.sample_pdf_file_path(2)
-        visualize_label_file_path = self.config.io.generated_sample_pdf_file_path(self.saved_samples,
-                                                                                  self.saved_samples + self.temp_batch_size,
-                                                                                  2)
-        label_grid_format = label_to_visualize.permute(0, 3, 1, 2)
-        grid_tensor = make_grid(label_grid_format, nrow=int(len(label_to_visualize) ** 0.5))
-        grid_image = ToPILImage()(grid_tensor.cpu())
-        grid_image.save(visualize_label_file_path, format='PDF')
-
-        mask_images = torch.clamp(mask_images.cpu() * 255, 0, 255).to(torch.uint8)
-        assert raw_images.shape[0] == label_images.shape[0] == mask_images.shape[0]
-        # visualize_merged_file_path = self.config.io.sample_pdf_file_path(3)
-        visualize_merged_file_path = self.config.io.generated_sample_pdf_file_path(self.saved_samples,
-                                                                                   self.saved_samples + self.temp_batch_size,
-                                                                                   3)
-        images_list = []
-        for i in range(raw_images.shape[0]):
-            raw = ToPILImage()(raw_images[i].cpu())
-            label = ToPILImage()(label_images[i].cpu())
-            mask = ToPILImage()(mask_images[i].cpu())
-            # 横向拼接
-            width, height = raw.width + label.width + mask.width, raw.height
-            merged = Image.new('RGB', (width, height))
-            merged.paste(raw, (0, 0))
-            merged.paste(label, (raw.width, 0))
-            merged.paste(mask, (raw.width + label.width, 0))
-            images_list.append(merged)
-
-        # 保存为PDF
-        if images_list:
-            images_list[0].save(visualize_merged_file_path, save_all=True, append_images=images_list[1:], format='PDF')
+    # def _save_samples_and_preview(self, raw_images, label_images, mask_images):
+    #     self.samples = mask_images
+    #     self.samples = torch.clamp(self.samples.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
+    #     samples_to_visualize = self.samples[:min(36, len(self.samples))]
+    #     # visualize_samples_file_path = self.config.io.sample_pdf_file_path(0)
+    #     visualize_samples_file_path = self.config.io.generated_sample_pdf_file_path(self.saved_samples,
+    #                                                                                 self.saved_samples + self.temp_batch_size,
+    #                                                                                 0)
+    #     samples_grid_format = samples_to_visualize.permute(0, 3, 1, 2)
+    #     grid_tensor = make_grid(samples_grid_format, nrow=int(len(samples_to_visualize) ** 0.5))
+    #     grid_image = ToPILImage()(grid_tensor.cpu())
+    #     grid_image.save(visualize_samples_file_path, format='PDF')
+    #
+    #     new_raw_images = torch.clamp(raw_images.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
+    #     raw_to_visualize = new_raw_images[:min(36, len(self.samples))]
+    #     # visualize_raw_file_path = self.config.io.sample_pdf_file_path(1)
+    #     visualize_raw_file_path = self.config.io.generated_sample_pdf_file_path(self.saved_samples,
+    #                                                                             self.saved_samples + self.temp_batch_size,
+    #                                                                             1)
+    #     raw_grid_format = raw_to_visualize.permute(0, 3, 1, 2)
+    #     grid_tensor = make_grid(raw_grid_format, nrow=int(len(raw_to_visualize) ** 0.5))
+    #     grid_image = ToPILImage()(grid_tensor.cpu())
+    #     grid_image.save(visualize_raw_file_path, format='PDF')
+    #
+    #     new_label_images = torch.clamp(label_images.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
+    #     label_to_visualize = new_label_images[:min(36, len(self.samples))]
+    #     # visualize_label_file_path = self.config.io.sample_pdf_file_path(2)
+    #     visualize_label_file_path = self.config.io.generated_sample_pdf_file_path(self.saved_samples,
+    #                                                                               self.saved_samples + self.temp_batch_size,
+    #                                                                               2)
+    #     label_grid_format = label_to_visualize.permute(0, 3, 1, 2)
+    #     grid_tensor = make_grid(label_grid_format, nrow=int(len(label_to_visualize) ** 0.5))
+    #     grid_image = ToPILImage()(grid_tensor.cpu())
+    #     grid_image.save(visualize_label_file_path, format='PDF')
+    #
+    #     mask_images = torch.clamp(mask_images.cpu() * 255, 0, 255).to(torch.uint8)
+    #     assert raw_images.shape[0] == label_images.shape[0] == mask_images.shape[0]
+    #     # visualize_merged_file_path = self.config.io.sample_pdf_file_path(3)
+    #     visualize_merged_file_path = self.config.io.generated_sample_pdf_file_path(self.saved_samples,
+    #                                                                                self.saved_samples + self.temp_batch_size,
+    #                                                                                3)
+    #     images_list = []
+    #     for i in range(raw_images.shape[0]):
+    #         raw = ToPILImage()(raw_images[i].cpu())
+    #         label = ToPILImage()(label_images[i].cpu())
+    #         mask = ToPILImage()(mask_images[i].cpu())
+    #         # 横向拼接
+    #         width, height = raw.width + label.width + mask.width, raw.height
+    #         merged = Image.new('RGB', (width, height))
+    #         merged.paste(raw, (0, 0))
+    #         merged.paste(label, (raw.width, 0))
+    #         merged.paste(mask, (raw.width + label.width, 0))
+    #         images_list.append(merged)
+    #
+    #     # 保存为PDF
+    #     if images_list:
+    #         images_list[0].save(visualize_merged_file_path, save_all=True, append_images=images_list[1:], format='PDF')
 
     def _update_stat(self):
         self.logger.info(

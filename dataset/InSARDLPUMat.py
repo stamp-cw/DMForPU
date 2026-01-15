@@ -86,16 +86,16 @@ class InSARDLPUMat(Dataset):
 
         sample = {
             "wrapped": wrapped,
-            "warpped_fp16": wrapped.to(torch.float16),
+            # "wrapped_fp16": wrapped.to(torch.float16),
             "unwrapped": unwrapped,
-            "unwrapped_fp16": unwrapped.to(torch.float16),
+            # "unwrapped_fp16": unwrapped.to(torch.float16),
             # "wrapped_norm": wrapped_norm,
             # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
             "wrapped_cond": wrapped_cond,
-            "wrapped_cond_fp16": wrapped_cond.to(torch.float16),
+            # "wrapped_cond_fp16": wrapped_cond.to(torch.float16),
             "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
-            "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
+            # "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
             "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,
-            "unwrapped_sub_wrapped_norm_fp16": unwrapped_sub_wrapped_norm.to(torch.float16)
+            # "unwrapped_sub_wrapped_norm_fp16": unwrapped_sub_wrapped_norm.to(torch.float16)
         }
         return sample
