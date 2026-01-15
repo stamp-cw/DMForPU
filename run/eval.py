@@ -53,6 +53,8 @@ class Evaluator:
             # output = self.model(images)
             wrapped = batch_dict["wrapped"].to(self.device)
             self.diffusion.setup_data(batch_dict)
+            # t_batch = torch.randint(0, self.scheduler.config.num_train_timesteps, (1,), device=self.device).long()
+            # t = t_batch.expand(self.wrapped.shape[0])
             self.diffusion.sample()
             pred_unwrapped = self.diffusion.pred_unwrapped
             self._save_eval_and_preview(wrapped, pred_unwrapped)

@@ -18,11 +18,9 @@ class Sampler:
         self.config = config
         self.logger = config.logger
         self.device = config.sampling.device
-        # self.model = ModelSetup(self.config, self.logger).model
         self.diffusion = DiffusionSetup(self.config, self.logger).diffusion
         self.data_loader = _DATA_LOADERS(self.config)
         self.eval_iter = iter(self.eval_loader)
-        # self.score_fn = ScoreFN()
         # with torch.no_grad(): self.ema = ExponentialMovingAverage(self.model.parameters(),
         #                                                           decay=self.config.model.ema_rate)
 
@@ -32,19 +30,12 @@ class Sampler:
         self.diffusion.setup_eval()
         # with self.ema.average_parameters():
         while self.remaining_samples > 0:
-            # images, labels = next(iter(self.eval_loader))
             try:
-                # images, labels = next(self.eval_iter)
                 batch_dict = next(self.eval_iter)
-                # wrapped = batch_dict["wrapped"].to(self.device)
-                # gt_unwrapped = batch_dict["unwrapped"].to(self.device)
 
             except StopIteration:
                 self.eval_iter = iter(self.eval_loader)
-                # images, labels = next(self.eval_iter)
                 batch_dict = next(self.eval_iter)
-                # wrapped = batch_dict["wrapped"].to(self.device)
-                # gt_unwrapped = batch_dict["unwrapped"].to(self.device)
             self._sample(batch_dict)
             self._save_samples_pt()
             self._save_samples_png()

@@ -202,7 +202,8 @@ class EpochFN:
     def epoch_fn(self, diffusion, optimizer, epoch, batch):
         # wrapped, gt_unwrapped = batch
         diffusion.setup_data(batch)
-        diffusion.sample()
+        t_batch = torch.randint(0, self.config.diffusion.num_train_timesteps, (1,), device=self.config.training.device).long().expand(batch.shape[0])
+        diffusion.train_sample(t_batch)
         pred_unwrapped = diffusion.pred_unwrapped
         gt_unwrapped = diffusion.gt_unwrapped
         # list(diffusion.model.parameters()) + list(diffusion.control_model.parameters())
