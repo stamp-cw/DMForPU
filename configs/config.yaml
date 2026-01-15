@@ -47,7 +47,7 @@ diffusion:
   loss_type: mse
 
 training:
-  batch_size: 1
+  batch_size: 2
   device: cuda
   brand_new_epochs: 200
   continue_training_epochs: 100
