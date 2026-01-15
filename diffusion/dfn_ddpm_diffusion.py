@@ -76,8 +76,9 @@ class DFNDDPMDiffusion:
         ).sample
         # self.pred_unwrapped = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
         self.pred_unwrapped_sub_wrapped_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
+        self.pred_unwrapped_sub_wrapped_norm = (self.pred_unwrapped_sub_wrapped_norm + 1) / 2
         self.pred_unwrapped = self.wrapped + self.pred_unwrapped_sub_wrapped_norm * (torch.pi * self.config.data.scale_k)
-        self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
+        self.diff_unwrapped = self.pred_unwrapped - self.gt_unwrapped
 
     def infer_sample(self):
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
@@ -108,8 +109,9 @@ class DFNDDPMDiffusion:
             ).sample
             x = self.scheduler.step(self.noise_pred, t, x).prev_sample
         self.pred_unwrapped_sub_wrapped_norm = x
+        self.pred_unwrapped_sub_wrapped_norm = (self.pred_unwrapped_sub_wrapped_norm + 1) / 2
         self.pred_unwrapped = self.wrapped + self.pred_unwrapped_sub_wrapped_norm * (torch.pi * self.config.data.scale_k)
-        self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
+        self.diff_unwrapped = self.pred_unwrapped - self.gt_unwrapped
 
     @property
     def optimize_parameters(self):

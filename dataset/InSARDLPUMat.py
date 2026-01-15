@@ -73,16 +73,17 @@ class InSARDLPUMat(Dataset):
         if self.target_transform:
             unwrapped = self.target_transform(unwrapped)
 
+        wrapped = wrapped + torch.pi
 
         # wrapped_norm = wrapped / torch.pi
         # wrapped_cond = torch.stack([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
-        wrapped_cond = wrapped / torch.pi
+        wrapped_cond = wrapped / (2 * torch.pi)
         unwrapped_sub_wrapped = unwrapped - wrapped
         # K = torch.round(unwrapped_sub_wrapped / (2 * torch.pi))
         K = self.K # k range 3-5
         # K = 5 # k range 3-5
         unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (torch.pi * K)
-        unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, -1, 1)
+        unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
 
         sample = {
             "wrapped": wrapped,

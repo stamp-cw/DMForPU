@@ -98,7 +98,11 @@ class Sampler:
     #     self.logger.info(f"Saved {self.temp_batch_size} samples to {pt_path}")
 
     def _save_samples_png(self):
-        samples = self.samples.permute(0, 3, 1, 2)
+        # self.samples = torch.clamp(self.samples.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
+        # self.samples = self.samples.reshape(
+        #     (-1, self.config.data.image_size, self.config.data.image_size, self.config.data.color_channels))
+        # samples = self.samples.permute(0, 3, 1, 2)
+        samples = self.samples
         for _, img_array in enumerate(samples):
             img = ToPILImage()(img_array)
             img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
