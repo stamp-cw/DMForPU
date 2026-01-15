@@ -57,7 +57,7 @@ training:
   log_freq: 1
   eval_freq: 100
   eval_save_least_epoch: 50
-  snapshot_sampling: true
+  snapshot_sampling: false
   amp: true
 
 sampling:
