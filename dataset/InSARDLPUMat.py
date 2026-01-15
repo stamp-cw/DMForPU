@@ -74,8 +74,9 @@ class InSARDLPUMat(Dataset):
             unwrapped = self.target_transform(unwrapped)
 
 
-        # wrapped_norm = torch.stack([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
-        wrapped_norm = wrapped / torch.pi
+        # wrapped_norm = wrapped / torch.pi
+        # wrapped_cond = torch.stack([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
+        wrapped_cond = wrapped / torch.pi
         unwrapped_sub_wrapped = unwrapped - wrapped
         # K = torch.round(unwrapped_sub_wrapped / (2 * torch.pi))
         K = self.K # k range 3-5
@@ -88,8 +89,10 @@ class InSARDLPUMat(Dataset):
             "warpped_fp16": wrapped.to(torch.float16),
             "unwrapped": unwrapped,
             "unwrapped_fp16": unwrapped.to(torch.float16),
-            "wrapped_norm": wrapped_norm,
-            "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
+            # "wrapped_norm": wrapped_norm,
+            # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
+            "wrapped_cond": wrapped_cond,
+            "wrapped_cond_fp16": wrapped_cond.to(torch.float16),
             "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
             "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
             "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,

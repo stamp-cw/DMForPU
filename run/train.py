@@ -202,7 +202,6 @@ class EpochFN:
         diffusion.train_sample(t_batch)
         pred_unwrapped = diffusion.pred_unwrapped
         gt_unwrapped = diffusion.gt_unwrapped
-        # list(diffusion.model.parameters()) + list(diffusion.control_model.parameters())
 
         if self.train:
             if self.config.training.amp:
@@ -213,7 +212,6 @@ class EpochFN:
                 scaler.scale(loss).backward()
                 self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch, scaler=scaler)
                 self.metrics["loss"] = loss.item()
-
             else:
                 optimizer.zero_grad()
                 loss = self.loss_fn(diffusion)

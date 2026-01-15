@@ -13,6 +13,7 @@ data:
   num_workers: 1
   scale_k: 5
   use_fp16: true
+  method: diff_norm
 #  random_flip: false
 #  centered: false
 #  uniform_dequantization: false
@@ -57,7 +58,7 @@ training:
   eval_freq: 1
   eval_save_least_epoch: 50
   snapshot_sampling: true
-  amp: true
+  amp: false
 
 sampling:
   device: cuda
