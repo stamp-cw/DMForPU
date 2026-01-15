@@ -39,7 +39,7 @@ class Sampler:
                 batch_dict = next(self.eval_iter)
             self._sample(batch_dict)
             # self._save_samples_pt()
-            # self._save_samples_png()
+            self._save_samples_png()
             self._update_stat()
 
     @property
@@ -96,15 +96,15 @@ class Sampler:
     #                                                            self.saved_samples + self.temp_batch_size)
     #     torch.save(self.samples, pt_path)
     #     self.logger.info(f"Saved {self.temp_batch_size} samples to {pt_path}")
-    #
-    # def _save_samples_png(self):
-    #     samples = self.samples.permute(0, 3, 1, 2)
-    #     for _, img_array in enumerate(samples):
-    #         img = ToPILImage()(img_array)
-    #         img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
-    #         img.save(img_path)
-    #     self.logger.info(
-    #         f"Saved {self.samples.shape[0]} samples as PNG images in folder: {self.config.io.out_raw_sample_path}")
+
+    def _save_samples_png(self):
+        samples = self.samples.permute(0, 3, 1, 2)
+        for _, img_array in enumerate(samples):
+            img = ToPILImage()(img_array)
+            img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
+            img.save(img_path)
+        self.logger.info(
+            f"Saved {self.samples.shape[0]} samples as PNG images in folder: {self.config.io.out_raw_sample_path}")
 
     def load_checkpoint(self):
         self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")

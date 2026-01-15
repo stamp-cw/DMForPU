@@ -11,7 +11,7 @@ data:
   image_size: 256
   color_channels: 1
   num_workers: 1
-  scale_k: 5
+  scale_k: 50
 #  use_fp16: false
   method: diff_norm
 #  random_flip: false
