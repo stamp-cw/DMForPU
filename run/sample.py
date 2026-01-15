@@ -4,11 +4,12 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 import torch
-from torch_ema import ExponentialMovingAverage
+# from torch_ema import ExponentialMovingAverage
 from torchvision.utils import make_grid
 from torchvision.transforms import ToPILImage
-from Model.model_setup import ModelSetup
-# from run.sde import ScoreFN
+
+from diffusion.diffusion_setup import DiffusionSetup
+from model.model_setup import ModelSetup
 from selector.data_selector import _DATA_LOADERS
 
 
@@ -17,30 +18,37 @@ class Sampler:
         self.config = config
         self.logger = config.logger
         self.device = config.sampling.device
-        self.model = ModelSetup(self.config, self.logger).model
+        # self.model = ModelSetup(self.config, self.logger).model
+        self.diffusion = DiffusionSetup(self.config, self.logger).diffusion
         self.data_loader = _DATA_LOADERS(self.config)
         self.eval_iter = iter(self.eval_loader)
         # self.score_fn = ScoreFN()
-        with torch.no_grad(): self.ema = ExponentialMovingAverage(self.model.parameters(),
-                                                                  decay=self.config.model.ema_rate)
+        # with torch.no_grad(): self.ema = ExponentialMovingAverage(self.model.parameters(),
+        #                                                           decay=self.config.model.ema_rate)
 
     def sample(self):
-        # self.iter_num = 0
         self.logger.info(
             f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
-        self.model.eval()
-        with self.ema.average_parameters():
-            while self.remaining_samples > 0:
-                # images, labels = next(iter(self.eval_loader))
-                try:
-                    images, labels = next(self.eval_iter)
-                except StopIteration:
-                    self.eval_iter = iter(self.eval_loader)
-                    images, labels = next(self.eval_iter)
-                self._sample(images, labels)
-                self._save_samples_pt()
-                self._save_samples_png()
-                self._update_stat()
+        self.diffusion.setup_eval()
+        # with self.ema.average_parameters():
+        while self.remaining_samples > 0:
+            # images, labels = next(iter(self.eval_loader))
+            try:
+                # images, labels = next(self.eval_iter)
+                batch_dict = next(self.eval_iter)
+                # wrapped = batch_dict["wrapped"].to(self.device)
+                # gt_unwrapped = batch_dict["unwrapped"].to(self.device)
+
+            except StopIteration:
+                self.eval_iter = iter(self.eval_loader)
+                # images, labels = next(self.eval_iter)
+                batch_dict = next(self.eval_iter)
+                # wrapped = batch_dict["wrapped"].to(self.device)
+                # gt_unwrapped = batch_dict["unwrapped"].to(self.device)
+            self._sample(batch_dict)
+            self._save_samples_pt()
+            self._save_samples_png()
+            self._update_stat()
 
     @property
     def saved_samples(self):
@@ -63,13 +71,15 @@ class Sampler:
         return (
                     self.remaining_samples // self.config.sampling.batch_size + 1) if self.remaining_samples % self.config.sampling.batch_size != 0 else self.remaining_samples // self.config.sampling.batch_size
 
-    def _sample(self, images, labels):
+    def _sample(self, batch_dict):
         with torch.no_grad():
-            output = self.model(images)
-            mask = torch.sigmoid(output)
-            mask = self.data_inverse_scaler(mask) > self.config.sampling.out_threshold
-            self._save_samples_and_preview(images, labels, mask)
-            self.samples = mask
+            self.diffusion.setup_data(batch_dict)
+            self.diffusion.sample()
+            pred_unwrapped = self.diffusion.pred_unwrapped
+            wrapped = self.diffusion.wrapped
+            gt_unwrapped = self.diffusion.gt_unwrapped
+            self._save_samples_and_preview(wrapped, gt_unwrapped, pred_unwrapped)
+            self.samples = pred_unwrapped
 
     @cached_property
     def eval_loader(self):

@@ -8,12 +8,13 @@
 from functools import cached_property
 
 import torch
-from torch_ema import ExponentialMovingAverage
+# from torch_ema import ExponentialMovingAverage
 from torchvision.utils import make_grid
 from torchvision.transforms import ToPILImage
 from PIL import Image
 
-from Model.model_setup import ModelSetup
+from diffusion.diffusion_setup import DiffusionSetup
+# from Model.model_setup import ModelSetup
 from selector.data_selector import _DATA_LOADERS
 
 
@@ -24,32 +25,38 @@ class Evaluator:
         self.logger = config.logger
         self.device = config.sampling.device
         self.data_loader = _DATA_LOADERS(self.config)
-        self.model = ModelSetup(self.config, self.logger).model
-        with torch.no_grad(): self.ema = ExponentialMovingAverage(self.model.parameters(), decay=self.config.model.ema_rate)
+        # self.model = ModelSetup(self.config, self.logger).model
+        self.diffusion = DiffusionSetup(self.config, self.logger).diffusion
+
+        # with torch.no_grad(): self.ema = ExponentialMovingAverage(self.model.parameters(), decay=self.config.model.ema_rate)
 
 
     def load_checkpoint(self):
         self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
         loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
-        self.ema.load_state_dict(loaded_state['ema'])
-        self.model.load_state_dict(loaded_state['model'], strict=True)
+        # self.ema.load_state_dict(loaded_state['ema'])
+        self.diffusion.model.load_state_dict(loaded_state['model'], strict=True)
+        self.diffusion.control_model.load_state_dict(loaded_state['model'], strict=True)
 
     def evaluate(self):
-        self.model.eval()
-        with self.ema.average_parameters():
-            for images in self.eval_loader:
-                self._evaluate(images)
-                self._save_eval_pt()
-                self._save_eval_png()
-                self._update_stat()
+        # self.model.eval()
+        self.diffusion.setup_eval()
+        # with self.ema.average_parameters():
+        for batch_dict in self.eval_loader:
+            self._evaluate(batch_dict)
+            self._save_eval_pt()
+            self._save_eval_png()
+            self._update_stat()
 
-    def _evaluate(self, images):
+    def _evaluate(self, batch_dict):
         with torch.no_grad():
-            output = self.model(images)
-            mask = torch.sigmoid(output)
-            mask = self.data_inverse_scaler(mask) > self.config.sampling.out_threshold
-            self._save_eval_and_preview(images, mask)
-            self.samples = mask
+            # output = self.model(images)
+            wrapped = batch_dict["wrapped"].to(self.device)
+            self.diffusion.setup_data(batch_dict)
+            self.diffusion.sample()
+            pred_unwrapped = self.diffusion.pred_unwrapped
+            self._save_eval_and_preview(wrapped, pred_unwrapped)
+            self.samples = pred_unwrapped
 
     def _save_eval_pt(self):
         self.samples = torch.clamp(self.samples.permute(0, 2, 3, 1).cpu() * 255, 0, 255).to(torch.uint8)
@@ -111,7 +118,8 @@ class Evaluator:
 
     @cached_property
     def eval_loader(self):
-        return self.data_loader.eval_loader
+        # return self.data_loader.eval_loader
+        return self.data_loader.test_loader
 
     def data_inverse_scaler(self, x):
         from selector.data_selector import BaseDataLoader
