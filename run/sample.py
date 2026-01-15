@@ -11,6 +11,7 @@ from torchvision.transforms import ToPILImage
 from diffusion.diffusion_setup import DiffusionSetup
 from model.model_setup import ModelSetup
 from selector.data_selector import _DATA_LOADERS
+import matplotlib.pyplot as plt
 
 
 class Sampler:
@@ -70,6 +71,7 @@ class Sampler:
             wrapped = self.diffusion.wrapped
             gt_unwrapped = self.diffusion.gt_unwrapped
             self._save_samples_and_preview(wrapped, gt_unwrapped, pred_unwrapped)
+            self._save_compare_png(wrapped, gt_unwrapped, pred_unwrapped)
             self.samples = pred_unwrapped
 
     @cached_property
@@ -98,13 +100,31 @@ class Sampler:
     def load_checkpoint(self):
         self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
         loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
-        self.ema.load_state_dict(loaded_state['ema'])
-        self.model.load_state_dict(loaded_state['model'], strict=True)
+        # self.ema.load_state_dict(loaded_state['ema'])
+        self.diffusion.model.load_state_dict(loaded_state['model'])
+        self.diffusion.control_model.load_state_dict(loaded_state['control_model'])
 
     def data_inverse_scaler(self, x):
         from selector.data_selector import BaseDataLoader
         data_loader = BaseDataLoader(self.config)
         return data_loader.data_inverse_scaler(x)
+
+    def _save_compare_png(self, wrapped, gt_unwrapped, pred_unwrapped):
+        def _to_numpy_2d(x: torch.Tensor):
+            return x.detach().cpu().squeeze().numpy()
+        compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size)
+        titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped"]
+        imgs = [_to_numpy_2d(wrapped), _to_numpy_2d(gt_unwrapped), _to_numpy_2d(pred_unwrapped)]
+        fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+        cmaps = ["twilight", "turbo", "turbo"]
+        for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):
+            im = ax.imshow(img, cmap=cmap)
+            ax.set_title(title)
+            ax.axis("off")
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        fig.tight_layout()
+        fig.savefig(compare_png_path, dpi=200)
+        plt.close(fig)
 
     def _save_samples_and_preview(self, raw_images, label_images, mask_images):
         self.samples = mask_images

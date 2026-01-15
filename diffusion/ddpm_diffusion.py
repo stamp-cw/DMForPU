@@ -8,6 +8,7 @@ import tqdm
 @register_diffusion(name='DDPMDiffusion')
 class DDPMDiffusion:
     def __init__(self, config):
+        self.config = config
         # self.name = config.diffusion.name
         self.device = config.training.device
         self.model = UNet2DConditionModel(
@@ -75,14 +76,15 @@ class DDPMDiffusion:
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
         encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
         control_cond = self.wrapped
-        B, C, H_latent, W_latent = self.noisy.shape
+        x = torch.randn_like(self.wrapped).to(self.device)
+        B, C, H_latent, W_latent = x.shape
         downsample_factor = 2 ** (len(self.control_model.config.block_out_channels) - 1)
         # (H_latent * downsample_factor, W_latent * downsample_factor)
         control_cond = torch.nn.functional.interpolate(control_cond, size=(H_latent * downsample_factor,
                                                                            W_latent * downsample_factor),
                                                        mode="bilinear", align_corners=False)
 
-        x = torch.randn_like(self.wrapped).to(self.device)
+        self.scheduler.set_timesteps(self.config.diffusion.num_infer_timesteps)
         for t in tqdm.tqdm(self.scheduler.timesteps, desc="Sampling"):
             ctrl_down, ctrl_mid = self.control_model(
                 x,
