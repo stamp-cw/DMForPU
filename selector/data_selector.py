@@ -229,7 +229,8 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
         return InSARDLPUMat(root=self.config.io.in_dataset_path, split='train',
                     transform=self.transform,
                     target_transform=self.gt_transform,
-                    joint_transform=self.joint_transform
+                    joint_transform=self.joint_transform,
+                    scale_k=self.config.data.scale_k,
                             )
 
     @cached_property
@@ -237,7 +238,8 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
         return InSARDLPUMat(root=self.config.io.in_dataset_path, split='test',
                     transform=self.eval_transform,
                     target_transform=self.eval_gt_transform,
-                    joint_transform=self.eval_joint_transform
+                    joint_transform=self.eval_joint_transform,
+                    scale_k=self.config.data.scale_k,
                             )
 
     @cached_property

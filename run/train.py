@@ -29,7 +29,6 @@ class Trainer:
         self.logger = config.logger
         self.device = self.config.training.device
         self.diffusion = DiffusionSetup(self.config, self.logger).diffusion
-        # self.optimizer = _OPTIMIZERS(self.config)(self.model.parameters())
         self.optimizer = _OPTIMIZERS(self.config)(self.diffusion.optimize_parameters)
         self.data_loader = _DATA_LOADERS(self.config)
         # self.ema = ExponentialMovingAverage(self.model.parameters(), decay=self.config.model.ema_rate)
@@ -55,7 +54,6 @@ class Trainer:
         self._train()
 
     def _train(self):
-        # for epoch in tqdm.tqdm(range(self.start_epoch, self.end_epoch), desc="Epochs"):
         for epoch in range(self.start_epoch, self.end_epoch):
             self.epoch = epoch
             self.diffusion.setup_train()
@@ -65,8 +63,6 @@ class Trainer:
             # for batch_data in self.train_loader:
             for batch_data in pbar:
                 self.acc_batch += 1
-                # batch_data = [self.data_loader.data_scaler(x).to(self.device) if hasattr(x, "to") else x for x in
-                #               batch_data]
                 metrics_dict = self.epoch_fn(self.diffusion, self.optimizer, epoch, batch_data)
                 self._record_metrics(metrics_dict, "train_per_batch", self.acc_batch)
                 avg_meter.update(metrics_dict)

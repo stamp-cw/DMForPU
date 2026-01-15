@@ -19,6 +19,7 @@ class InSARDLPUMat(Dataset):
         transform=None,
         target_transform=None,
         joint_transform=None,
+        scale_k=5
     ):
         """
         Args:
@@ -32,6 +33,8 @@ class InSARDLPUMat(Dataset):
         super().__init__()
 
         assert split in ['train', 'test'], "split 必须是 'train' 或 'test'"
+
+        self.K = scale_k
 
         self.transform = transform
         self.target_transform = target_transform
@@ -70,5 +73,26 @@ class InSARDLPUMat(Dataset):
         if self.target_transform:
             unwrapped = self.target_transform(unwrapped)
 
-        sample = {"wrapped": wrapped.float(), "unwrapped": unwrapped.float()}
+
+        # wrapped_norm = torch.stack([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
+        wrapped_norm = wrapped / torch.pi
+        unwrapped_sub_wrapped = unwrapped - wrapped
+        # K = torch.round(unwrapped_sub_wrapped / (2 * torch.pi))
+        K = self.K # k range 3-5
+        # K = 5 # k range 3-5
+        unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (torch.pi * K)
+        unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, -1, 1)
+
+        sample = {
+            "wrapped": wrapped,
+            "warpped_fp16": wrapped.to(torch.float16),
+            "unwrapped": unwrapped,
+            "unwrapped_fp16": unwrapped.to(torch.float16),
+            "wrapped_norm": wrapped_norm,
+            "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
+            "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
+            "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
+            "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,
+            "unwrapped_sub_wrapped_norm_fp16": unwrapped_sub_wrapped_norm.to(torch.float16)
+        }
         return sample

@@ -1,13 +1,20 @@
 # Configuration for training and sampling
 seed: 42
 
+#method:
+#  diff_norm: true
+#  pca: false
+#  rwa: false
+
 data:
   name: InSARDLPUMat
   image_size: 256
   color_channels: 1
   num_workers: 1
+  scale_k: 5
+  use_fp16: true
 #  random_flip: false
-  centered: false
+#  centered: false
 #  uniform_dequantization: false
 #  is_fold: true
 #  fold: 0
@@ -29,7 +36,7 @@ controlnet_model:
   block_out_channels: [64, 128, 256, 512]
 
 diffusion:
-  name: DDPMDiffusion
+  name: DFNDDPMDiffusion
   custom_model: false
   timesteps: 1000
   num_train_timesteps: 1000
