@@ -107,7 +107,7 @@ class DFNDDPMDiffusion:
                 mid_block_additional_residual=ctrl_mid,
             ).sample
             x = self.scheduler.step(self.noise_pred, t, x).prev_sample
-        self.unwrapped_sub_wrapped_norm = x
+        self.pred_unwrapped_sub_wrapped_norm = x
         self.pred_unwrapped = self.wrapped + self.pred_unwrapped_sub_wrapped_norm * (torch.pi * self.config.data.scale_k)
 
     @property
