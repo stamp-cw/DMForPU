@@ -205,9 +205,9 @@ class EpochFN:
 
         if self.train:
             if self.config.training.amp:
-                scaler = GradScaler()
+                scaler = GradScaler(self.config.training.device)
                 optimizer.zero_grad()
-                with autocast():
+                with autocast(self.config.training.device):
                     loss = self.loss_fn(diffusion)
                 scaler.scale(loss).backward()
                 self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch, scaler=scaler)

@@ -91,8 +91,10 @@ class DFNDDPMDiffusion:
                                                                            W_latent * downsample_factor),
                                                        mode="bilinear", align_corners=False)
 
-        self.scheduler.set_timesteps(self.config.diffusion.num_infer_timesteps)
-        for t in tqdm.tqdm(self.scheduler.timesteps, desc="Sampling"):
+        # self.scheduler.set_timesteps(self.config.diffusion.num_infer_timesteps)
+        scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
+
+        for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
             ctrl_down, ctrl_mid = self.control_model(
                 x,
                 t,
@@ -107,7 +109,7 @@ class DFNDDPMDiffusion:
                 down_block_additional_residuals=ctrl_down,
                 mid_block_additional_residual=ctrl_mid,
             ).sample
-            x = self.scheduler.step(self.noise_pred, t, x).prev_sample
+            x = scheduler.step(self.noise_pred, t, x).prev_sample
         self.pred_unwrapped_sub_wrapped_norm = x
         self.pred_unwrapped_sub_wrapped_norm = (self.pred_unwrapped_sub_wrapped_norm + 1) / 2
         self.pred_unwrapped = self.wrapped + self.pred_unwrapped_sub_wrapped_norm * (torch.pi * self.config.data.scale_k)

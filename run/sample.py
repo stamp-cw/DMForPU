@@ -129,7 +129,7 @@ class Sampler:
         # pred_unwrapped = self.data_inverse_scaler(pred_unwrapped)
         # pred_unwrapped = torch.clamp(pred_unwrapped * 2 - 1,0,1)
         titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped"]
-        imgs = [_to_numpy_2d(wrapped), _to_numpy_2d(gt_unwrapped), _to_numpy_2d(pred_unwrapped), _to_numpy_2d(diff_unwrapped)]
+        imgs = [_to_numpy_2d(wrapped[0]), _to_numpy_2d(gt_unwrapped[0]), _to_numpy_2d(pred_unwrapped[0]), _to_numpy_2d(diff_unwrapped[0])]
         fig, axes = plt.subplots(1, 4, figsize=(16, 4))
         cmaps = ["twilight", "turbo", "turbo", "inferno"]
         for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):
