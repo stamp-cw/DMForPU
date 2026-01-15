@@ -113,6 +113,8 @@ class Sampler:
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
         compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size)
+        # pred_unwrapped = self.data_inverse_scaler(pred_unwrapped)
+        pred_unwrapped = torch.clamp(pred_unwrapped * 2 - 1,0,1)
         titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped"]
         imgs = [_to_numpy_2d(wrapped), _to_numpy_2d(gt_unwrapped), _to_numpy_2d(pred_unwrapped)]
         fig, axes = plt.subplots(1, 3, figsize=(12, 4))

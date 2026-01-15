@@ -7,7 +7,7 @@ data:
   color_channels: 1
   num_workers: 1
 #  random_flip: false
-#  centered: false
+  centered: false
 #  uniform_dequantization: false
 #  is_fold: true
 #  fold: 0
