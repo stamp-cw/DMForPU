@@ -8,3 +8,4 @@ pip install scipy
 pip install wandb
 pip install ml_collections
 pip install tensorboard
+pip install bitsandbytes

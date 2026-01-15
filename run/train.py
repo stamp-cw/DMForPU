@@ -16,6 +16,7 @@ from selector.data_selector import _DATA_LOADERS
 from selector.optimizer_selector import _OPTIMIZERS
 from utils.metrics import l1_metric, rmse_metric
 from utils.util import AverageMeter
+from torch.cuda.amp import autocast, GradScaler
 
 METRIC_FUNCS = {
     "l1": l1_metric,
@@ -27,9 +28,6 @@ class Trainer:
         self.config = config
         self.logger = config.logger
         self.device = self.config.training.device
-        # model_setup = ModelSetup(self.config, self.logger)
-        # self.model = model_setup.model
-        # self.control_model = model_setup.control_model
         self.diffusion = DiffusionSetup(self.config, self.logger).diffusion
         # self.optimizer = _OPTIMIZERS(self.config)(self.model.parameters())
         self.optimizer = _OPTIMIZERS(self.config)(self.diffusion.optimize_parameters)
@@ -57,21 +55,19 @@ class Trainer:
         self._train()
 
     def _train(self):
-        for epoch in tqdm.tqdm(range(self.start_epoch, self.end_epoch), desc="Epochs"):
+        # for epoch in tqdm.tqdm(range(self.start_epoch, self.end_epoch), desc="Epochs"):
+        for epoch in range(self.start_epoch, self.end_epoch):
             self.epoch = epoch
-            # self.model.train()
-            # self.control_model.train()
             self.diffusion.setup_train()
             avg_meter = AverageMeter()
             # avg_eval_meter = AverageMeter()
-            for batch_data in self.train_loader:
+            pbar = tqdm.tqdm(self.train_loader, desc=f"Epoch {epoch+1}/{self.end_epoch}")
+            # for batch_data in self.train_loader:
+            for batch_data in pbar:
                 self.acc_batch += 1
                 # batch_data = [self.data_loader.data_scaler(x).to(self.device) if hasattr(x, "to") else x for x in
                 #               batch_data]
-                # metrics_dict = self.epoch_fn(self.model, self.optimizer, self.ema, epoch, batch_data)
-                # metrics_dict = self.epoch_fn(self.model, self.optimizer, epoch, batch_data)
                 metrics_dict = self.epoch_fn(self.diffusion, self.optimizer, epoch, batch_data)
-                # loss = metrics_dict["loss"]
                 self._record_metrics(metrics_dict, "train_per_batch", self.acc_batch)
                 avg_meter.update(metrics_dict)
             avg_metrics = avg_meter.avg()
@@ -118,57 +114,57 @@ class Trainer:
         if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
             self._save_state(self.epoch)
 
-    def _record_and_evaluate_fold(self):
-        self.saved = False
-        if self.epoch % self.config.training.eval_freq == 0:
-            self.evaluate_loss = 0
-            self.model.eval()
-            avg_meter = AverageMeter()
-            for batch_data in self.eval_loader:
-                batch_data = [self.data_loader.data_scaler(x).to(self.device) if hasattr(x, "to") else x for x in
-                              batch_data]
-                with torch.no_grad():
-                    metrics = self.eval_epoch_fn(self.model, self.optimizer, self.ema, self.epoch, batch_data)
-                    loss = metrics["loss"]
-                    avg_meter.update(metrics)
-                    self.evaluate_loss += loss
+    # def _record_and_evaluate_fold(self):
+    #     self.saved = False
+    #     if self.epoch % self.config.training.eval_freq == 0:
+    #         self.evaluate_loss = 0
+    #         self.model.eval()
+    #         avg_meter = AverageMeter()
+    #         for batch_data in self.eval_loader:
+    #             batch_data = [self.data_loader.data_scaler(x).to(self.device) if hasattr(x, "to") else x for x in
+    #                           batch_data]
+    #             with torch.no_grad():
+    #                 metrics = self.eval_epoch_fn(self.model, self.optimizer, self.ema, self.epoch, batch_data)
+    #                 loss = metrics["loss"]
+    #                 avg_meter.update(metrics)
+    #                 self.evaluate_loss += loss
+    #
+    #         avg_metrics = avg_meter.avg()
+    #         self._record_metrics(avg_metrics, f"eval_epoch_fold_{self.config.data.fold}", self.epoch)
+    #         self.eval_fold_metrics = avg_metrics
+    #         self.model.train()
 
-            avg_metrics = avg_meter.avg()
-            self._record_metrics(avg_metrics, f"eval_epoch_fold_{self.config.data.fold}", self.epoch)
-            self.eval_fold_metrics = avg_metrics
-            self.model.train()
+    # def _evaluate(self):
+    #     self.saved = False
+    #     if self.epoch % self.config.training.eval_freq == 0:
+    #         self.evaluate_loss = 0
+    #         self.model.eval()
+    #         avg_meter = AverageMeter()
+    #         for batch_data in self.eval_loader:
+    #             # batch_data = batch_data.to(self.device)
+    #             # batch_data = self.data_loader.data_scaler(batch_data)
+    #             batch_data = [self.data_loader.data_scaler(x).to(self.device) if hasattr(x, "to") else x for x in batch_data]
+    #             with torch.no_grad():
+    #                 # loss = self.eval_epoch_fn(self.model, self.optimizer, self.ema, self.epoch, batch_data)
+    #                 # self.evaluate_loss += loss.item()
+    #                 metrics = self.eval_epoch_fn(self.model, self.optimizer, self.ema, self.epoch, batch_data)
+    #                 loss = metrics["loss"]
+    #                 avg_meter.update(metrics)
+    #                 self.evaluate_loss += loss
+    #         avg_metrics = avg_meter.avg()
+    #         self._record_metrics(avg_metrics, "eval_epoch", self.epoch)
+    #         self.evaluate_loss /= len(self.eval_loader)
+    #         if self.config.io.use_tensorboard: self.writer.add_scalar("evaluate_loss", self.evaluate_loss, self.epoch)
+    #         self._update_best_evaluate()
+    #         self.model.train()
 
-    def _evaluate(self):
-        self.saved = False
-        if self.epoch % self.config.training.eval_freq == 0:
-            self.evaluate_loss = 0
-            self.model.eval()
-            avg_meter = AverageMeter()
-            for batch_data in self.eval_loader:
-                # batch_data = batch_data.to(self.device)
-                # batch_data = self.data_loader.data_scaler(batch_data)
-                batch_data = [self.data_loader.data_scaler(x).to(self.device) if hasattr(x, "to") else x for x in batch_data]
-                with torch.no_grad():
-                    # loss = self.eval_epoch_fn(self.model, self.optimizer, self.ema, self.epoch, batch_data)
-                    # self.evaluate_loss += loss.item()
-                    metrics = self.eval_epoch_fn(self.model, self.optimizer, self.ema, self.epoch, batch_data)
-                    loss = metrics["loss"]
-                    avg_meter.update(metrics)
-                    self.evaluate_loss += loss
-            avg_metrics = avg_meter.avg()
-            self._record_metrics(avg_metrics, "eval_epoch", self.epoch)
-            self.evaluate_loss /= len(self.eval_loader)
-            if self.config.io.use_tensorboard: self.writer.add_scalar("evaluate_loss", self.evaluate_loss, self.epoch)
-            self._update_best_evaluate()
-            self.model.train()
-
-    def _update_best_evaluate(self):
-        if self.epoch - self.start_epoch > self.config.training.eval_save_least_epoch and self.evaluate_loss < self.best_evaluate_loss:
-            self._save_state(self.epoch)
-            self.saved = True
-        self.best_evaluate_loss = min(self.best_evaluate_loss, self.evaluate_loss)
-        self.logger.info(
-            f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Eval Loss: {self.evaluate_loss:.4f}, Best Eval Loss: {self.best_evaluate_loss:.4f}")
+    # def _update_best_evaluate(self):
+    #     if self.epoch - self.start_epoch > self.config.training.eval_save_least_epoch and self.evaluate_loss < self.best_evaluate_loss:
+    #         self._save_state(self.epoch)
+    #         self.saved = True
+    #     self.best_evaluate_loss = min(self.best_evaluate_loss, self.evaluate_loss)
+    #     self.logger.info(
+    #         f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Eval Loss: {self.evaluate_loss:.4f}, Best Eval Loss: {self.best_evaluate_loss:.4f}")
 
     @property
     def train_loader(self):
@@ -212,11 +208,21 @@ class EpochFN:
         # list(diffusion.model.parameters()) + list(diffusion.control_model.parameters())
 
         if self.train:
-            optimizer.zero_grad()
-            loss = self.loss_fn(diffusion)
-            loss.backward()
-            self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch)
-            self.metrics["loss"] = loss.item()
+            if self.config.training.amp:
+                scaler = GradScaler()
+                optimizer.zero_grad()
+                with autocast():
+                    loss = self.loss_fn(diffusion)
+                scaler.scale(loss).backward()
+                self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch, scaler=scaler)
+                self.metrics["loss"] = loss.item()
+
+            else:
+                optimizer.zero_grad()
+                loss = self.loss_fn(diffusion)
+                loss.backward()
+                self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch)
+                self.metrics["loss"] = loss.item()
         else:
             loss = self.loss_fn(diffusion)
             self.metrics["loss"] = loss.item()
@@ -224,7 +230,6 @@ class EpochFN:
         for k in self.metrics_keys:
             func = METRIC_FUNCS[k]
             value = func(pred_unwrapped, gt_unwrapped)
-            # self.metrics[k] = value.item() if not math.isnan(value) else 0.0
             self.metrics[k] = value.item()
 
         return self.metrics

@@ -50,6 +50,7 @@ training:
   eval_freq: 1
   eval_save_least_epoch: 50
   snapshot_sampling: true
+  amp: true
 
 sampling:
   device: cuda
@@ -61,7 +62,7 @@ sampling:
 #  out_threshold: 0.5
 
 optim:
-  optimizer: Adam
+  optimizer: AdamW8bit
   lr: 0.0001
   weight_decay: 0
   beta1: 0.9
