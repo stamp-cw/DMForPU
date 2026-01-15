@@ -24,7 +24,6 @@ class PHYLossType:
         self.lam_phys = config.loss_type.lam_phys
 
     def __call__(self, diffusion):
-        diffusion.sample()
         # unet pred noise diff
         noise_pred = diffusion.noise_pred
         noise = diffusion.noise

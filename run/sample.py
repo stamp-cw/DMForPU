@@ -65,7 +65,7 @@ class Sampler:
     def _sample(self, batch_dict):
         with torch.no_grad():
             self.diffusion.setup_data(batch_dict)
-            self.diffusion.sample()
+            self.diffusion.infer_sample()
             pred_unwrapped = self.diffusion.pred_unwrapped
             wrapped = self.diffusion.wrapped
             gt_unwrapped = self.diffusion.gt_unwrapped
