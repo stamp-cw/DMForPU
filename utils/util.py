@@ -4,7 +4,11 @@ import torch
 
 def wrap_phase(phi: torch.Tensor) -> torch.Tensor:
     """Wrap continuous phase to [-pi, pi]."""
-    return torch.atan2(torch.sin(phi), torch.cos(phi))
+    # return torch.atan2(torch.sin(phi), torch.cos(phi))
+
+    psi = torch.mod((phi + torch.pi),2 * torch.pi) - torch.pi
+
+    return psi
 
 
 class AverageMeter:
