@@ -1,29 +1,17 @@
 # Configuration for training and sampling
 seed: 42
 
-#method:
-#  diff_norm: true
-#  pca: false
-#  rwa: false
-
 data:
-  name: InSARDLPUMat
-  image_size: 256
+  name: SyntheticData
+  image_size: 64
   color_channels: 1
   num_workers: 1
-  scale_k: 50
-#  use_fp16: false
-  method: diff_norm
-#  random_flip: false
-#  centered: false
-#  uniform_dequantization: false
-#  is_fold: true
-#  fold: 0
-#  num_folds: 5
+  scale_k: 1
+  method: none
 
 model:
   name: UNet
-  sample_size: 256
+  sample_size: 64
   in_channels: 1
   out_channels: 1
   layers_per_block: 2
@@ -37,17 +25,14 @@ controlnet_model:
   block_out_channels: [64, 128, 256, 512]
 
 diffusion:
-  name: DFNDDPMDiffusion
+  name: DDPMDiffusion
   custom_model: false
   timesteps: 1000
   num_train_timesteps: 1000
   num_infer_timesteps: 1000
-  beta_start: 0.0001
-  beta_end: 0.02
-  loss_type: mse
 
 training:
-  batch_size: 2
+  batch_size: 32
   device: cuda
   brand_new_epochs: 1000
   continue_training_epochs: 1000
@@ -67,12 +52,11 @@ sampling:
   total_samples: 4
   record_freq: 1
   eps: 1e-5
-#  out_threshold: 0.5
 
 optim:
   optimizer: AdamW8bit
   lr: 0.0001
-  weight_decay: 0
+  weight_decay: 0.1
   beta1: 0.9
   eps: 1e-8
   warmup: 2

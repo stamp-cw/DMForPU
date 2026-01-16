@@ -42,8 +42,8 @@ class SyntheticData(Dataset):
 
         self.data_root = Path(root)
 
-        self.wrapped_dir = self.data_root / f"{split}_in"
-        self.unwrapped_dir = self.data_root / f"{split}_gt"
+        self.wrapped_dir = self.data_root / f"{split}_wrapped"
+        self.unwrapped_dir = self.data_root / f"{split}_unwrapped"
 
         wrapped_files = {p.stem: p for p in self.wrapped_dir.glob("*.mat")}
         unwrapped_files = {p.stem: p for p in self.unwrapped_dir.glob("*.mat")}
