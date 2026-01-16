@@ -2,8 +2,17 @@ import scipy.io as sio
 import torch
 import matplotlib.pyplot as plt
 
-wrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/train_wrapped/000101.mat')['input']
-unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/train_gt_absolute/000101.mat')['input']
+# wrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/train_wrapped/000101.mat')['input']
+# unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/train_gt_absolute/000101.mat')['output']
+
+
+# wrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/tmp/SyntheticPUMat/train_in/train_in/cut_data_64/000101_part_1_0.mat')['input']
+# unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/tmp/SyntheticPUMat/train_gt/train_gt/cut_data_64/000101_part_1_0.mat')['gt']
+
+wrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/tmp/SyntheticPUMat/train_in/000101.mat')['input']
+unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/tmp/SyntheticPUMat/train_gt/000101.mat')['gt']
+
+
 
 wrapped = torch.as_tensor(wrapped).unsqueeze(0)
 unwrapped = torch.as_tensor(unwrapped).unsqueeze(0)
