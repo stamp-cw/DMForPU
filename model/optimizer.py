@@ -12,6 +12,7 @@ class AdamOptimizer:
         self.weight_decay = config.optim.weight_decay
 
     def __call__(self, model_parameters):
+        # return torch.optim.Adam(model_parameters, lr=self.lr, weight_decay=self.weight_decay)
         return torch.optim.Adam(model_parameters, lr=self.lr, betas=(self.beta1, 0.999), eps=self.eps,
                                 weight_decay=self.weight_decay)
 

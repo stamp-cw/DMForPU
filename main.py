@@ -165,6 +165,7 @@ if __name__ == '__main__':
     from model.optimizer import AdamOptimizer,SGDOptimizer
     from run.losses import PHYLossType
     from diffusion.ddpm_diffusion import DDPMDiffusion
+    from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
     # from model.unet.unet_model import UNet
     main()

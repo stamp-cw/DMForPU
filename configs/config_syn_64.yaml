@@ -43,7 +43,7 @@ training:
   eval_freq: 100
   eval_save_least_epoch: 50
   snapshot_sampling: false
-  amp: true
+  amp: false
 
 sampling:
   device: cuda
@@ -54,7 +54,7 @@ sampling:
   eps: 1e-5
 
 optim:
-  optimizer: AdamW8bit
+  optimizer: Adam
   lr: 0.0001
   weight_decay: 0.1
   beta1: 0.9
@@ -78,5 +78,5 @@ scheduler:
 metrics:
   l1: true
   rmse: true
-  wrap_l1: false
-  wrap_rmse: false
+  wrap_l1: true
+  wrap_rmse: true

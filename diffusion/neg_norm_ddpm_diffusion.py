@@ -5,8 +5,8 @@ from selector.diffusion_selector import register_diffusion
 import tqdm
 
 
-@register_diffusion(name='NormDDPMDiffusion')
-class NormDDPMDiffusion:
+@register_diffusion(name='NegNormDDPMDiffusion')
+class NegNormDDPMDiffusion:
     def __init__(self, config):
         self.config = config
         self.device = config.training.device
@@ -41,7 +41,7 @@ class NormDDPMDiffusion:
         self.wrapped = batch_dict["wrapped"].to(self.device)
         self.wrapped_cond = batch_dict["wrapped_cond"].to(self.device)
         self.gt_unwrapped = batch_dict["unwrapped"].to(self.device)
-        self.gt_unwrapped_norm = batch_dict["unwrapped_norm"].to(self.device)
+        self.gt_unwrapped_norm = batch_dict["unwrapped_neg_norm"].to(self.device)
 
     def train_sample(self, t):
         self.noise = torch.randn_like(self.gt_unwrapped_norm).to(self.device)
@@ -69,11 +69,13 @@ class NormDDPMDiffusion:
             down_block_additional_residuals=ctrl_down,
             mid_block_additional_residual=ctrl_mid,
         ).sample
-        self.pred_unwrapped_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
-        self.pred_unwrapped_norm = (self.pred_unwrapped_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (torch.pi * self.config.data.scale_k)
+        self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
+        if self.config.data.name == 'SyntheticData':
+            self.pred_unwrapped = self.pred_unwrapped_neg_norm * (torch.pi * self.config.data.scale_k)
+        else:
+            self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
+            self.pred_unwrapped = self.pred_unwrapped_norm * (torch.pi * self.config.data.scale_k)
         self.diff_unwrapped = self.pred_unwrapped - self.gt_unwrapped
-
 
     def infer_sample(self):
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
@@ -104,9 +106,12 @@ class NormDDPMDiffusion:
                 mid_block_additional_residual=ctrl_mid,
             ).sample
             x = scheduler.step(self.noise_pred, t, x).prev_sample
-        self.pred_unwrapped_norm = x
-        self.pred_unwrapped_norm = (self.pred_unwrapped_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (torch.pi * self.config.data.scale_k)
+        self.pred_unwrapped_neg_norm = x
+        if self.config.data.name == 'SyntheticData':
+            self.pred_unwrapped = self.pred_unwrapped_neg_norm * (torch.pi * self.config.data.scale_k)
+        else:
+            self.pred_unwrapped_norm = (self.pred_unwrapped_norm + 1) / 2
+            self.pred_unwrapped = self.pred_unwrapped_norm * (torch.pi * self.config.data.scale_k)
         self.diff_unwrapped = self.pred_unwrapped - self.gt_unwrapped
 
     @property
