@@ -6,7 +6,7 @@ data:
   image_size: 128
   color_channels: 1
   num_workers: 1
-  scale_k: 50
+  scale_k: 5
   method: none
 
 model:
@@ -32,12 +32,12 @@ diffusion:
   num_infer_timesteps: 1000
 
 training:
-  batch_size: 2
+  batch_size: 4
   device: cuda
   brand_new_epochs: 1000
   continue_training_epochs: 1000
   use_all_data: false
-  snapshot_freq: 1
+  snapshot_freq: 50
   snapshot_batch_size: 2
   log_freq: 1
   eval_freq: 1

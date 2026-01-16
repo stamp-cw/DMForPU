@@ -1,1 +1,1 @@
-python3 main.py --config config.yaml --mode sample
+python3 main.py --config config.yaml --mode sample --sampling_from_epoch 0
