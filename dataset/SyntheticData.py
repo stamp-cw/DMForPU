@@ -15,7 +15,7 @@ def synthesize_pair(image_size: int, device: torch.device):
     wrapped = wrap_phase(unwrapped)
     return unwrapped.unsqueeze(0), wrapped.unsqueeze(0)
 
-class InSARDataset(Dataset):
+class SyntheticData(Dataset):
     """Simple synthetic dataset; replace with real loader for InSAR-DLPU."""
 
     def __init__(
