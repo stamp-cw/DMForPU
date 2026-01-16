@@ -76,8 +76,9 @@ class SyntheticData(Dataset):
         K = self.K # k range 3-5
         # wrapped = wrapped + torch.pi
         # wrapped_norm = wrapped / torch.pi
-        unwrapped_norm = unwrapped / (torch.pi * K)
-        unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
+        unwrapped_neg_norm = unwrapped / (torch.pi * K)
+        unwrapped_neg_norm = torch.clamp(unwrapped_neg_norm, -1, 1)
+        unwrapped_norm =  (unwrapped_neg_norm + 1) / 2
         # wrapped_cond = torch.stack([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
         # wrapped_cond = wrapped / (2 * torch.pi)
         wrapped_cond = wrapped / torch.pi
@@ -94,6 +95,7 @@ class SyntheticData(Dataset):
             # "wrapped_norm": wrapped_norm,
             # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
             "unwrapped_norm": unwrapped_norm,
+            "unwrapped_neg_norm": unwrapped_neg_norm,
             "wrapped_cond": wrapped_cond,
             # "wrapped_cond_fp16": wrapped_cond.to(torch.float16),
             "unwrapped_sub_wrapped": unwrapped_sub_wrapped,

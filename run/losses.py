@@ -29,12 +29,13 @@ class PHYLossType:
         noise = diffusion.noise
         diff_loss = F.mse_loss(noise_pred, noise)
 
-        # diffusion solution pred unwrapped phase
-        wrapped_norm = diffusion.wrapped / torch.pi
-        pred_wrapped_norm = wrap_phase(diffusion.pred_unwrapped) / torch.pi
-        phys_loss = F.l1_loss(pred_wrapped_norm, wrapped_norm)
+        # # diffusion solution pred unwrapped phase
+        # wrapped_norm = diffusion.wrapped / torch.pi
+        # pred_wrapped_norm = wrap_phase(diffusion.pred_unwrapped) / torch.pi
+        # phys_loss = F.l1_loss(pred_wrapped_norm, wrapped_norm)
 
-        total_loss = diff_loss + self.lam_phys * phys_loss
+        # total_loss = diff_loss + self.lam_phys * phys_loss
+        total_loss = diff_loss
 
         return total_loss
 
