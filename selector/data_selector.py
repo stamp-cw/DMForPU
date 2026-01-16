@@ -19,6 +19,8 @@ from dataset.InSARDLPUMat import InSARDLPUMat
 
 from torchvision.transforms import v2 as T
 
+from dataset.SyntheticPUMat import SyntheticPUMat
+
 
 class BaseDataLoader:
     def __init__(self, config):
@@ -262,11 +264,11 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 @register_data_loader(name='SyntheticPUMat')
-class InSARDLPUMatDataLoader(BaseDataLoader):
+class SyntheticPUMatDataLoader(BaseDataLoader):
 
     @cached_property
     def train_dataset(self):
-        return InSARDLPUMat(root=self.config.io.in_dataset_path, split='train',
+        return SyntheticPUMat(root=self.config.io.in_dataset_path, split='train',
                             transform=self.transform,
                             target_transform=self.gt_transform,
                             joint_transform=self.joint_transform,
@@ -275,7 +277,7 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
 
     @cached_property
     def test_dataset(self):
-        return InSARDLPUMat(root=self.config.io.in_dataset_path, split='test',
+        return SyntheticPUMat(root=self.config.io.in_dataset_path, split='test',
                             transform=self.eval_transform,
                             target_transform=self.eval_gt_transform,
                             joint_transform=self.eval_joint_transform,
