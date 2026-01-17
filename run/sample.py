@@ -135,7 +135,7 @@ class Sampler:
         loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
         # self.ema.load_state_dict(loaded_state['ema'])
         self.diffusion.model.load_state_dict(loaded_state['model'])
-        if self.config.model.use_controlnet:
+        if self.config.diffusion.use_controlnet:
             self.diffusion.controlnet_model.load_state_dict(loaded_state['controlnet_model'])
 
     def data_inverse_scaler(self, x):
