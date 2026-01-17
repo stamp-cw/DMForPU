@@ -163,7 +163,7 @@ def unflatten_dict(flat_dict, sep="."):
 
 if __name__ == '__main__':
     from model.optimizer import AdamOptimizer,SGDOptimizer
-    from run.losses import PHYLossType
+    from run.losses import PHY1LossType,PHY2LossType,PHY3LossType,PureLossType
     from diffusion.ddpm_diffusion import DDPMDiffusion
     from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
