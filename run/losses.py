@@ -16,13 +16,48 @@ from utils.util import wrap_phase
 #     total = diff_loss + lambda_phys * phys_loss
 #     return total, {"diff": diff_loss.detach(), "phys": phys_loss.detach()}
 
-@register_loss_type(name='PHY')
+@register_loss_type(name='PURE')
+class PureLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+
+    def __call__(self, diffusion):
+        # unet pred noise diff
+        noise_pred = diffusion.noise_pred
+        noise = diffusion.noise
+        diff_loss = F.mse_loss(noise_pred, noise)
+        total_loss = diff_loss
+        return total_loss
+
+@register_loss_type(name='PHY1')
 class PHYLossType:
     def __init__(self, config):
         self.config = config
         self.name = config.loss_type.name
-        self.lam_phys = config.loss_type.lam_phys
+        # self.lam_phys = config.loss_type.lam_phys
 
+    def __call__(self, diffusion):
+        # unet pred noise diff
+        noise_pred = diffusion.noise_pred
+        noise = diffusion.noise
+        diff_loss = F.mse_loss(noise_pred, noise)
+
+        # diffusion solution pred unwrapped phase
+        wrapped = diffusion.wrapped
+        pred_wrapped = wrap_phase(diffusion.pred_unwrapped)
+        phys_loss = F.l1_loss(pred_wrapped, wrapped)
+
+        total_loss = diff_loss + 0.5 * phys_loss
+
+        return total_loss
+
+@register_loss_type(name='PHY2')
+class PHYLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        # self.lam_phys = config.loss_type.lam_phys
 
     def gradient_loss(self, pred, target):
         grad_pred_x = torch.abs(pred[:, :, 1:, :] - pred[:, :, :-1, :])  # x-axis gradient
@@ -48,20 +83,52 @@ class PHYLossType:
         noise = diffusion.noise
         diff_loss = F.mse_loss(noise_pred, noise)
 
-        # diffusion solution pred unwrapped phase
-        # wrapped = diffusion.wrapped
-        # pred_wrapped = wrap_phase(diffusion.pred_unwrapped)
-        # phys_loss = F.l1_loss(pred_wrapped, wrapped)
-        #
+        l1_loss = F.l1_loss(diffusion.pred_wrapped, diffusion.wrapped)
 
-        phys_loss1 = F.mse_loss(diffusion.pred_k_mat_cont_neg_norm, diffusion.gt_k_mat_cont_neg_norm)
-
-        # grad_loss = self.gradient_loss(pred_wrapped, wrapped)
-        # tv_loss = self.tv_loss(pred_wrapped)
+        grad_loss = self.gradient_loss(diffusion.pred_wrapped, diffusion.wrapped)
+        tv_loss = self.tv_loss(diffusion.pred_wrapped)
 
         # total_loss = diff_loss + self.lam_phys * phys_loss + 0.1 * grad_loss + 0.01 * tv_loss
-        # total_loss = diff_loss + 0.001 * phys_loss + 0.01 * grad_loss + 0.001 * tv_loss
-        total_loss = diff_loss + phys_loss1
+        total_loss = diff_loss + 0.001 * l1_loss + 0.01 * grad_loss + 0.001 * tv_loss
+
+        return total_loss
+
+# PHNet2.0 loss
+@register_loss_type(name='PHY3')
+class PHYLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        # self.lam_phys = config.loss_type.lam_phys
+
+    def residue_loss(self, gt_wrapped, pred_unwrapped):
+        gt_wrapped_grad_x = gt_wrapped[:, :, 1:, :] - gt_wrapped[:, :, :-1, :]  # x-axis gradient
+        gt_wrapped_grad_y = gt_wrapped[:, :, :, 1:] - gt_wrapped[:, :, :, :-1]  # y-axis gradient
+        pred_unwrapped_grad_x = pred_unwrapped[:, :, 1:, :] - pred_unwrapped[:, :, :-1, :]  # x-axis gradient
+        pred_unwrapped_grad_y = pred_unwrapped[:, :, :, 1:] - pred_unwrapped[:, :, :, :-1]  # y-axis gradient
+        loss = torch.mean(torch.abs(pred_unwrapped_grad_x - gt_wrapped_grad_x) + torch.abs(pred_unwrapped_grad_y - gt_wrapped_grad_y))
+        return loss
+
+    def cross_loss(self, gt_k_mat, pred_k_mat):
+        loss = -torch.mean(gt_k_mat * torch.log(pred_k_mat))
+        return loss
+
+    def l1_loss(self, gt_unwrapped, pred_unwrapped):
+        loss = F.l1_loss(pred_unwrapped, gt_unwrapped)
+        return loss
+
+
+    def __call__(self, diffusion):
+        # unet pred noise diff
+        noise_pred = diffusion.noise_pred
+        noise = diffusion.noise
+        diff_loss = F.mse_loss(noise_pred, noise)
+
+        r_loss = self.residue_loss(diffusion.wrapped, diffusion.pred_unwrapped)
+        c_loss = self.cross_loss(diffusion.gt_k_mat, diffusion.pred_k_mat)
+        l_one_loss = self.l1_loss(diffusion.gt_unwrapped, diffusion.pred_unwrapped)
+
+        total_loss = diff_loss + 0.1 * r_loss + 0.1 * c_loss + 0.1 * l_one_loss
 
         return total_loss
 

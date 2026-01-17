@@ -12,6 +12,7 @@ from diffusion.diffusion_setup import DiffusionSetup
 from model.model_setup import ModelSetup
 from selector.data_selector import _DATA_LOADERS
 import matplotlib.pyplot as plt
+from matplotlib import colors
 
 
 class Sampler:
@@ -158,6 +159,7 @@ class Sampler:
                   "Wrapped", "GT k-mat Cont NegNorm", "Pred k-mat Cont NegNorm", "Diff k-mat Cont NegNorm",
                   "Wrapped", "GT k-mat Cont", "Pred k-mat Cont", "Diff k-mat Cont",
                   "Wrapped", "GT k-mat Disc", "Pred k-mat Disc", "Diff k-mat Disc"]
+        # color_norm = colors.Normalize(vmin=-1, vmax=16)
         for i in range(wrapped.shape[0]):
             compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
             imgs = [
@@ -173,6 +175,7 @@ class Sampler:
                      "twilight", "viridis", "viridis", "inferno",
                      "twilight", "viridis", "viridis", "inferno"]
             for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):
+                # im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)
                 ax.axis("off")

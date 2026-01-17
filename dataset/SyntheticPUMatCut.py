@@ -79,7 +79,7 @@ class SyntheticPUMatCut(Dataset):
             unwrapped = self.target_transform(unwrapped)
 
         unwrapped = unwrapped - (torch.min(unwrapped) // (torch.pi * 2)) * (torch.pi * 2)
-
+        unwrapped = torch.clamp(unwrapped, min=0.0) # [0, inf]
         k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi) # [-0.5, inf]
         k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
         k_mat_cont_neg_norm = torch.clamp(k_mat_cont_neg_norm, min= -1, max= 1) # [-1, 1]

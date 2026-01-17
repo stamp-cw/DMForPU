@@ -44,6 +44,8 @@ class KdfDDPMDiffusion:
         self.gt_k_mat_cont_neg_norm = batch_dict["k_mat_cont_neg_norm"].to(self.device)
         self.wrapped_cond = batch_dict["wrapped_cond"].to(self.device)
 
+        self.gt_k_mat_disc = batch_dict["k_mat_disc"].to(self.device)
+
     def train_sample(self, t):
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
         encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
