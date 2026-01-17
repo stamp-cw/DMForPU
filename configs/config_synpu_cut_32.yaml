@@ -2,11 +2,11 @@
 seed: 42
 
 data:
-  name: SyntheticPUMat
+  name: SyntheticPUMatCut
   image_size: 32
   color_channels: 1
   num_workers: 1
-  scale_k: 5
+  scale_k: 6
   method: none
 
 model:
@@ -32,12 +32,12 @@ diffusion:
   num_infer_timesteps: 1000
 
 training:
-  batch_size: 64
+  batch_size: 128
   device: cuda
-  brand_new_epochs: 1000
-  continue_training_epochs: 1000
+  brand_new_epochs: 1001
+  continue_training_epochs: 1001
   use_all_data: false
-  snapshot_freq: 50
+  snapshot_freq: 1
   snapshot_batch_size: 2
   log_freq: 1
   eval_freq: 1
@@ -70,9 +70,6 @@ iio:
   use_tensorboard: true
   use_wandb: false
   save_pth_to_wandb: false
-
-scheduler:
-  num_train_timesteps: 50
 
 metrics:
   l1: true

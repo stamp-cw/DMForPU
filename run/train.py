@@ -61,7 +61,7 @@ class Trainer:
             self.diffusion.setup_train()
             avg_meter = AverageMeter()
             # avg_eval_meter = AverageMeter()
-            pbar = tqdm.tqdm(self.train_loader, desc=f"Epoch {epoch+1}/{self.end_epoch}")
+            pbar = tqdm.tqdm(self.train_loader, desc=f"Epoch {epoch}/{self.end_epoch}")
             # for batch_data in self.train_loader:
             for batch_data in pbar:
                 self.acc_batch += 1

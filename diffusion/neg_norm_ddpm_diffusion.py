@@ -110,7 +110,7 @@ class NegNormDDPMDiffusion:
         if self.config.data.name == 'SyntheticData':
             self.pred_unwrapped = self.pred_unwrapped_neg_norm * (torch.pi * self.config.data.scale_k)
         else:
-            self.pred_unwrapped_norm = (self.pred_unwrapped_norm + 1) / 2
+            self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
             self.pred_unwrapped = self.pred_unwrapped_norm * (torch.pi * self.config.data.scale_k)
         self.diff_unwrapped = self.pred_unwrapped - self.gt_unwrapped
 
