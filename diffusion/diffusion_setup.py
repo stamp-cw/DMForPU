@@ -14,7 +14,7 @@ class DiffusionSetup:
             self.controlnet_model = model_setup.controlnet_model
 
     def _create_diffusion(self):
-        if self.config.diffusion.custom_model:
+        if self.config.diffusion.use_custom_model:
             self._setup_model()
             self.diffusion = _DIFFUSIONS[self.config.diffusion.name](self.config, self.model, self.controlnet_model)
         else:

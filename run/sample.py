@@ -75,10 +75,10 @@ class Sampler:
                 "diff_unwrapped": self.diffusion.diff_unwrapped,
                 "gt_k_mat_cont": batch_dict["gt_k_mat_cont"],
                 "pred_k_mat_cont": self.diffusion.pred_k_mat_cont,
-                "diff_k_mat_cont": self.diffusion.diff_k_mat_cont,
+                "diff_k_mat_cont": self.diffusion.pred_k_mat_cont - batch_dict["gt_k_mat_cont"],
                 "gt_k_mat_disc": batch_dict["gt_k_mat_disc"],
                 "pred_k_mat_disc": self.diffusion.pred_k_mat_disc,
-                "diff_k_mat_disc": self.diffusion.diff_k_mat_disc
+                "diff_k_mat_disc": self.diffusion.pred_k_mat_disc - batch_dict["gt_k_mat_disc"],
             }
             self._save_compare_png(c_batch)
             self._save_compare_pt(c_batch)
