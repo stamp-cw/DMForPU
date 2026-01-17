@@ -73,12 +73,15 @@ class Sampler:
                 "gt_unwrapped": self.diffusion.gt_unwrapped,
                 "pred_unwrapped": self.diffusion.pred_unwrapped,
                 "diff_unwrapped": self.diffusion.diff_unwrapped,
-                "gt_k_mat_cont": batch_dict["gt_k_mat_cont"],
+                "gt_k_mat_cont_neg_norm": batch_dict["k_mat_cont_neg_norm"].to(self.device),
+                "pred_k_mat_cont_neg_norm": self.diffusion.pred_k_mat_cont_neg_norm,
+                "diff_k_mat_cont_neg_norm": self.diffusion.pred_k_mat_cont_neg_norm - batch_dict["k_mat_cont_neg_norm"].to(self.device),
+                "gt_k_mat_cont": batch_dict["k_mat_cont"].to(self.device),
                 "pred_k_mat_cont": self.diffusion.pred_k_mat_cont,
-                "diff_k_mat_cont": self.diffusion.pred_k_mat_cont - batch_dict["gt_k_mat_cont"],
-                "gt_k_mat_disc": batch_dict["gt_k_mat_disc"],
+                "diff_k_mat_cont": self.diffusion.pred_k_mat_cont - batch_dict["k_mat_cont"].to(self.device),
+                "gt_k_mat_disc": batch_dict["k_mat_disc"].to(self.device),
                 "pred_k_mat_disc": self.diffusion.pred_k_mat_disc,
-                "diff_k_mat_disc": self.diffusion.pred_k_mat_disc - batch_dict["gt_k_mat_disc"],
+                "diff_k_mat_disc": self.diffusion.pred_k_mat_disc - batch_dict["k_mat_disc"].to(self.device),
             }
             self._save_compare_png(c_batch)
             self._save_compare_pt(c_batch)
@@ -147,22 +150,26 @@ class Sampler:
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
         wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped = c_batch['wrapped'], c_batch['gt_unwrapped'], c_batch['pred_unwrapped'], c_batch['diff_unwrapped']
+        wrapped, gt_k_mat_cont_neg_norm, pred_k_mat_cont_neg_norm, diff_k_mat_cont_neg_norm = c_batch['wrapped'], c_batch['gt_k_mat_cont_neg_norm'], c_batch['pred_k_mat_cont_neg_norm'], c_batch['diff_k_mat_cont_neg_norm']
         wrapped, gt_k_mat_cont, pred_k_mat_cont, diff_k_mat_cont = c_batch['wrapped'], c_batch['gt_k_mat_cont'], c_batch['pred_k_mat_cont'], c_batch['diff_k_mat_cont']
         wrapped, gt_k_mat_disc, pred_k_mat_disc, diff_k_mat_disc = c_batch['wrapped'], c_batch['gt_k_mat_disc'], c_batch['pred_k_mat_disc'], c_batch['diff_k_mat_disc']
 
         titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped",
+                  "Wrapped", "GT k-mat Cont NegNorm", "Pred k-mat Cont NegNorm", "Diff k-mat Cont NegNorm",
                   "Wrapped", "GT k-mat Cont", "Pred k-mat Cont", "Diff k-mat Cont",
                   "Wrapped", "GT k-mat Disc", "Pred k-mat Disc", "Diff k-mat Disc"]
         for i in range(wrapped.shape[0]):
-            compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size)
+            compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
             imgs = [
                 _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i]),
+                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_cont_neg_norm[i]), _to_numpy_2d(pred_k_mat_cont_neg_norm[i]), _to_numpy_2d(diff_k_mat_cont_neg_norm[i]),
                 _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_cont[i]), _to_numpy_2d(pred_k_mat_cont[i]), _to_numpy_2d(diff_k_mat_cont[i]),
                 _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_disc[i]), _to_numpy_2d(pred_k_mat_disc[i]), _to_numpy_2d(diff_k_mat_disc[i])
             ]
-            fig, axes = plt.subplots(3, 4, figsize=(16, 12))
+            fig, axes = plt.subplots(4, 4, figsize=(16, 16))
             axes = axes.flatten()
             cmaps = ["twilight", "turbo", "turbo", "inferno",
+                     "twilight", "turbo", "turbo", "inferno",
                      "twilight", "viridis", "viridis", "inferno",
                      "twilight", "viridis", "viridis", "inferno"]
             for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):

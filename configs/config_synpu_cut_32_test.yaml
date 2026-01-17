@@ -5,10 +5,10 @@ data:
   image_size: 32
   color_channels: 1
   num_workers: 1
-  scale_k: 10
+  scale_k: 6
   method: kdf
-  k_min: 0
-  k_max: 10
+  k_min: -3
+  k_max: 3
 
 diffusion:
   name: KdfDDPMDiffusion
