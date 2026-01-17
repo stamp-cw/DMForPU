@@ -86,7 +86,7 @@ class KdfDDPMDiffusion:
                 t,
                 encoder_hidden_states=encoder_hidden_states,
             ).sample
-        self.pred_k_mat_cont_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).prev_sample
+        self.pred_k_mat_cont_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         # if self.config.data.name == 'SyntheticData':
         #     self.pred_unwrapped = self.pred_unwrapped_neg_norm * (torch.pi * self.config.data.scale_k)
         # else:
