@@ -9,12 +9,6 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from functools import cached_property
 
-# from dataset.CustomEval import CustomEval
-# from dataset.CustomTrain import CustomTrain
-# from dataset.FRBS import FRBS
-# from dataset.HRSID import HRSID
-# from dataset.SARBuD import SARBuD
-
 from dataset.InSARDLPUMat import InSARDLPUMat
 
 from torchvision.transforms import v2 as T
@@ -231,7 +225,7 @@ def register_data_loader(cls=None, *, name=None):
     return _register(cls) if cls is not None else _register
 
 
-@register_data_loader(name='InSARDLPUMat')
+@register_data_loader(name=['InSARDLPUMat','InSARDLPUMat256Big','InSARDLPUMat256Small','InSARDLPUMat256Test'])
 class InSARDLPUMatDataLoader(BaseDataLoader):
 
     @cached_property
@@ -272,7 +266,7 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name=['InSARDLPUMatCut','InSARDLPUMatCut32'])
+@register_data_loader(name=['InSARDLPUMatCut','InSARDLPUMatCut32','InSARDLPUMatCut32Test','InSARDLPUMatCut64','InSARDLPUMatCut64Test'])
 class InSARDLPUMatCutDataLoader(BaseDataLoader):
 
     @cached_property
@@ -312,7 +306,7 @@ class InSARDLPUMatCutDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name='SyntheticPUMat')
+@register_data_loader(name=['SyntheticPUMat','SyntheticPUMat64Test'])
 class SyntheticPUMatDataLoader(BaseDataLoader):
 
     @cached_property
@@ -352,7 +346,7 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMatCut','SyntheticPUMatCut32'])
+@register_data_loader(name=['SyntheticPUMatCut','SyntheticPUMatCut128Big','SyntheticPUMatCut32','SyntheticPUMatCut32Test','SyntheticPUMatCut64','SyntheticPUMatCut64Test'])
 class SyntheticPUMatCutMatDataLoader(BaseDataLoader):
 
     @cached_property
