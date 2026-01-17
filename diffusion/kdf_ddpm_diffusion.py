@@ -94,7 +94,7 @@ class KdfDDPMDiffusion:
         self.pred_k_mat_cont = self.pred_k_mat_cont_norm * (self.config.data.k_max - self.config.data.k_min) + self.config.data.k_min
         self.pred_k_mat_disc = torch.round(self.pred_k_mat_cont)
         self.pred_unwrapped = self.wrapped + self.pred_k_mat_disc * 2 * torch.pi
-        self.diff_unwrapped = self.pred_unwrapped - self.gt_unwrapped
+        self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
     def infer_sample(self):
         cross_dim = getattr(self.model.config, "cross_attention_dim", None)
@@ -151,7 +151,7 @@ class KdfDDPMDiffusion:
         self.pred_k_mat_cont = self.pred_k_mat_cont_norm * (self.config.data.k_max - self.config.data.k_min) + self.config.data.k_min
         self.pred_k_mat_disc = torch.round(self.pred_k_mat_cont)
         self.pred_unwrapped = self.wrapped + self.pred_k_mat_disc * 2 * torch.pi
-        self.diff_unwrapped = self.pred_unwrapped - self.gt_unwrapped
+        self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
     @property
     def optimize_parameters(self):

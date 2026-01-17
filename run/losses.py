@@ -54,14 +54,14 @@ class PHYLossType:
         # phys_loss = F.l1_loss(pred_wrapped, wrapped)
         #
 
-        phys_loss = F.mse_loss(diffusion.pred_k_mat_cont_neg_norm, diffusion.gt_k_mat_cont_neg_norm)
+        phys_loss1 = F.mse_loss(diffusion.pred_k_mat_cont_neg_norm, diffusion.gt_k_mat_cont_neg_norm)
 
         # grad_loss = self.gradient_loss(pred_wrapped, wrapped)
         # tv_loss = self.tv_loss(pred_wrapped)
 
         # total_loss = diff_loss + self.lam_phys * phys_loss + 0.1 * grad_loss + 0.01 * tv_loss
         # total_loss = diff_loss + 0.001 * phys_loss + 0.01 * grad_loss + 0.001 * tv_loss
-        total_loss = diff_loss + phys_loss
+        total_loss = diff_loss + phys_loss1
 
         return total_loss
 

@@ -75,13 +75,13 @@ class Sampler:
                 "diff_unwrapped": self.diffusion.diff_unwrapped,
                 "gt_k_mat_cont_neg_norm": batch_dict["k_mat_cont_neg_norm"].to(self.device),
                 "pred_k_mat_cont_neg_norm": self.diffusion.pred_k_mat_cont_neg_norm,
-                "diff_k_mat_cont_neg_norm": self.diffusion.pred_k_mat_cont_neg_norm - batch_dict["k_mat_cont_neg_norm"].to(self.device),
+                "diff_k_mat_cont_neg_norm": batch_dict["k_mat_cont_neg_norm"].to(self.device) - self.diffusion.pred_k_mat_cont_neg_norm ,
                 "gt_k_mat_cont": batch_dict["k_mat_cont"].to(self.device),
                 "pred_k_mat_cont": self.diffusion.pred_k_mat_cont,
-                "diff_k_mat_cont": self.diffusion.pred_k_mat_cont - batch_dict["k_mat_cont"].to(self.device),
+                "diff_k_mat_cont": batch_dict["k_mat_cont"].to(self.device) - self.diffusion.pred_k_mat_cont ,
                 "gt_k_mat_disc": batch_dict["k_mat_disc"].to(self.device),
                 "pred_k_mat_disc": self.diffusion.pred_k_mat_disc,
-                "diff_k_mat_disc": self.diffusion.pred_k_mat_disc - batch_dict["k_mat_disc"].to(self.device),
+                "diff_k_mat_disc": batch_dict["k_mat_disc"].to(self.device) - self.diffusion.pred_k_mat_disc ,
             }
             self._save_compare_png(c_batch)
             self._save_compare_pt(c_batch)

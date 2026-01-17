@@ -82,7 +82,7 @@ class SyntheticPUMatCut(Dataset):
 
         k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi) # [-0.5, inf]
         k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
-        k_mat_cont_neg_norm = torch.clamp(k_mat_cont_neg_norm, -1, 1) # [-1, 1]
+        k_mat_cont_neg_norm = torch.clamp(k_mat_cont_neg_norm, min= -1, max= 1) # [-1, 1]
         k_mat_disc = torch.round(k_mat_cont) # [0, inf]
         k_mat_disc_neg_norm = ((k_mat_disc - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-1, 1]
         wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
