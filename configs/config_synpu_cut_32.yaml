@@ -2,7 +2,7 @@
 seed: 42
 
 data:
-  name: SyntheticPUMatCut
+  name: SyntheticPUMatCut32
   image_size: 32
   color_channels: 1
   num_workers: 1

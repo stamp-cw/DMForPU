@@ -217,12 +217,17 @@ _DATA_LOADERS = DataLoaderRegistry()
 
 def register_data_loader(cls=None, *, name=None):
     def _register(cls):
-        local_name = name if name is not None else cls.__name__
-        if local_name in _DATA_LOADERS:
-            raise ValueError(f'Already registered data loader with name: {local_name}')
-        _DATA_LOADERS[local_name] = cls
+        if isinstance(name, list):
+            for local_name in name:
+                if local_name in _DATA_LOADERS:
+                    raise ValueError(f'Already registered data loader with name: {local_name}')
+                _DATA_LOADERS[local_name] = cls
+        else:
+            local_name = name if name is not None else cls.__name__
+            if local_name in _DATA_LOADERS:
+                raise ValueError(f'Already registered data loader with name: {local_name}')
+            _DATA_LOADERS[local_name] = cls
         return cls
-
     return _register(cls) if cls is not None else _register
 
 
@@ -267,7 +272,7 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name='InSARDLPUMatCut')
+@register_data_loader(name=['InSARDLPUMatCut','InSARDLPUMatCut32'])
 class InSARDLPUMatCutDataLoader(BaseDataLoader):
 
     @cached_property
@@ -347,7 +352,7 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name='SyntheticPUMatCut')
+@register_data_loader(name=['SyntheticPUMatCut','SyntheticPUMatCut32'])
 class SyntheticPUMatCutMatDataLoader(BaseDataLoader):
 
     @cached_property
