@@ -19,9 +19,9 @@ class SyntheticPUMatCut(Dataset):
         transform=None,
         target_transform=None,
         joint_transform=None,
-        scale_k=5,
+        scale_k=3,
         k_min = 0,
-        k_max = 10,
+        k_max = 3,
     ):
         """
         Args:
@@ -80,9 +80,11 @@ class SyntheticPUMatCut(Dataset):
 
         unwrapped = unwrapped - (torch.min(unwrapped) // (torch.pi * 2)) * (torch.pi * 2)
 
-        k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi)
-        k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1
-
+        k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi) # [-0.5, inf]
+        k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
+        k_mat_cont_neg_norm = torch.clamp(k_mat_cont_neg_norm, -1, 1) # [-1, 1]
+        k_mat_disc = torch.round(k_mat_cont) # [0, inf]
+        k_mat_disc_neg_norm = ((k_mat_disc - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-1, 1]
         wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
 
         # wrapped = wrapped + torch.pi
@@ -103,8 +105,9 @@ class SyntheticPUMatCut(Dataset):
             # "wrapped_fp16": wrapped.to(torch.float16),
             "unwrapped": unwrapped,
             "k_mat_cont": k_mat_cont,
-            "k_mat_disc": torch.round(k_mat_cont),
             "k_mat_cont_neg_norm": k_mat_cont_neg_norm,
+            "k_mat_disc": k_mat_disc,
+            "k_mat_disc_neg_norm": k_mat_disc_neg_norm,
             # "unwrapped_fp16": unwrapped.to(torch.float16),
             # "wrapped_norm": wrapped_norm,
             # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),

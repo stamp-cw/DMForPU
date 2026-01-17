@@ -23,6 +23,25 @@ class PHYLossType:
         self.name = config.loss_type.name
         self.lam_phys = config.loss_type.lam_phys
 
+
+    def gradient_loss(self, pred, target):
+        grad_pred_x = torch.abs(pred[:, :, 1:, :] - pred[:, :, :-1, :])  # x-axis gradient
+        grad_pred_y = torch.abs(pred[:, :, :, 1:] - pred[:, :, :, :-1])  # y-axis gradient
+        grad_target_x = torch.abs(target[:, :, 1:, :] - target[:, :, :-1, :])  # x-axis gradient
+        grad_target_y = torch.abs(target[:, :, :, 1:] - target[:, :, :, :-1])  # y-axis gradient
+
+        grad_loss_x = torch.mean(grad_pred_x - grad_target_x)
+        grad_loss_y = torch.mean(grad_pred_y - grad_target_y)
+
+        return grad_loss_x + grad_loss_y
+
+
+    def tv_loss(self, x):
+        # 各向异性 Total Variation (TV)
+        tv_x = torch.abs(x[:, :, 1:, :] - x[:, :, :-1, :])  # x-direction gradient
+        tv_y = torch.abs(x[:, :, :, 1:] - x[:, :, :, :-1])  # y-direction gradient
+        return torch.sum(tv_x) + torch.sum(tv_y)
+
     def __call__(self, diffusion):
         # unet pred noise diff
         noise_pred = diffusion.noise_pred
@@ -33,9 +52,16 @@ class PHYLossType:
         # wrapped = diffusion.wrapped
         # pred_wrapped = wrap_phase(diffusion.pred_unwrapped)
         # phys_loss = F.l1_loss(pred_wrapped, wrapped)
+        #
 
-        # total_loss = diff_loss + self.lam_phys * phys_loss
-        total_loss = diff_loss
+        phys_loss = F.mse_loss(diffusion.pred_k_mat_cont_neg_norm, diffusion.gt_k_mat_cont_neg_norm)
+
+        # grad_loss = self.gradient_loss(pred_wrapped, wrapped)
+        # tv_loss = self.tv_loss(pred_wrapped)
+
+        # total_loss = diff_loss + self.lam_phys * phys_loss + 0.1 * grad_loss + 0.01 * tv_loss
+        # total_loss = diff_loss + 0.001 * phys_loss + 0.01 * grad_loss + 0.001 * tv_loss
+        total_loss = diff_loss + phys_loss
 
         return total_loss
 
