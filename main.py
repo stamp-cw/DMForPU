@@ -167,5 +167,6 @@ if __name__ == '__main__':
     from diffusion.ddpm_diffusion import DDPMDiffusion
     from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
+    from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
     # from model.unet.unet_model import UNet
     main()

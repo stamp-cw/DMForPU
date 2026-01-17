@@ -19,7 +19,9 @@ class SyntheticPUMatCut(Dataset):
         transform=None,
         target_transform=None,
         joint_transform=None,
-        scale_k=5
+        scale_k=5,
+        k_min = 0,
+        k_max = 10,
     ):
         """
         Args:
@@ -34,7 +36,10 @@ class SyntheticPUMatCut(Dataset):
 
         assert split in ['train', 'test'], "split 必须是 'train' 或 'test'"
 
-        self.K = scale_k
+        # self.scale_k = scale_k
+        self.scale_k = k_max - k_min
+        self.k_min = k_min
+        self.k_max = k_max
 
         self.transform = transform
         self.target_transform = target_transform
@@ -75,34 +80,40 @@ class SyntheticPUMatCut(Dataset):
 
         unwrapped = unwrapped - (torch.min(unwrapped) // (torch.pi * 2)) * (torch.pi * 2)
 
-        K = self.K # k range 3-5
+        k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi)
+        k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1
+
+        wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=1)
+
         # wrapped = wrapped + torch.pi
         # wrapped_norm = wrapped / torch.pi
-        unwrapped_norm = unwrapped / (torch.pi * K)
-        unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
-        unwrapped_neg_norm = unwrapped_norm * 2 - 1
+        # unwrapped_norm = unwrapped / (torch.pi * self.scale_k)
+        # unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
+        # unwrapped_neg_norm = unwrapped_norm * 2 - 1
         # wrapped_cond = torch.stack([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
         # wrapped_cond = wrapped / (2 * torch.pi)
-        wrapped_cond = wrapped / torch.pi
+        # wrapped_cond = wrapped / torch.pi
 
-        unwrapped_sub_wrapped = unwrapped - wrapped
-        unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (torch.pi * K)
-        unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
+        # unwrapped_sub_wrapped = unwrapped - wrapped
+        # unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (torch.pi * self.scale_k)
+        # unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
 
         sample = {
             "wrapped": wrapped,
             # "wrapped_fp16": wrapped.to(torch.float16),
             "unwrapped": unwrapped,
+            "k_mat_cont": k_mat_cont,
+            "k_mat_cont_neg_norm": k_mat_cont_neg_norm,
             # "unwrapped_fp16": unwrapped.to(torch.float16),
             # "wrapped_norm": wrapped_norm,
             # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
-            "unwrapped_norm": unwrapped_norm,
-            "unwrapped_neg_norm": unwrapped_neg_norm,
+            # "unwrapped_norm": unwrapped_norm,
+            # "unwrapped_neg_norm": unwrapped_neg_norm,
             "wrapped_cond": wrapped_cond,
             # "wrapped_cond_fp16": wrapped_cond.to(torch.float16),
-            "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
+            # "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
             # "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
-            "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,
+            # "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,
             # "unwrapped_sub_wrapped_norm_fp16": unwrapped_sub_wrapped_norm.to(torch.float16)
         }
         return sample

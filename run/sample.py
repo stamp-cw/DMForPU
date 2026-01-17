@@ -67,24 +67,32 @@ class Sampler:
         with torch.no_grad():
             self.diffusion.setup_data(batch_dict)
             self.diffusion.infer_sample()
-            pred_unwrapped = self.diffusion.pred_unwrapped
-            wrapped = self.diffusion.wrapped
-            gt_unwrapped = self.diffusion.gt_unwrapped
-            diff_unwrapped = self.diffusion.diff_unwrapped
             # self._save_samples_and_preview(wrapped, gt_unwrapped, pred_unwrapped)
-            self._save_compare_png(wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped)
-            self._save_compare_pt(wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped)
-            self.samples = pred_unwrapped
+            c_batch = {
+                "wrapped": self.diffusion.wrapped,
+                "gt_unwrapped": self.diffusion.gt_unwrapped,
+                "pred_unwrapped": self.diffusion.pred_unwrapped,
+                "diff_unwrapped": self.diffusion.diff_unwrapped,
+                "gt_k_mat_cont": batch_dict["gt_k_mat_cont"],
+                "pred_k_mat_cont": self.diffusion.pred_k_mat_cont,
+                "diff_k_mat_cont": self.diffusion.diff_k_mat_cont,
+                "gt_k_mat_disc": batch_dict["gt_k_mat_disc"],
+                "pred_k_mat_disc": self.diffusion.pred_k_mat_disc,
+                "diff_k_mat_disc": self.diffusion.diff_k_mat_disc
+            }
+            self._save_compare_png(c_batch)
+            self._save_compare_pt(c_batch)
+            self.samples = self.diffusion.pred_unwrapped
 
     @cached_property
     def eval_loader(self):
         # return self.data_loader.eval_loader
         return self.data_loader.test_loader
 
-    def _save_compare_pt(self, wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped):
+    def _save_compare_pt(self, c_batch):
         pt_path = self.config.io.generated_compare_pt_file_path(self.saved_samples,
                                                                self.saved_samples + self.temp_batch_size)
-        torch.save({"wrapped":wrapped, "gt_unwrapped": gt_unwrapped, "pred_unwrapped": pred_unwrapped, "diff_unwrapped": diff_unwrapped}, pt_path)
+        torch.save(c_batch, pt_path)
         self.logger.info(f"Saved {self.temp_batch_size} samples to {pt_path}")
 
 
@@ -102,11 +110,23 @@ class Sampler:
         # self.samples = self.samples.reshape(
         #     (-1, self.config.data.image_size, self.config.data.image_size, self.config.data.color_channels))
         # samples = self.samples.permute(0, 3, 1, 2)
-        samples = self.samples
-        for _, img_array in enumerate(samples):
-            img = ToPILImage()(img_array)
-            img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
-            img.save(img_path)
+        # samples = self.samples
+        # for _, img_array in enumerate(samples):
+        #     img = ToPILImage()(img_array)
+        #     img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
+        #     img.save(img_path)
+
+        samples = self.samples  # shape: [B, H, W] 或 [B, 1, H, W]
+        for i, img_array in enumerate(samples):
+            img = img_array.squeeze()  # [H, W]
+            img = img.detach().cpu().numpy()
+            img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1 + i)
+            plt.figure(figsize=(4, 4))
+            plt.imshow(img, cmap="turbo")   # ⭐ 改这里的颜色
+            plt.axis("off")
+            plt.colorbar(fraction=0.046, pad=0.04)
+            plt.savefig(img_path, bbox_inches="tight", pad_inches=0)
+            plt.close()
         self.logger.info(
             f"Saved {self.samples.shape[0]} samples as PNG images in folder: {self.config.io.out_raw_sample_path}")
 
@@ -115,31 +135,44 @@ class Sampler:
         loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
         # self.ema.load_state_dict(loaded_state['ema'])
         self.diffusion.model.load_state_dict(loaded_state['model'])
-        self.diffusion.control_model.load_state_dict(loaded_state['control_model'])
+        if self.config.model.use_controlnet:
+            self.diffusion.controlnet_model.load_state_dict(loaded_state['controlnet_model'])
 
     def data_inverse_scaler(self, x):
         from selector.data_selector import BaseDataLoader
         data_loader = BaseDataLoader(self.config)
         return data_loader.data_inverse_scaler(x)
 
-    def _save_compare_png(self, wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped):
+    def _save_compare_png(self, c_batch):
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
-        compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size)
-        # pred_unwrapped = self.data_inverse_scaler(pred_unwrapped)
-        # pred_unwrapped = torch.clamp(pred_unwrapped * 2 - 1,0,1)
-        titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped"]
-        imgs = [_to_numpy_2d(wrapped[0]), _to_numpy_2d(gt_unwrapped[0]), _to_numpy_2d(pred_unwrapped[0]), _to_numpy_2d(diff_unwrapped[0])]
-        fig, axes = plt.subplots(1, 4, figsize=(16, 4))
-        cmaps = ["twilight", "turbo", "turbo", "inferno"]
-        for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):
-            im = ax.imshow(img, cmap=cmap)
-            ax.set_title(title)
-            ax.axis("off")
-            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-        fig.tight_layout()
-        fig.savefig(compare_png_path, dpi=200)
-        plt.close(fig)
+        wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped = c_batch['wrapped'], c_batch['gt_unwrapped'], c_batch['pred_unwrapped'], c_batch['diff_unwrapped']
+        wrapped, gt_k_mat_cont, pred_k_mat_cont, diff_k_mat_cont = c_batch['wrapped'], c_batch['gt_k_mat_cont'], c_batch['pred_k_mat_cont'], c_batch['diff_k_mat_cont']
+        wrapped, gt_k_mat_disc, pred_k_mat_disc, diff_k_mat_disc = c_batch['wrapped'], c_batch['gt_k_mat_disc'], c_batch['pred_k_mat_disc'], c_batch['diff_k_mat_disc']
+
+        titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped",
+                  "Wrapped", "GT k-mat Cont", "Pred k-mat Cont", "Diff k-mat Cont",
+                  "Wrapped", "GT k-mat Disc", "Pred k-mat Disc", "Diff k-mat Disc"]
+        for i in range(wrapped.shape[0]):
+            compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size)
+            imgs = [
+                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i]),
+                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_cont[i]), _to_numpy_2d(pred_k_mat_cont[i]), _to_numpy_2d(diff_k_mat_cont[i]),
+                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_disc[i]), _to_numpy_2d(pred_k_mat_disc[i]), _to_numpy_2d(diff_k_mat_disc[i])
+            ]
+            fig, axes = plt.subplots(3, 4, figsize=(16, 12))
+            axes = axes.flatten()
+            cmaps = ["twilight", "turbo", "turbo", "inferno",
+                     "twilight", "viridis", "viridis", "inferno",
+                     "twilight", "viridis", "viridis", "inferno"]
+            for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):
+                im = ax.imshow(img, cmap=cmap)
+                ax.set_title(title)
+                ax.axis("off")
+                fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            fig.tight_layout()
+            fig.savefig(compare_png_path, dpi=200)
+            plt.close(fig)
 
     # def _save_samples_and_preview(self, raw_images, label_images, mask_images):
     #     self.samples = mask_images

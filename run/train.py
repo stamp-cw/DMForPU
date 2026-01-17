@@ -77,12 +77,19 @@ class Trainer:
 
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
-        state_dict = {
-            'model': self.diffusion.model.state_dict(),
-            # 'ema': self.ema.state_dict(),
-            'control_model': self.diffusion.control_model.state_dict(),
-            'optimizer': self.optimizer.state_dict()
-        }
+        if self.config.diffusion.use_controlnet:
+            state_dict = {
+                'model': self.diffusion.model.state_dict(),
+                # 'ema': self.ema.state_dict(),
+                'controlnet_model': self.diffusion.controlnet_model.state_dict(),
+                'optimizer': self.optimizer.state_dict()
+            }
+        else:
+            state_dict = {
+                'model': self.diffusion.model.state_dict(),
+                # 'ema': self.ema.state_dict(),
+                'optimizer': self.optimizer.state_dict()
+            }
         torch.save(state_dict, ckpt_file_path)
         self.logger.info(f"Saved model to {ckpt_file_path}")
         if self.config.io.use_wandb and self.config.io.save_pth_to_wandb:
@@ -96,7 +103,8 @@ class Trainer:
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
         self.diffusion.model.load_state_dict(ckpt['model'])
         # self.ema.load_state_dict(ckpt['ema'])
-        self.diffusion.control_model.load_state_dict(ckpt['control_model'])
+        if self.config.diffusion.use_controlnet:
+            self.diffusion.controlnet_model.load_state_dict(ckpt['controlnet_model'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
     def _record_metrics(self, metrics, prefix, step):
