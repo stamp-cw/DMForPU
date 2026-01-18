@@ -12,7 +12,8 @@ data:
 
 diffusion:
 #  name: KdfDDPMDiffusion
-  name: DFNDDPMDiffusion
+#  name: DFNDDPMDiffusion
+  name: NegNormDDPMDiffusion
   timesteps: 1000
   num_train_timesteps: 1000
   num_infer_timesteps: 1000
@@ -76,7 +77,8 @@ optim:
 
 loss_type:
 #  name: PHY3
-  name: PURE
+  name: PHY1
+#  name: PURE
   lam_phys: 0.5
 
 iio:
