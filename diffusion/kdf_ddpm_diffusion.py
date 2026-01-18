@@ -57,7 +57,7 @@ class KdfDDPMDiffusion:
             if self.config.diffusion.use_controlnet:
                 control_cond = self.wrapped_cond
                 B, C, H_latent, W_latent = self.noisy.shape
-                downsample_factor = 2 ** (len(self.control_model.config.block_out_channels) - 1)
+                downsample_factor = 2 ** (len(self.controlnet_model.config.block_out_channels) - 1)
                 control_cond = torch.nn.functional.interpolate(control_cond,
                                                                size=(H_latent * downsample_factor, W_latent * downsample_factor),
                                                                mode="bilinear", align_corners=False)
@@ -114,12 +114,12 @@ class KdfDDPMDiffusion:
                 control_cond = self.wrapped_cond
                 x = torch.randn_like(self.wrapped).to(self.device)
                 B, C, H_latent, W_latent = x.shape
-                downsample_factor = 2 ** (len(self.control_model.config.block_out_channels) - 1)
+                downsample_factor = 2 ** (len(self.controlnet_model.config.block_out_channels) - 1)
                 control_cond = torch.nn.functional.interpolate(control_cond,
                                                                size=(H_latent * downsample_factor, W_latent * downsample_factor),
                                                                mode="bilinear", align_corners=False)
                 for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
-                    ctrl_down, ctrl_mid = self.control_model(
+                    ctrl_down, ctrl_mid = self.controlnet_model(
                         x,
                         t,
                         encoder_hidden_states=encoder_hidden_states,

@@ -8,10 +8,11 @@ data:
   scale_k: 3
   method: kdf
   k_min: 0
-  k_max: 4
+  k_max: 3
 
 diffusion:
-  name: KdfDDPMDiffusion
+#  name: KdfDDPMDiffusion
+  name: DFNDDPMDiffusion
   timesteps: 1000
   num_train_timesteps: 1000
   num_infer_timesteps: 1000
@@ -74,7 +75,8 @@ optim:
   momentum: 0.9
 
 loss_type:
-  name: PHY3
+#  name: PHY3
+  name: PURE
   lam_phys: 0.5
 
 iio:

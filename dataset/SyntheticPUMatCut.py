@@ -103,9 +103,10 @@ class SyntheticPUMatCut(Dataset):
         # wrapped_cond = wrapped / (2 * torch.pi)
         # wrapped_cond = wrapped / torch.pi
 
-        # unwrapped_sub_wrapped = unwrapped - wrapped
-        # unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (torch.pi * self.scale_k)
-        # unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
+        unwrapped_sub_wrapped = unwrapped - wrapped
+        unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (2 * torch.pi * self.scale_k)
+        unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
+        unwrapped_sub_wrapped_neg_norm = unwrapped_sub_wrapped_norm * 2 - 1
 
         sample = {
             "wrapped": wrapped,
@@ -125,6 +126,7 @@ class SyntheticPUMatCut(Dataset):
             # "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
             # "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
             # "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,
+            "unwrapped_sub_wrapped_neg_norm": unwrapped_sub_wrapped_neg_norm,
             # "unwrapped_sub_wrapped_norm_fp16": unwrapped_sub_wrapped_norm.to(torch.float16)
         }
         return sample
