@@ -101,7 +101,6 @@ class KdfDDPMDiffusion:
         self.pred_k_mat_cont_norm = (self.pred_k_mat_cont_neg_norm + 1) / 2
         self.pred_k_mat_cont = self.pred_k_mat_cont_norm * (self.config.data.k_max - self.config.data.k_min) + self.config.data.k_min
         self.pred_k_mat_disc = torch.round(self.pred_k_mat_cont)
-        # self.pred_k_mat_disc = torch.clamp(self.pred_k_mat_disc - 1, 0)
         self.pred_unwrapped = self.wrapped + self.pred_k_mat_disc * 2 * torch.pi
         self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 

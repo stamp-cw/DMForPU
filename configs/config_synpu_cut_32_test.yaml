@@ -8,7 +8,7 @@ data:
   scale_k: 3
   method: kdf
   k_min: 0
-  k_max: 3
+  k_max: 4
 
 diffusion:
   name: KdfDDPMDiffusion

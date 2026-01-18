@@ -5,7 +5,7 @@ data:
   image_size: 32
   color_channels: 1
   num_workers: 1
-  scale_k: 3
+  scale_k: 6
   method: kdf
   k_min: 0
   k_max: 6
