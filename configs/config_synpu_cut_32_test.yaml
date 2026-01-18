@@ -56,9 +56,9 @@ training:
 
 sampling:
   device: cuda
-  batch_size: 1
+  batch_size: 8
   eval: true
-  total_samples: 4
+  total_samples: 8
   record_freq: 1
   eps: 1e-5
   fix_seed: true

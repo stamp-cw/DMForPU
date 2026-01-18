@@ -137,12 +137,12 @@ class KdfDDPMDiffusion:
                 x = torch.randn_like(self.wrapped).to(self.device)
                 # model_input = torch.cat([x, self.wrapped_cond], dim=1)
                 if self.config.diffusion.fusion_type == 'concat':
-                    model_input = torch.cat([x, self.wrapped_cond], dim=1)
+                    x = torch.cat([x, self.wrapped_cond], dim=1)
                 else:
-                    model_input = torch.clamp((x + self.wrapped_cond[0] + self.wrapped_cond[1]) / 3, -1, 1)
+                    x = torch.clamp((x + self.wrapped_cond[0] + self.wrapped_cond[1]) / 3, -1, 1)
                 for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
                     self.noise_pred = self.model(
-                        model_input,
+                        x,
                         t,
                         encoder_hidden_states=encoder_hidden_states,
                     ).sample

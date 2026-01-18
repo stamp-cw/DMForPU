@@ -22,6 +22,8 @@ from dataset.SyntheticPUMatCut import SyntheticPUMatCut
 class BaseDataLoader:
     def __init__(self, config):
         self.config = config
+        if config.mode == 'sample':
+            self.batch_size = self.config.sampling.batch_size
         self.batch_size = self.config.training.batch_size
         num_devices = torch.cuda.device_count() if torch.cuda.is_available() else 1
         if self.batch_size % num_devices != 0:
