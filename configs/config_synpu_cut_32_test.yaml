@@ -72,7 +72,7 @@ optim:
   momentum: 0.9
 
 loss_type:
-  name: PHY3
+  name: PHY4
   lam_phys: 0.5
 
 iio:
