@@ -27,6 +27,10 @@ class Sampler:
         #                                                           decay=self.config.model.ema_rate)
 
     def sample(self):
+
+        torch.manual_seed(self.config.seed)  # 设置 CPU 随机数种子
+        torch.cuda.manual_seed_all(self.config.seed)  # 设置所有 GPU 随机数种子
+
         self.logger.info(
             f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
         self.diffusion.setup_eval()

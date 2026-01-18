@@ -8,7 +8,7 @@ data:
   scale_k: 3
   method: kdf
   k_min: 0
-  k_max: 3
+  k_max: 6
 
 diffusion:
   name: KdfDDPMDiffusion
@@ -20,6 +20,7 @@ diffusion:
   conditioning_channels: 2
   use_controlnet: false
 #  use_cross_attention: false
+  use_filter: false
 
 
 model:

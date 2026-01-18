@@ -19,8 +19,7 @@ diffusion:
   on_conditioning: true
   conditioning_channels: 2
   use_controlnet: false
-#  use_cross_attention: false
-
+  use_filter: false
 
 model:
   name: UNet

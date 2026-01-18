@@ -131,7 +131,7 @@ class PHY3LossType:
         c_loss = self.cross_loss(diffusion.gt_k_mat_disc, diffusion.pred_k_mat_disc)
         l_one_loss = self.l1_loss(diffusion.gt_unwrapped, diffusion.pred_unwrapped)
 
-        print(f"diff_loss: {diff_loss.item()}, r_loss: {r_loss.item()}, c_loss: {c_loss.item()}, l_one_loss: {l_one_loss.item()}")
+        # print(f"diff_loss: {diff_loss.item()}, r_loss: {r_loss.item()}, c_loss: {c_loss.item()}, l_one_loss: {l_one_loss.item()}")
 
         total_loss = diff_loss + 0.1 * r_loss + 0.1 * c_loss + 0.1 * l_one_loss
 

@@ -4,6 +4,8 @@ from diffusers import UNet2DConditionModel, DDPMScheduler, ControlNetModel
 from selector.diffusion_selector import register_diffusion
 import tqdm
 
+from utils.util import median_filter2d
+
 
 @register_diffusion(name='KdfDDPMDiffusion')
 class KdfDDPMDiffusion:
@@ -152,6 +154,10 @@ class KdfDDPMDiffusion:
         self.pred_k_mat_cont_norm = (self.pred_k_mat_cont_neg_norm + 1) / 2
         self.pred_k_mat_cont = self.pred_k_mat_cont_norm * (self.config.data.k_max - self.config.data.k_min) + self.config.data.k_min
         self.pred_k_mat_disc = torch.round(self.pred_k_mat_cont)
+
+        if self.config.diffusion.use_filter:
+            self.pred_k_mat_disc = median_filter2d(self.pred_k_mat_disc, kernel_size=3)
+
         self.pred_unwrapped = self.wrapped + self.pred_k_mat_disc * 2 * torch.pi
         self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
