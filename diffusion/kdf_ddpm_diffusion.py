@@ -14,7 +14,7 @@ class KdfDDPMDiffusion:
         self.device = config.training.device
         self.model = UNet2DConditionModel(
             sample_size=config.model.sample_size,
-            in_channels=config.model.in_channels + (config.diffusion.conditioning_channels if config.diffusion.on_conditioning else 0),
+            in_channels=config.model.in_channels + (config.diffusion.conditioning_channels if config.diffusion.on_conditioning and self.config.diffusion.fusion_type == 'concat' else 0),
             out_channels=config.model.out_channels,
             layers_per_block=config.model.layers_per_block,
             block_out_channels=tuple(config.model.block_out_channels),
@@ -77,7 +77,11 @@ class KdfDDPMDiffusion:
                 ).sample
             else:
                 # print(f"noisy shape: {self.noisy.shape}, wrapped_cond shape: {self.wrapped_cond.shape}")
-                model_input = torch.cat([self.noisy, self.wrapped_cond], dim=1)
+                # model_input = torch.cat([self.noisy, self.wrapped_cond], dim=1)
+                if self.config.diffusion.fusion_type == 'concat':
+                    model_input = torch.cat([self.noisy, self.wrapped_cond], dim=1)
+                else:
+                    model_input = torch.clamp((self.noisy + self.wrapped_cond[0] + self.wrapped_cond[1]) / 3, -1, 1)
                 # print(model_input.shape)
                 self.noise_pred = self.model(
                     model_input,
@@ -131,9 +135,14 @@ class KdfDDPMDiffusion:
                     x = scheduler.step(self.noise_pred, t, x).prev_sample
             else:
                 x = torch.randn_like(self.wrapped).to(self.device)
+                # model_input = torch.cat([x, self.wrapped_cond], dim=1)
+                if self.config.diffusion.fusion_type == 'concat':
+                    model_input = torch.cat([x, self.wrapped_cond], dim=1)
+                else:
+                    model_input = torch.clamp((x + self.wrapped_cond[0] + self.wrapped_cond[1]) / 3, -1, 1)
                 for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
                     self.noise_pred = self.model(
-                        torch.cat([x, self.wrapped_cond], dim=1),
+                        model_input,
                         t,
                         encoder_hidden_states=encoder_hidden_states,
                     ).sample

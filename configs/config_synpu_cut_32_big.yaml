@@ -8,7 +8,7 @@ data:
   scale_k: 3
   method: kdf
   k_min: 0
-  k_max: 3
+  k_max: 6
 
 diffusion:
   name: KdfDDPMDiffusion
@@ -19,6 +19,7 @@ diffusion:
   on_conditioning: true
   conditioning_channels: 2
   use_controlnet: false
+  fusion_type: concat
   use_filter: false
 
 model:
@@ -58,6 +59,7 @@ sampling:
   total_samples: 4
   record_freq: 1
   eps: 1e-5
+  fix_seed: true
 
 optim:
   optimizer: Adam
