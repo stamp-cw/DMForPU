@@ -43,6 +43,14 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return 'ckpt'
 
     @property
+    def out_hf_ckpt_suffix(self):
+        return 'hf_ckpt'
+
+    @property
+    def out_vae_hf_ckpt_suffix(self):
+        return 'vae_hf_ckpt'
+
+    @property
     def out_ckpt_filename_prefix(self):
         return 'epoch'
 
@@ -92,6 +100,20 @@ class DynamicIOConfig(ml_collections.ConfigDict):
     @cached_property
     def out_ckpt_path(self):
         path = os.path.join(self.out_asset_prefix, self.out_asset_suffix, self.out_ckpt_suffix)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    @cached_property
+    def out_hf_ckpt_path(self):
+        path = os.path.join(self.out_asset_prefix, self.out_asset_suffix, self.out_hf_ckpt_suffix)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    @cached_property
+    def out_vae_hf_ckpt_path(self):
+        path = os.path.join(self.out_asset_prefix, self.out_asset_suffix, self.out_vae_hf_ckpt_suffix)
         if not os.path.exists(path):
             os.makedirs(path)
         return path

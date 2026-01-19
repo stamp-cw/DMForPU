@@ -74,9 +74,11 @@ class VAETrainer:
 
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
+        self.vae.model.save_pretrained(self.config.io.out_hf_ckpt_path)
         state_dict = {
             'model': self.vae.model.state_dict(),
-            'optimizer': self.optimizer.state_dict()
+            'optimizer': self.optimizer.state_dict(),
+            'epoch': epoch
         }
         torch.save(state_dict, ckpt_file_path)
         self.logger.info(f"Saved model to {ckpt_file_path}")

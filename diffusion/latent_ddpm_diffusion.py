@@ -5,14 +5,15 @@ from selector.diffusion_selector import register_diffusion
 import tqdm
 
 
-@register_diffusion(name='DDPMDiffusion')
-class DDPMDiffusion:
+@register_diffusion(name='LatentDDPMDiffusion')
+class LatentDDPMDiffusion:
     def __init__(self, config):
         self.config = config
         self.device = config.training.device
+        self.vae = AutoencoderKL.from_pretrained(self.config.io.out_vae_hf_ckpt_path).to(self.device)
         if config.diffusion.use_vae:
-            model_in_channels = config.vae.in_channels  + (config.diffusion.conditioning_channels if config.diffusion.on_conditioning and self.config.diffusion.fusion_type == 'concat' else 0)
-            model_out_channels = config.vae.in_channels
+            model_in_channels = self.vae.config.latent_channels  + (config.diffusion.conditioning_channels if config.diffusion.on_conditioning and self.config.diffusion.fusion_type == 'concat' else 0)
+            model_out_channels = self.vae.config.latent_channels
         else:
             model_in_channels = config.model.in_channels + (config.diffusion.conditioning_channels if config.diffusion.on_conditioning and self.config.diffusion.fusion_type == 'concat' else 0)
             model_out_channels = config.model.out_channels
@@ -31,12 +32,6 @@ class DDPMDiffusion:
                 block_out_channels=tuple(config.controlnet_model.block_out_channels),
             ).to(self.device)
 
-        self.vae = AutoencoderKL(
-            in_channels=self.config.vae.in_channels,
-            out_channels=self.config.vae.out_channels,
-            latent_channels=self.config.vae.latent_channels,
-            block_out_channels=tuple(self.config.vae.block_out_channels),
-        ).to(self.device)
 
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
 
@@ -62,7 +57,7 @@ class DDPMDiffusion:
     def train_sample(self, t):
         if self.config.diffusion.use_vae:
             with torch.no_grad():
-                self.latents = self.vae.encode(self.gt_unwrapped_norm).latent_dist.sample()
+                self.latents = self.vae.encode(self.gt_unwrapped_norm).latent_dist.mode()
                 self.latents = self.latents * self.config.diffusion.scaling_factor
         else:
             self.latents = self.gt_unwrapped_norm
@@ -125,7 +120,7 @@ class DDPMDiffusion:
     def infer_sample(self):
         if self.config.diffusion.use_vae:
             with torch.no_grad():
-                self.latents = self.vae.encode(self.gt_unwrapped_norm).latent_dist.sample()
+                self.latents = self.vae.encode(self.gt_unwrapped_norm).latent_dist.mode()
                 self.latents = self.latents * self.config.diffusion.scaling_factor
         else:
             self.latents = self.gt_unwrapped_norm
@@ -158,7 +153,7 @@ class DDPMDiffusion:
                     ).sample
                     x = scheduler.step(self.noise_pred, t, x).prev_sample
             else:
-                x = torch.randn_like(self.wrapped).to(self.device)
+                x = torch.randn_like(self.latents).to(self.device)
                 for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
                     if self.config.diffusion.fusion_type == 'concat':
                         model_input = torch.cat([x, self.wrapped_cond], dim=1)

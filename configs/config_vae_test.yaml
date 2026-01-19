@@ -21,7 +21,7 @@ model:
 training:
   device: cuda
   brand_new_epochs: 1001
-  continue_training_epochs: 1001
+  continue_training_epochs: 10001
   batch_size: 64
   use_all_data: false
   amp: true
@@ -65,7 +65,7 @@ optim:
   momentum: 0.9
 
 loss_type:
-  name: VAEPURELOSS
+  name: VAEKLLOSS
 
 iio:
   use_tensorboard: true

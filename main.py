@@ -176,6 +176,7 @@ if __name__ == '__main__':
     from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
     from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
+    from diffusion.latent_ddpm_diffusion import LatentDDPMDiffusion
     from vae.latent_vae import LatentVAE
     from run.losses import VAEKLLossType, VAEPURELossType
     # from model.unet.unet_model import UNet

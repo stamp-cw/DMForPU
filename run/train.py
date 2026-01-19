@@ -82,13 +82,15 @@ class Trainer:
                 'model': self.diffusion.model.state_dict(),
                 # 'ema': self.ema.state_dict(),
                 'controlnet_model': self.diffusion.controlnet_model.state_dict(),
-                'optimizer': self.optimizer.state_dict()
+                'optimizer': self.optimizer.state_dict(),
+                "epoch": epoch
             }
         else:
             state_dict = {
                 'model': self.diffusion.model.state_dict(),
                 # 'ema': self.ema.state_dict(),
-                'optimizer': self.optimizer.state_dict()
+                'optimizer': self.optimizer.state_dict(),
+                'epoch': epoch
             }
         torch.save(state_dict, ckpt_file_path)
         self.logger.info(f"Saved model to {ckpt_file_path}")
