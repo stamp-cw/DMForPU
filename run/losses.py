@@ -90,6 +90,34 @@ class PHY11LossType:
 
         return total_loss
 
+@register_loss_type(name='PHY12')
+class PHY12LossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        # self.lam_phys = config.loss_type.lam_phys
+
+    def kmat_cont_neg_norm_l1_loss(self, gt_kmat_cont_neg_norm, pred_k_mat_cont_neg_norm):
+        # pred_wrapped = wrap_phase(pred_unwrapped)
+        loss = F.l1_loss(pred_k_mat_cont_neg_norm, gt_kmat_cont_neg_norm)
+        return loss
+
+    def __call__(self, diffusion):
+        # unet pred noise diff
+        noise_pred = diffusion.noise_pred
+        noise = diffusion.noise
+        diff_loss = F.mse_loss(noise_pred, noise)
+
+        # diffusion solution pred unwrapped phase
+        # wrapped = diffusion.wrapped
+        # pred_wrapped = wrap_phase(diffusion.pred_unwrapped)
+        # phys_loss = F.l1_loss(pred_wrapped, wrapped)
+        phys_loss = self.kmat_cont_neg_norm_l1_loss(diffusion.gt_k_mat_cont_neg_norm, diffusion.pred_k_mat_cont_neg_norm)
+
+        total_loss = diff_loss + 0.5 * phys_loss
+
+        return total_loss
+
 @register_loss_type(name='PHY2')
 class PHY2LossType:
     def __init__(self, config):

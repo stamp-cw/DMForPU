@@ -80,7 +80,7 @@ loss_type:
 #  name: PHY3
 #  name: PHY1
 #  name: PHY4
-  name: PHY11
+  name: PHY12
   lam_phys: 0.5
 
 iio:
