@@ -12,12 +12,18 @@ import matplotlib.pyplot as plt
 # wrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/tmp/SyntheticPUMat/train_in/000101.mat')['input']
 # unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/tmp/SyntheticPUMat/train_gt/000101.mat')['gt']
 
-wrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/test/synthetic_phase_dataset/wrapped/00020.mat')['wrapped']
-unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/test/synthetic_phase_dataset/unwrapped/00020.mat')['unwrapped']
+# wrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/test/synthetic_phase_dataset/wrapped/00020.mat')['wrapped']
+# unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/test/synthetic_phase_dataset/unwrapped/00020.mat')['unwrapped']
+
+wrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/Phase_unwrapping_by_U-Net/SyntheticPUMat128Big/Results_real/000297-results.mat')['input']
+gt_unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/Phase_unwrapping_by_U-Net/SyntheticPUMat128Big/Results_real/000297-results.mat')['gt']
+pred_unwrapped = sio.loadmat('/home/lbxu/xiangyu.liu/stamp-cw/project/Phase_unwrapping_by_U-Net/SyntheticPUMat128Big/Results_real/000297-results.mat')['output']
+
 
 
 wrapped = torch.as_tensor(wrapped).unsqueeze(0)
-unwrapped = torch.as_tensor(unwrapped).unsqueeze(0)
+gt_unwrapped = torch.as_tensor(gt_unwrapped).unsqueeze(0)
+pred_unwrapped = torch.as_tensor(pred_unwrapped).unsqueeze(0)
 
 def _save_compare_png(path, wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped):
     def _to_numpy_2d(x: torch.Tensor):
@@ -36,4 +42,4 @@ def _save_compare_png(path, wrapped, gt_unwrapped, pred_unwrapped, diff_unwrappe
     fig.savefig(compare_png_path, dpi=200)
     plt.close(fig)
 
-_save_compare_png('compare.png', wrapped, unwrapped, unwrapped - wrapped, unwrapped - wrapped)
+_save_compare_png('compare.png', wrapped, gt_unwrapped, pred_unwrapped, gt_unwrapped - pred_unwrapped)
