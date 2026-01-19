@@ -1,0 +1,110 @@
+seed: 42
+
+data:
+  name: SyntheticPUMatCut32Test
+  image_size: 32
+  color_channels: 1
+  num_workers: 1
+  scale_k: 3
+  method: kdf
+  k_min: 0
+  k_max: 3
+
+diffusion:
+#  name: KdfDDPMDiffusion
+  name: DFNDDPMDiffusion
+#  name: NegNormDDPMDiffusion
+#  name: DDPMDiffusion
+  timesteps: 1000
+  num_train_timesteps: 1000
+  num_infer_timesteps: 1000
+  use_custom_model: false
+  on_conditioning: true
+  conditioning_channels: 1
+  use_controlnet: false
+  fusion_type: concat
+#  use_cross_attention: false
+  use_filter: false
+  scaling_factor: 0.18215
+  use_vae: true
+
+
+model:
+  name: UNet
+  sample_size: 32
+  in_channels: 1
+  out_channels: 1
+  layers_per_block: 2
+  block_out_channels: [64, 128, 256, 512]
+
+vae:
+  name: LatentVAE
+  latent_channels: 4
+  in_channels: 1
+  out_channels: 1
+  block_out_channels: [64, 128, 256, 512]
+#  hidden_channels: 32
+#  num_res_blocks: 2
+#  channel_multipliers: [1, 2, 4, 4]
+#  image_size: 32
+#  z_size: 8
+#  use_attention: true
+#  use_fp16: false
+
+controlnet_model:
+  name: ControlNet
+  in_channels: 1
+  conditioning_channels: 1
+  layers_per_block: 2
+  block_out_channels: [64, 128, 256, 512]
+
+
+training:
+  device: cuda
+  brand_new_epochs: 1001
+  continue_training_epochs: 1001
+  batch_size: 64
+  use_all_data: false
+  amp: true
+  log_freq: 1
+  snapshot_freq: 100
+  eval_freq: 1
+  snapshot_sampling: false
+  snapshot_batch_size: 2
+
+sampling:
+  device: cuda
+  batch_size: 8
+  eval: true
+  total_samples: 8
+  record_freq: 1
+  eps: 1e-5
+  fix_seed: true
+
+optim:
+  optimizer: Adam
+  lr: 0.0001
+  weight_decay: 0.1
+  beta1: 0.9
+  eps: 1e-8
+  warmup: 2
+  grad_clip: 1.0
+  momentum: 0.9
+
+loss_type:
+#  name: PHY3
+#  name: PHY1
+#  name: PHY4
+  name: PURE
+  lam_phys: 0.5
+
+iio:
+  use_tensorboard: true
+  use_wandb: false
+  save_pth_to_wandb: false
+
+metrics:
+  l1: true
+  rmse: true
+  wrap_l1: true
+  wrap_rmse: true
