@@ -24,6 +24,9 @@ class LatentVAE:
 
     def train_predict(self, gt):
         self.gt = gt.to(self.device)
+        # print(f"gt shape:{self.gt.shape}")
+        # print(self.model.encoder)
+
         self.posterior = self.model.encode(self.gt).latent_dist
         z = self.posterior.sample()
         self.pred = self.model.decode(z).sample
@@ -35,7 +38,7 @@ class LatentVAE:
             self.gt = self.gt.to(self.device)
             self.posterior = self.model.encode(self.gt).latent_dist
             z = self.posterior.mode()
-            print("z mean:", z.mean().item(), "std:", z.std().item())
+            # print("z mean:", z.mean().item(), "std:", z.std().item())
             self.pred = self.model.decode(z).sample
         return self.pred
 

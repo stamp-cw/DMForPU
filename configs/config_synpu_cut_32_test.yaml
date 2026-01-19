@@ -11,8 +11,8 @@ data:
   k_max: 3
 
 diffusion:
-#  name: KdfDDPMDiffusion
-  name: DFNDDPMDiffusion
+  name: KdfDDPMDiffusion
+#  name: DFNDDPMDiffusion
 #  name: NegNormDDPMDiffusion
 #  name: DDPMDiffusion
   timesteps: 1000
@@ -20,7 +20,7 @@ diffusion:
   num_infer_timesteps: 1000
   use_custom_model: false
   on_conditioning: true
-  conditioning_channels: 1
+  conditioning_channels: 2
   use_controlnet: false
   fusion_type: concat
 #  use_cross_attention: false

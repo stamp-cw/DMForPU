@@ -99,7 +99,7 @@ class VAETester:
             img = img.detach().cpu().numpy()
             img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
             plt.figure(figsize=(4, 4))
-            plt.imshow(img, cmap="turbo")   # ⭐ 改这里的颜色
+            plt.imshow(img, cmap="turbo")
             plt.axis("off")
             plt.colorbar(fraction=0.046, pad=0.04)
             plt.savefig(img_path, bbox_inches="tight", pad_inches=0)
@@ -121,9 +121,16 @@ class VAETester:
             fig, axes = plt.subplots(1, 5, figsize=(20, 4))
             axes = axes.flatten()
             cmaps = ["twilight", "turbo", "turbo", "turbo", "inferno"]
-            for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[:2]:
                 # im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 im = ax.imshow(img, cmap=cmap)
+                ax.set_title(title)
+                ax.axis("off")
+                fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            color_norm = colors.Normalize(vmin=-1, vmax=1)
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[2:]:
+                im = ax.imshow(img, cmap=cmap, norm=color_norm)
+                # im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)
                 ax.axis("off")
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)

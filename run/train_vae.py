@@ -142,7 +142,7 @@ class EpochFN:
 
     def epoch_fn(self, vae, optimizer, epoch, batch):
         gt = batch['unwrapped_neg_norm'].to(self.config.training.device)
-        print("gt shape:", gt.shape)
+        # print("gt shape:", gt.shape)
         pred = vae.train_predict(gt)
 
         if self.train:

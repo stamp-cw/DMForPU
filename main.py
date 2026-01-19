@@ -40,8 +40,10 @@ def main():
     tmp_config.iio.in_raw_dataset_path = os.path.join("data", "raw", tmp_config.data.name)
     if args.hyper:
         tmp_config.iio.out_asset_suffix = os.path.join("hyper",tmp_config.data.name, tmp_config.model.name, f"exp-{run_time}")
-    else:
+    elif args.mode == 'train_vae' or args.mode == 'test_vae':
         tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.model.name)
+    else:
+        tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.diffusion.name)
 
 
     ioo = IOConfig(tmp_config)
@@ -171,7 +173,7 @@ def unflatten_dict(flat_dict, sep="."):
 
 if __name__ == '__main__':
     from model.optimizer import AdamOptimizer,SGDOptimizer
-    from run.losses import PHY1LossType,PHY2LossType,PHY3LossType,PureLossType, PHY4LossType
+    from run.losses import PHY1LossType,PHY2LossType,PHY3LossType,PureLossType, PHY4LossType, PHY11LossType
     from diffusion.ddpm_diffusion import DDPMDiffusion
     from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
