@@ -97,13 +97,6 @@ class SyntheticPUMatCut(Dataset):
         # wrapped_cond = wrapped / (2 * torch.pi)
         # wrapped_cond = wrapped / torch.pi
 
-        # wrapped_cond
-        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped], dim=0)
-        # wrapped_cond = unwrapped
-        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped_neg_norm], dim=0)
-        wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
-
-
         # neg_norm_diffusion
         unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
         unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
@@ -114,6 +107,14 @@ class SyntheticPUMatCut(Dataset):
         unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (2 * torch.pi * self.scale_k)
         unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
         unwrapped_sub_wrapped_neg_norm = unwrapped_sub_wrapped_norm * 2 - 1
+
+        # wrapped_cond
+        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped], dim=0)
+        # wrapped_cond = unwrapped
+        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped_neg_norm], dim=0)
+        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
+        wrapped_cond = torch.cat([unwrapped_neg_norm, -unwrapped_neg_norm], dim=0)
+
 
         sample = {
             "wrapped": wrapped,
