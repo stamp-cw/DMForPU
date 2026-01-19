@@ -192,8 +192,8 @@ class PHY4LossType:
 
         return total_loss
 
-@register_loss_type(name='VAELOSS')
-class VAELossType:
+@register_loss_type(name='VAEKLLOSS')
+class VAEKLLossType:
     def __init__(self, config):
         self.config = config
         self.name = config.loss_type.name
@@ -206,6 +206,22 @@ class VAELossType:
         # kl_weight = min(1e-6, step / 10000 * 1e-6)
         # total_loss = recon_loss + kl_weight * kl_loss
         total_loss = recon_loss + 0.0001 * kl_loss
+        return total_loss
+
+@register_loss_type(name='VAEPURELOSS')
+class VAEPURELossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+
+    def __call__(self, vae):
+        # unet pred noise diff
+        recon_loss = F.l1_loss(vae.pred, vae.gt)
+        kl_loss = vae.posterior.kl().mean()
+
+        # kl_weight = min(1e-6, step / 10000 * 1e-6)
+        # total_loss = recon_loss + kl_weight * kl_loss
+        total_loss = recon_loss
         return total_loss
 
 class LossFN:

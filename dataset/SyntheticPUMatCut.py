@@ -19,7 +19,6 @@ class SyntheticPUMatCut(Dataset):
         transform=None,
         target_transform=None,
         joint_transform=None,
-        scale_k=3,
         k_min = 0,
         k_max = 3,
     ):

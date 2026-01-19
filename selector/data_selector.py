@@ -357,7 +357,6 @@ class SyntheticPUMatCutMatDataLoader(BaseDataLoader):
                               transform=self.transform,
                               target_transform=self.gt_transform,
                               joint_transform=self.joint_transform,
-                              scale_k=self.config.data.scale_k,
                                  k_max=self.config.data.k_max,
                                  k_min=self.config.data.k_min
                               )
@@ -368,7 +367,6 @@ class SyntheticPUMatCutMatDataLoader(BaseDataLoader):
                               transform=self.eval_transform,
                               target_transform=self.eval_gt_transform,
                               joint_transform=self.eval_joint_transform,
-                              scale_k=self.config.data.scale_k,
                                  k_max=self.config.data.k_max,
                                  k_min=self.config.data.k_min
                               )

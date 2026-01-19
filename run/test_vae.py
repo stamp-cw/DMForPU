@@ -19,7 +19,7 @@ class VAETester:
         self.config = config
         self.logger = config.logger
         self.device = config.test.device
-        self.vae = VAESetup(self.config, self.logger).model
+        self.vae = VAESetup(self.config, self.logger).vae
         self.data_loader = _DATA_LOADERS(self.config)
         self.test_iter = iter(self.eval_loader)
 
@@ -66,7 +66,7 @@ class VAETester:
         with torch.no_grad():
             # self.diffusion.infer_sample()
             gt_unwrapped_neg_norm = batch_dict["unwrapped_neg_norm"].to(self.device)
-            pred_unwrapped_neg_norm = self.vae.predict(gt_unwrapped_neg_norm)
+            pred_unwrapped_neg_norm = self.vae.eval_predict(gt_unwrapped_neg_norm)
             # self._save_samples_and_preview(wrapped, gt_unwrapped, pred_unwrapped)
             c_batch = {
                 "wrapped": batch_dict["wrapped"].to(self.device),
@@ -116,7 +116,7 @@ class VAETester:
         for i in range(wrapped.shape[0]):
             compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
             imgs = [
-                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped_neg_norm[i]), _to_numpy_2d(diff_unwrapped_neg_norm[i]),
+                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(gt_unwrapped_neg_norm[i]), _to_numpy_2d(pred_unwrapped_neg_norm[i]), _to_numpy_2d(diff_unwrapped_neg_norm[i])
             ]
             fig, axes = plt.subplots(1, 5, figsize=(20, 4))
             axes = axes.flatten()

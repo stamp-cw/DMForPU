@@ -5,19 +5,18 @@ data:
   image_size: 32
   color_channels: 1
   num_workers: 1
-  scale_k: 3
-  method: kdf
-  k_min: 0
   k_max: 3
+  k_min: 0
 
 model:
   name: LatentVAE
   sample_size: 32
-  layers_per_block: 2
   latent_channels: 4
   in_channels: 1
   out_channels: 1
-  block_out_channels: [ 64, 128, 256, 512 ]
+#  block_out_channels: [ 64, 128, 256, 256 ]
+#  block_out_channels: [ 32, 64 ]
+  block_out_channels: [ 32,]
 
 training:
   device: cuda
@@ -41,7 +40,14 @@ sampling:
   eps: 1e-5
   fix_seed: true
 
-eval:
+val:
+  device: cuda
+  batch_size: 8
+  total_samples: 8
+  eps: 1e-5
+  fix_seed: true
+
+test:
   device: cuda
   batch_size: 8
   total_samples: 8
@@ -59,7 +65,7 @@ optim:
   momentum: 0.9
 
 loss_type:
-  name: VAELOSS
+  name: VAEPURELOSS
 
 iio:
   use_tensorboard: true

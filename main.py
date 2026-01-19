@@ -17,7 +17,7 @@ from configs.dynamic_io import IOConfig
 def main():
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
     parser.add_argument('--config', type=str, required=True, help='Path to the configs file')
-    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'eval', 'train_vae'], help='Train the model or generate samples')
+    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'eval', 'train_vae', 'test_vae'], help='Train the model or generate samples')
     parser.add_argument('--user_logging_level', type=str, required=False, default='info', choices=['debug', 'info', 'warning', 'error'], help='Set logging level (debug, info, warning, error)')
     parser.add_argument('--training_from_scratch', action='store_true', default=False, required=False, help='Train from scratch instead of resuming training')
     parser.add_argument('--sampling_from_epoch', type=int, required=False, default=None, help='Epoch number to load for sampling (default: latest checkpoint)')
@@ -176,5 +176,7 @@ if __name__ == '__main__':
     from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
     from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
+    from vae.latent_vae import LatentVAE
+    from run.losses import VAEKLLossType, VAEPURELossType
     # from model.unet.unet_model import UNet
     main()

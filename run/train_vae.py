@@ -28,7 +28,7 @@ class VAETrainer:
         self.config = config
         self.logger = config.logger
         self.device = self.config.training.device
-        self.vae = VAESetup(self.config, self.logger).model
+        self.vae = VAESetup(self.config, self.logger).vae
         self.optimizer = _OPTIMIZERS(self.config)(self.vae.optimize_parameters)
         self.data_loader = _DATA_LOADERS(self.config)
         self.optimize_fn = OptimizerFN(self.config)
@@ -139,8 +139,9 @@ class EpochFN:
         return self.epoch_fn(diffusion, optimizer, epoch, batch)
 
     def epoch_fn(self, vae, optimizer, epoch, batch):
-        gt = batch['unwrapped_neg_norm']
-        pred = vae.predict(gt)
+        gt = batch['unwrapped_neg_norm'].to(self.config.training.device)
+        print("gt shape:", gt.shape)
+        pred = vae.train_predict(gt)
 
         if self.train:
             if self.config.training.amp:

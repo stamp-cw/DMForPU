@@ -12,7 +12,7 @@ class VAERegistry(dict):
 _VAES = VAERegistry()
 
 
-def register_model(cls=None, *, name=None):
+def register_vae(cls=None, *, name=None):
     def _register(cls):
         local_name = name if name is not None else cls.__name__
         if local_name in _VAES:
