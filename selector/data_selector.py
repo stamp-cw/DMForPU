@@ -308,7 +308,7 @@ class InSARDLPUMatCutDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMat','SyntheticPUMat64Test'])
+@register_data_loader(name=['SyntheticPUMat','SyntheticPUMat64Test','SyntheticPUMat128Big','SyntheticPUMat128Small'])
 class SyntheticPUMatDataLoader(BaseDataLoader):
 
     @cached_property
@@ -317,7 +317,8 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
                             transform=self.transform,
                             target_transform=self.gt_transform,
                             joint_transform=self.joint_transform,
-                            scale_k=self.config.data.scale_k,
+                              k_max=self.config.data.k_max,
+                              k_min=self.config.data.k_min
                             )
 
     @cached_property
@@ -326,7 +327,8 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
                             transform=self.eval_transform,
                             target_transform=self.eval_gt_transform,
                             joint_transform=self.eval_joint_transform,
-                            scale_k=self.config.data.scale_k,
+                              k_max=self.config.data.k_max,
+                              k_min=self.config.data.k_min
                             )
 
     @cached_property

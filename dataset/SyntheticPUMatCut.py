@@ -35,7 +35,6 @@ class SyntheticPUMatCut(Dataset):
 
         assert split in ['train', 'test'], "split 必须是 'train' 或 'test'"
 
-        # self.scale_k = scale_k
         self.scale_k = k_max - k_min
         self.k_min = k_min
         self.k_max = k_max

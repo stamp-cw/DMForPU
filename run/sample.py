@@ -296,12 +296,21 @@ class Sampler:
                      # "twilight", "viridis", "viridis", "inferno",
                      # "twilight", "viridis", "viridis", "inferno"
                      ]
-            for ax, img, title, cmap in zip(axes, imgs, titles, cmaps):
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[:5]:
                 # im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)
                 ax.axis("off")
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+            color_norm = colors.Normalize(vmin=-1, vmax=1)
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[5:]:
+                im = ax.imshow(img, cmap=cmap, norm=color_norm)
+                # im = ax.imshow(img, cmap=cmap)
+                ax.set_title(title)
+                ax.axis("off")
+                fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
             fig.tight_layout()
             fig.savefig(compare_png_path, dpi=200)
             plt.close(fig)

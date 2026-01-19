@@ -117,7 +117,7 @@ class LatentDDPMDiffusion:
         else:
             self.pred_unwrapped_neg_norm = self.pred_latents
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.scale_k)
+        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
         self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
     def infer_sample(self):
@@ -185,7 +185,7 @@ class LatentDDPMDiffusion:
         else:
             self.pred_unwrapped_neg_norm = self.pred_latents
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.scale_k)
+        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
         self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
     @property
