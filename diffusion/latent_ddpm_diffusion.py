@@ -11,6 +11,8 @@ class LatentDDPMDiffusion:
         self.config = config
         self.device = config.training.device
         self.vae = AutoencoderKL.from_pretrained(self.config.io.out_vae_hf_ckpt_path).to(self.device)
+        self.vae.requires_grad_(False)
+        self.vae.eval()
         if config.diffusion.use_vae:
             model_in_channels = self.vae.config.latent_channels  + (config.diffusion.conditioning_channels if config.diffusion.on_conditioning and self.config.diffusion.fusion_type == 'concat' else 0)
             model_out_channels = self.vae.config.latent_channels
@@ -111,6 +113,7 @@ class LatentDDPMDiffusion:
         if self.config.diffusion.use_vae:
             self.pred_latents = self.pred_latents / self.config.diffusion.scaling_factor
             self.pred_unwrapped_neg_norm = self.vae.decode(self.pred_latents).sample
+            self.pred_unwrapped_neg_norm = torch.clamp(self.pred_unwrapped_neg_norm, -1, 1)
         else:
             self.pred_unwrapped_neg_norm = self.pred_latents
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2

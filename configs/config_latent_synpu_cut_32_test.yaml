@@ -21,7 +21,7 @@ diffusion:
   num_infer_timesteps: 1000
   use_custom_model: false
   on_conditioning: true
-  conditioning_channels: 1
+  conditioning_channels: 2
   use_controlnet: false
   fusion_type: concat
 #  use_cross_attention: false
@@ -95,9 +95,9 @@ optim:
 
 loss_type:
 #  name: PHY3
-#  name: PHY1
+  name: PHY1
 #  name: PHY4
-  name: PURE
+#  name: PURE
   lam_phys: 0.5
 
 iio:

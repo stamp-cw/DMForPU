@@ -100,9 +100,9 @@ class SyntheticPUMatCut(Dataset):
 
         # wrapped_cond
         # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped], dim=0)
-        wrapped_cond = unwrapped
+        # wrapped_cond = unwrapped
         # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped_neg_norm], dim=0)
-        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
+        wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
 
 
         # neg_norm_diffusion
