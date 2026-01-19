@@ -110,6 +110,11 @@ def main():
             from run.train_vae import VAETrainer
             vae_trainer = VAETrainer(config)
             vae_trainer.train()
+        elif args.mode == 'test_vae':
+            from run.test_vae import VAETester
+            vae_tester = VAETester(config)
+            vae_tester.load_checkpoint()
+            vae_tester.test()
         else:
             raise ValueError(f"Invalid mode: {args.mode}")
 

@@ -36,17 +36,20 @@ class DDPMDiffusion:
             out_channels=self.config.vae.out_channels,
             latent_channels=self.config.vae.latent_channels,
             block_out_channels=tuple(self.config.vae.block_out_channels),
-        )
+        ).to(self.device)
 
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
 
     def setup_train(self):
         self.model.train()
+        self.vae.train()
         if self.config.diffusion.use_controlnet:
             self.controlnet_model.train()
 
+
     def setup_eval(self):
         self.model.eval()
+        self.vae.eval()
         if self.config.diffusion.use_controlnet:
             self.controlnet_model.eval()
 

@@ -16,6 +16,12 @@ class LatentVAE:
             block_out_channels=tuple(self.config.vae.block_out_channels),
         )
 
+    def setup_train(self):
+        self.model.train()
+
+    def setup_eval(self):
+        self.model.eval()
+
     def predict(self, gt):
         self.gt = gt.to(self.device)
         self.posterior = self.model.encode(self.gt)

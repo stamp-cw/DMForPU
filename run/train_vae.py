@@ -114,14 +114,14 @@ class VAETrainer:
         return self.data_loader.eval_loader
 
     def _snapshot_sampling(self):
-        from run.sample import Sampler
+        from run.test_vae import VAETester as Tester
         self.config.sampling.batch_size = self.config.training.snapshot_batch_size
         self.config.sampling.total_samples = self.config.training.snapshot_batch_size
         self.config.sampling.eval = True
-        sampler = Sampler(self.config)
+        sampler = Tester(self.config)
         # sampler.ema = self.ema
         # sampler.model = self.model
-        sampler.diffusion = self.diffusion
+        sampler.vae = self.vae
         sampler.sample()
 
 
@@ -139,7 +139,7 @@ class EpochFN:
         return self.epoch_fn(diffusion, optimizer, epoch, batch)
 
     def epoch_fn(self, vae, optimizer, epoch, batch):
-        gt = batch['unwrapped']
+        gt = batch['unwrapped_neg_norm']
         pred = vae.predict(gt)
 
         if self.train:
