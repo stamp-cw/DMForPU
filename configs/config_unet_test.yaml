@@ -25,7 +25,7 @@ training:
   device: cuda
   brand_new_epochs: 1001
   continue_training_epochs: 10001
-  batch_size: 128
+  batch_size: 8
   use_all_data: false
   amp: true
   log_freq: 1
@@ -68,7 +68,7 @@ optim:
   momentum: 0.9
 
 loss_type:
-  name: VAEKLLOSS
+  name: UNetLOSS
 
 iio:
   use_tensorboard: true

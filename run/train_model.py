@@ -30,7 +30,7 @@ class ModelTrainer:
         self.config = config
         self.logger = config.logger
         self.device = self.config.training.device
-        self.mmodel = MModelSetup(self.config, self.logger).model
+        self.mmodel = MModelSetup(self.config, self.logger).mmodel
         self.optimizer = _OPTIMIZERS(self.config)(self.mmodel.optimize_parameters)
         self.data_loader = _DATA_LOADERS(self.config)
         self.optimize_fn = OptimizerFN(self.config)
@@ -143,7 +143,8 @@ class EpochFN:
         return self.epoch_fn(diffusion, optimizer, epoch, batch)
 
     def epoch_fn(self, mmodel, optimizer, epoch, batch):
-        gt = batch['unwrapped_neg_norm'].to(self.config.training.device)
+        # gt = batch['unwrapped_neg_norm'].to(self.config.training.device)
+        gt = batch['unwrapped'].to(self.config.training.device)
         # print("gt shape:", gt.shape)
         pred = mmodel.train_predict(gt)
 

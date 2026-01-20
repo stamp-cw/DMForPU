@@ -1,3 +1,5 @@
+import os
+
 import torch
 from functools import cached_property
 
@@ -16,18 +18,28 @@ class ModelSampler:
         self.data_loader = _DATA_LOADERS(self.config)
         self.test_iter = iter(self.eval_loader)
 
-    # def load_checkpoint(self):
-    #     self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
-    #     loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
-    #     self.mmodel.model.load_state_dict(loaded_state['model'], strict=True)
-
     def load_checkpoint(self):
-        # self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
-        # loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
-        # self.mmodel.model.load_state_dict(loaded_state['model'], strict=True)
-        load_weights = r"/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big/model_weights/weights.pth"
-        checkpoint = torch.load(load_weights, map_location='cpu')
-        self.mmodel.model.load_state_dict(checkpoint['state_dict'])
+        self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
+        loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
+        self.mmodel.model.load_state_dict(loaded_state['model'], strict=True)
+
+    # def load_checkpoint(self):
+    #     # self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
+    #     # loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
+    #     # self.mmodel.model.load_state_dict(loaded_state['model'], strict=True)
+    #     load_weights = r"/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big/model_weights/weights.pth"
+    #     checkpoint = torch.load(load_weights, map_location='cpu')
+    #
+    #     ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{100}.pth')
+    #     # self.vae.model.save_pretrained(self.config.io.out_hf_ckpt_path)
+    #     state_dict = {
+    #         'model': checkpoint['state_dict'],
+    #         'optimizer': checkpoint['optimizer'],
+    #         'epoch': 100
+    #     }
+    #     torch.save(state_dict, ckpt_file_path)
+    #
+    #     self.mmodel.model.load_state_dict(checkpoint['state_dict'])
 
     def sample(self):
         self.logger.info(

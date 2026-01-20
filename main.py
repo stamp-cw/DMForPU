@@ -203,7 +203,7 @@ if __name__ == '__main__':
     from diffusion.latent_ddpm_diffusion import LatentDDPMDiffusion
     from diffusion.dph_ddpm_diffusion import DphDDPMDiffusion
     from vae.latent_vae import LatentVAE
-    from run.losses import VAEKLLossType, VAEPURELossType
+    from run.losses import VAEKLLossType, VAEPURELossType, UNetLOSSLossType
     # from model.unet.unet_model import UNet
     from model.unet.unet import UNet as AuxUNet
     # from model.unet.unet import UNet

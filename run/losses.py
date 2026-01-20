@@ -341,6 +341,20 @@ class VAEPURELossType:
         total_loss = recon_loss
         return total_loss
 
+
+@register_loss_type(name='UNetLOSS')
+class UNetLOSSLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+
+    def __call__(self, vae):
+        # unet pred noise diff
+        recon_loss = F.l1_loss(vae.pred, vae.gt)
+        total_loss = recon_loss
+        return total_loss
+
+
 class LossFN:
     def __init__(self, config):
         self.config = config
