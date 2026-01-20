@@ -93,3 +93,35 @@ class ExtraTokenCondition(nn.Module):
             return aux_tokens
 
         return torch.cat([encoder_hidden_states, aux_tokens], dim=1)
+
+
+class UNetFeatureHook:
+    def __init__(self, unet, hook_layers):
+        """
+        unet: 你的 UNet 实例
+        hook_layers: dict(name -> module)
+        """
+        self.features = {}
+        self.handles = []
+
+        for name, module in hook_layers.items():
+            handle = module.register_forward_hook(self._make_hook(name))
+            self.handles.append(handle)
+
+    def _make_hook(self, name):
+        def hook(module, inputs, output):
+            # output 可能是 tuple（你的 DownB 很可能是）
+            if isinstance(output, tuple):
+                self.features[name] = output[0]  # 主分支特征
+            else:
+                self.features[name] = output
+        return hook
+
+    def clear(self):
+        self.features.clear()
+
+    def remove(self):
+        for h in self.handles:
+            h.remove()
+        self.handles.clear()
+

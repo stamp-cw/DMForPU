@@ -14,10 +14,16 @@ _MODELS = ModelRegistry()
 
 def register_model(cls=None, *, name=None):
     def _register(cls):
-        local_name = name if name is not None else cls.__name__
-        if local_name in _MODELS:
-            raise ValueError(f'Already registered model with name: {local_name}')
-        _MODELS[local_name] = cls
+        if isinstance(name, list):
+            for local_name in name:
+                if local_name in _MODELS:
+                    raise ValueError(f'Already registered model with name: {local_name}')
+                _MODELS[local_name] = cls
+        else:
+            local_name = name if name is not None else cls.__name__
+            if local_name in _MODELS:
+                raise ValueError(f'Already registered model with name: {local_name}')
+            _MODELS[local_name] = cls
         return cls
 
     return _register(cls) if cls is not None else _register

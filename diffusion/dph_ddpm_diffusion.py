@@ -5,7 +5,7 @@ from model.sec_model_setup import SecModelSetup
 from selector.diffusion_selector import register_diffusion
 import tqdm
 
-from utils.util import ExtraTokenCondition
+from utils.util import ExtraTokenCondition, UNetFeatureHook
 
 
 @register_diffusion(name='DphDDPMDiffusion')
@@ -46,12 +46,12 @@ class DphDDPMDiffusion:
 
         # load aux_unet weights to aux_unet
         # self.aux_unet.load_state_dict(torch.load(self.config.model.aux_unet_path, map_location=self.device))
-        # self.aux_unet.eval()
+        self.aux_unet.eval()
 
         self.token_condition = ExtraTokenCondition(
             self.config,
-            # in_channels_list=[256, 256],  # down3 + mid
-            in_channels_list=[256, 512],  # down3 + mid
+            # in_channels_list=[256, 256],  # down4 + mid
+            in_channels_list=[512, 1024],  # down4 + mid
             cross_attention_dim=self.unet.config.cross_attention_dim
         ).to(self.device)
 
@@ -76,12 +76,33 @@ class DphDDPMDiffusion:
         # encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim,
         #                                                                    device=self.device)
 
-        aux_feats = self.aux_unet(self.wrapped)
+
+
+        # unet = UNet(config).to(device)
+
+        hook = UNetFeatureHook(
+            self.aux_unet,
+            hook_layers={
+                "down1": self.aux_unet.down1,
+                "down2": self.aux_unet.down2,
+                "down3": self.aux_unet.down3,
+                "down4": self.aux_unet.down4,
+                "mid":   self.aux_unet.res,
+            }
+        )
+        hook.clear()
+        self.aux_unet(self.wrapped)
+
         selected_feats = {
-            # "down3": aux_feats["down3"],
-            "down2": aux_feats["down2"],
-            "mid": aux_feats["mid"],
+            "down4": hook.features["down4"],  # [B, 512, H/8, W/8]
+            "mid": hook.features["mid"],    # [B,1024, H/8, W/8]
         }
+
+        # selected_feats = {
+        #     # "down3": aux_feats["down3"],
+        #     "down2": aux_feats["down2"],
+        #     "mid": aux_feats["mid"],
+        # }
 
         encoder_hidden_states = self.token_condition(
             encoder_hidden_states=None,
@@ -107,11 +128,30 @@ class DphDDPMDiffusion:
 
 
         # aux_feats = self.aux_unet(self.wrapped)
-        aux_feats = self.aux_unet(self.gt_unwrapped_norm)
+        # aux_feats = self.aux_unet(self.gt_unwrapped_norm)
+        # selected_feats = {
+        #     # "down3": aux_feats["down3"],
+        #     "down2": aux_feats["down2"],
+        #     "mid": aux_feats["mid"],
+        # }
+
+
+        hook = UNetFeatureHook(
+            self.aux_unet,
+            hook_layers={
+                "down1": self.aux_unet.down1,
+                "down2": self.aux_unet.down2,
+                "down3": self.aux_unet.down3,
+                "down4": self.aux_unet.down4,
+                "mid":   self.aux_unet.res,
+            }
+        )
+        hook.clear()
+        self.aux_unet(self.wrapped)
+
         selected_feats = {
-            # "down3": aux_feats["down3"],
-            "down2": aux_feats["down2"],
-            "mid": aux_feats["mid"],
+            "down4": hook.features["down4"],  # [B, 512, H/8, W/8]
+            "mid": hook.features["mid"],    # [B,1024, H/8, W/8]
         }
 
         encoder_hidden_states = self.token_condition(
