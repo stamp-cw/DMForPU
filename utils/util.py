@@ -46,3 +46,50 @@ class AverageMeter:
 
     def avg(self):
         return {k: self.sums[k] / self.counts[k] for k in self.sums}
+
+
+import torch.nn as nn
+# import torch.nn.functional as F
+class ExtraTokenCondition(nn.Module):
+    """
+    将 aux UNet 的 feature maps 转为 cross-attention tokens
+    """
+    def __init__(self,config, in_channels_list, cross_attention_dim):
+        super().__init__()
+        self.device = config.training.device
+
+
+        self.proj_layers = nn.ModuleList([
+            nn.Linear(c, cross_attention_dim) for c in in_channels_list
+        ])
+
+        # gate：非常重要，保证训练稳定
+        self.gate = nn.Parameter(torch.zeros(1))
+
+    def forward(self, encoder_hidden_states, feats_dict):
+        """
+        encoder_hidden_states: [B, N, D] or None
+        feats_dict: {"down3": [B,C,H,W], "mid": ...}
+        """
+        tokens_all = []
+
+        for i, feat in enumerate(feats_dict.values()):
+            # 下采样，控制 token 数
+            feat = F.avg_pool2d(feat, kernel_size=2)
+
+            B, C, H, W = feat.shape
+            tokens = feat.flatten(2).transpose(1, 2)   # [B, HW, C]
+
+            assert tokens.shape[-1] == self.proj_layers[i].in_features, \
+                f"Token dim {tokens.shape[-1]} != Linear in_features {self.proj_layers[i].in_features}"
+
+            tokens = self.proj_layers[i](tokens)       # [B, HW, D]
+            tokens_all.append(tokens)
+
+        aux_tokens = torch.cat(tokens_all, dim=1)
+        aux_tokens = torch.sigmoid(self.gate) * aux_tokens
+
+        if encoder_hidden_states is None:
+            return aux_tokens
+
+        return torch.cat([encoder_hidden_states, aux_tokens], dim=1)

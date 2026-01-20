@@ -308,7 +308,7 @@ class InSARDLPUMatCutDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMat','SyntheticPUMat64Test','SyntheticPUMat128Big','SyntheticPUMat128Small'])
+@register_data_loader(name=['SyntheticPUMat','SyntheticPUMat64Test','SyntheticPUMat128Big','SyntheticPUMat128Small','SyntheticPUMat128Test'])
 class SyntheticPUMatDataLoader(BaseDataLoader):
 
     @cached_property

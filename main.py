@@ -17,7 +17,7 @@ from configs.dynamic_io import IOConfig
 def main():
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
     parser.add_argument('--config', type=str, required=True, help='Path to the configs file')
-    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'eval', 'train_vae', 'test_vae'], help='Train the model or generate samples')
+    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'eval', 'train_vae', 'test_vae','train_model','test_model','val_model','sample_model'], help='Train the model or generate samples')
     parser.add_argument('--user_logging_level', type=str, required=False, default='info', choices=['debug', 'info', 'warning', 'error'], help='Set logging level (debug, info, warning, error)')
     parser.add_argument('--training_from_scratch', action='store_true', default=False, required=False, help='Train from scratch instead of resuming training')
     parser.add_argument('--sampling_from_epoch', type=int, required=False, default=None, help='Epoch number to load for sampling (default: latest checkpoint)')
@@ -41,6 +41,8 @@ def main():
     if args.hyper:
         tmp_config.iio.out_asset_suffix = os.path.join("hyper",tmp_config.data.name, tmp_config.model.name, f"exp-{run_time}")
     elif args.mode == 'train_vae' or args.mode == 'test_vae':
+        tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.model.name)
+    elif args.mode == 'train_model' or args.mode == 'test_model' or args.mode == 'val_model' or args.mode == 'sample_model':
         tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.model.name)
     else:
         tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.diffusion.name)
@@ -117,6 +119,25 @@ def main():
             vae_tester = VAETester(config)
             vae_tester.load_checkpoint()
             vae_tester.test()
+        elif args.mode  == 'train_model':
+            from run.train_model import ModelTrainer
+            model_trainer = ModelTrainer(config)
+            model_trainer.train()
+        elif args.mode  == 'test_model':
+            from run.test_model import ModelTester
+            model_tester = ModelTester(config)
+            model_tester.load_checkpoint()
+            model_tester.test()
+        elif args.mode  == 'val_model':
+            from run.val_model import ModelValidator
+            model_validator = ModelValidator(config)
+            model_validator.load_checkpoint()
+            model_validator.validate()
+        elif args.mode  == 'sample_model':
+            from run.sample_model import ModelSampler
+            model_sampler = ModelSampler(config)
+            model_sampler.load_checkpoint()
+            model_sampler.sample()
         else:
             raise ValueError(f"Invalid mode: {args.mode}")
 
@@ -180,7 +201,9 @@ if __name__ == '__main__':
     from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
     from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
     from diffusion.latent_ddpm_diffusion import LatentDDPMDiffusion
+    from diffusion.dph_ddpm_diffusion import DphDDPMDiffusion
     from vae.latent_vae import LatentVAE
     from run.losses import VAEKLLossType, VAEPURELossType
     # from model.unet.unet_model import UNet
+    from model.unet.aux_unet import AuxUNet
     main()

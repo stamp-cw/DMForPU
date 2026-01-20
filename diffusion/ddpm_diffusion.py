@@ -91,7 +91,7 @@ class DDPMDiffusion:
             ).sample
         self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.scale_k)
+        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.k_max - self.config.data.k_min)
         self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
     def infer_sample(self):
@@ -148,7 +148,7 @@ class DDPMDiffusion:
                 x = scheduler.step(self.noise_pred, t, x).prev_sample
         self.pred_unwrapped_neg_norm = x
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.scale_k)
+        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.k_max - self.config.data.k_min)
         self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
     @property
