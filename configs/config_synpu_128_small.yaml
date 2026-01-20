@@ -13,11 +13,12 @@ diffusion:
 #  name: KdfDDPMDiffusion
 #  name: DFNDDPMDiffusion
 #  name: LatentDDPMDiffusion
-  name: NegNormDDPMDiffusion
+#  name: NegNormDDPMDiffusion
+  name: MchNegNormDDPMDiffusion
 #  name: DDPMDiffusion
   timesteps: 1000
   num_train_timesteps: 1000
-  num_infer_timesteps: 1000
+  num_infer_timesteps: 100
   use_custom_model: false
   on_conditioning: true
   conditioning_channels: 2

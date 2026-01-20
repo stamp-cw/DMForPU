@@ -11,16 +11,17 @@ data:
   k_max: 3
 
 diffusion:
-  name: KdfDDPMDiffusion
+#  name: KdfDDPMDiffusion
 #  name: DFNDDPMDiffusion
 #  name: NegNormDDPMDiffusion
+  name: MchNegNormDDPMDiffusion
 #  name: DDPMDiffusion
   timesteps: 1000
   num_train_timesteps: 1000
   num_infer_timesteps: 1000
   use_custom_model: false
   on_conditioning: true
-  conditioning_channels: 2
+  conditioning_channels: 1
   use_controlnet: false
   fusion_type: concat
 #  use_cross_attention: false
@@ -80,7 +81,8 @@ loss_type:
 #  name: PHY3
 #  name: PHY1
 #  name: PHY4
-  name: PHY12
+#  name: PHY13
+  name: PHY13
   lam_phys: 0.5
 
 iio:

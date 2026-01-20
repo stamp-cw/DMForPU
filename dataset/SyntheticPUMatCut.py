@@ -109,12 +109,21 @@ class SyntheticPUMatCut(Dataset):
         unwrapped_sub_wrapped_neg_norm = unwrapped_sub_wrapped_norm * 2 - 1
 
         # wrapped_cond
+        # wrapped_cond = wrapped_neg_norm
         # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped], dim=0)
         # wrapped_cond = unwrapped
         # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped_neg_norm], dim=0)
+        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), k_mat_disc_neg_norm], dim=0)
+        # one_mat = torch.ones_like(wrapped_neg_norm)
+        # cond_one_mat = [one_mat, one_mat, one_mat, one_mat, one_mat, one_mat, -one_mat]
+        # # wrapped_cond = torch.cat([wrapped_neg_norm, *cond_one_mat], dim=0)
+        # zero_mat = torch.zeros_like(wrapped_neg_norm)
+        # cond_zero_mat = [zero_mat, zero_mat, zero_mat, zero_mat, zero_mat, zero_mat, zero_mat]
+        # wrapped_cond = torch.cat([wrapped_neg_norm, *cond_one_mat, *cond_zero_mat], dim=0)
         # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
-        # wrapped_cond = torch.cat([unwrapped_neg_norm, -unwrapped_neg_norm], dim=0)
-        wrapped_cond = torch.cat([k_mat_cont_neg_norm, -k_mat_cont_neg_norm], dim=0)
+        wrapped_cond = torch.cat([unwrapped_neg_norm, -unwrapped_neg_norm], dim=0)
+        # wrapped_cond = torch.cat([k_mat_cont_neg_norm, -k_mat_cont_neg_norm], dim=0)
+        # wrapped_cond = torch.cat([k_mat_cont_neg_norm, -k_mat_cont_neg_norm], dim=0)
 
 
         sample = {

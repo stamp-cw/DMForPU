@@ -118,6 +118,62 @@ class PHY12LossType:
 
         return total_loss
 
+
+@register_loss_type(name='PHY13')
+class PHY13LossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        # self.lam_phys = config.loss_type.lam_phys
+
+    def neg_norm_l1_loss(self, gt_kmat_cont_neg_norm, pred_k_mat_cont_neg_norm):
+        # pred_wrapped = wrap_phase(pred_unwrapped)
+        loss = F.l1_loss(pred_k_mat_cont_neg_norm, gt_kmat_cont_neg_norm)
+        return loss
+
+    def __call__(self, diffusion):
+        # unet pred noise diff
+        noise_pred = diffusion.noise_pred
+        noise = diffusion.noise
+        diff_loss = F.mse_loss(noise_pred, noise)
+
+        # diffusion solution pred unwrapped phase
+        # wrapped = diffusion.wrapped
+        # pred_wrapped = wrap_phase(diffusion.pred_unwrapped)
+        # phys_loss = F.l1_loss(pred_wrapped, wrapped)
+        phys_loss = self.neg_norm_l1_loss(diffusion.gt_unwrapped_neg_norm, diffusion.pred_unwrapped_neg_norm)
+
+        total_loss = diff_loss + 0.5 * phys_loss
+
+        return total_loss
+
+@register_loss_type(name='PHY14')
+class PHY13LossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        # self.lam_phys = config.loss_type.lam_phys
+
+    # def neg_norm_kl_loss(self, gt_unwrapped_neg_norm, pred_unwrapped_neg_norm):
+    #     loss = torch.mean(gt_kmat_cont_neg_norm * torch.log((gt_kmat_cont_neg_norm + 1e-8) / (pred_k_mat_cont_neg_norm + 1e-8)))
+    #     return loss
+
+    def __call__(self, diffusion):
+        # unet pred noise diff
+        noise_pred = diffusion.noise_pred
+        noise = diffusion.noise
+        diff_loss = F.mse_loss(noise_pred, noise)
+
+        # diffusion solution pred unwrapped phase
+        # wrapped = diffusion.wrapped
+        # pred_wrapped = wrap_phase(diffusion.pred_unwrapped)
+        # phys_loss = F.l1_loss(pred_wrapped, wrapped)
+        phys_loss = self.neg_norm_l1_loss(diffusion.gt_unwrapped_neg_norm, diffusion.pred_unwrapped_neg_norm)
+
+        total_loss = diff_loss + 0.5 * phys_loss
+
+        return total_loss
+
 @register_loss_type(name='PHY2')
 class PHY2LossType:
     def __init__(self, config):

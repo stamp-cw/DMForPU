@@ -176,6 +176,7 @@ if __name__ == '__main__':
     from run.losses import PHY1LossType,PHY2LossType,PHY3LossType,PureLossType, PHY4LossType, PHY11LossType, PHY12LossType
     from diffusion.ddpm_diffusion import DDPMDiffusion
     from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
+    from diffusion.mch_neg_norm_ddpm_diffusion import MchNegNormDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
     from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
     from diffusion.latent_ddpm_diffusion import LatentDDPMDiffusion
