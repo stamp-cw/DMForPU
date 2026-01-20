@@ -1,24 +1,16 @@
-from selector.model_selector import _MODELS
+from selector.mmodel_selector import _MMODELS
 import torch
 
 class MModelSetup:
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
-        self._create_model()
-        self._set_mode()
+        self._create_mmodel()
         self._log_model_info()
 
-    def _create_model(self):
-        self.model = _MODELS[self.config.model.name](self.config).to(self.config.training.device)
-        self.model = torch.nn.DataParallel(self.model)
+    def _create_mmodel(self):
+        self.mmodel = _MMODELS[self.config.mmodel.name](self.config)
+        # self.model = torch.nn.DataParallel(self.model)
 
     def _log_model_info(self):
-        self.logger.debug(self.model)
-
-    def _set_mode(self):
-        if self.config.mode == 'train':
-            self.model.train()
-
-        elif self.config.mode == 'sample':
-            self.model.eval()
+        self.logger.debug(self.mmodel)

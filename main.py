@@ -206,4 +206,6 @@ if __name__ == '__main__':
     from run.losses import VAEKLLossType, VAEPURELossType
     # from model.unet.unet_model import UNet
     from model.unet.unet import UNet as AuxUNet
+    # from model.unet.unet import UNet
+    from model.unet_mmodel import UnetMModel
     main()

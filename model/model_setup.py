@@ -12,14 +12,14 @@ class ModelSetup:
     def _create_model(self):
         self.model = _MODELS[self.config.model.name](self.config).to(self.config.training.device)
         self.model = torch.nn.DataParallel(self.model)
-        if self.config.diffusion.use_controlnet:
-            self.controlnet_model = _MODELS[self.config.controlnet_model.name](self.config).to(self.config.training.device)
-            self.controlnet_model = torch.nn.DataParallel(self.controlnet_model)
+        # if self.config.diffusion.use_controlnet:
+        #     self.controlnet_model = _MODELS[self.config.controlnet_model.name](self.config).to(self.config.training.device)
+        #     self.controlnet_model = torch.nn.DataParallel(self.controlnet_model)
 
     def _log_model_info(self):
         self.logger.debug(self.model)
-        if self.config.diffusion.use_controlnet:
-            self.logger.debug(self.controlnet_model)
+        # if self.config.diffusion.use_controlnet:
+        #     self.logger.debug(self.controlnet_model)
 
     def _set_mode(self):
         if self.config.mode == 'train':
