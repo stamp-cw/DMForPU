@@ -125,3 +125,79 @@ class UNetFeatureHook:
             h.remove()
         self.handles.clear()
 
+
+from diffusers.models.attention import Attention
+
+class AttentionKVInjector:
+    def __init__(self, unet):
+        self.handles = []
+        self.kv_cache = None  # (k, v)
+
+        for module in unet.modules():
+            if isinstance(module, Attention):
+                h = module.register_forward_hook(self._hook_fn)
+                self.handles.append(h)
+
+    def set_kv(self, k, v):
+        """
+        k, v: [B, N, D]
+        """
+        self.kv_cache = (k, v)
+
+    def _hook_fn(self, module, inputs, output):
+        """
+        inputs:
+          hidden_states,
+          encoder_hidden_states,
+          attention_mask,
+          ...
+        """
+        if self.kv_cache is None:
+            return output
+
+        # 判断是不是 cross-attention
+        encoder_hidden_states = inputs[1] if len(inputs) > 1 else None
+        if encoder_hidden_states is None:
+            return output  # skip self-attn
+
+        hidden_states = inputs[0]
+        k_ext, v_ext = self.kv_cache
+
+        k_ext = k_ext.to(hidden_states.device)
+        v_ext = v_ext.to(hidden_states.device)
+
+        # ===== 原 Attention 内部逻辑（复刻）=====
+        query = module.to_q(hidden_states)
+
+        key   = module.to_k(k_ext)
+        value = module.to_v(v_ext)
+
+        query = module.head_to_batch_dim(query)
+        key   = module.head_to_batch_dim(key)
+        value = module.head_to_batch_dim(value)
+
+        attn_scores = torch.baddbmm(
+            torch.empty(
+                query.shape[0], query.shape[1], key.shape[1],
+                device=query.device,
+                dtype=query.dtype,
+            ),
+            query,
+            key.transpose(-1, -2),
+            beta=0,
+            alpha=module.scale,
+        )
+
+        attn_probs = attn_scores.softmax(dim=-1)
+        hidden_states = torch.bmm(attn_probs, value)
+
+        hidden_states = module.batch_to_head_dim(hidden_states)
+        hidden_states = module.to_out[0](hidden_states)
+        hidden_states = module.to_out[1](hidden_states)
+
+        return hidden_states
+
+    def remove(self):
+        for h in self.handles:
+            h.remove()
+
