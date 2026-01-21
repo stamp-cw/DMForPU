@@ -20,6 +20,27 @@ def variance_scaling(scale, mode, distribution,
         fan_out = shape[out_axis] * receptive_field_size
         return fan_in, fan_out
 
+    def init(shape, dtype=dtype, device=device):
+        fan_in, fan_out = _compute_fans(shape, in_axis, out_axis)
+        if mode == "fan_in":
+            denominator = fan_in
+        elif mode == "fan_out":
+            denominator = fan_out
+        elif mode == "fan_avg":
+            denominator = (fan_in + fan_out) / 2
+        else:
+            raise ValueError(
+                "invalid mode for variance scaling initializer: {}".format(mode))
+        variance = scale / denominator
+        if distribution == "normal":
+            return torch.randn(*shape, dtype=dtype, device=device) * torch.sqrt(variance)
+        elif distribution == "uniform":
+            return (torch.rand(*shape, dtype=dtype, device=device) * 2. - 1.) * torch.sqrt(3 * variance)
+        else:
+            raise ValueError("invalid distribution for variance scaling initializer")
+
+    return init
+
 def default_init(scale=1.):
     """The same initialization used in DDPM."""
     scale = 1e-10 if scale == 0 else scale
@@ -212,7 +233,7 @@ class ResB(nn.Module):
 class DownB(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(DownB, self).__init__()
-        self.c_attn = SpatialCrossAttnBlock(out_ch)
+        self.c_attn = SpatialCrossAttnBlock(in_ch)
         self.res = ResB(in_ch, out_ch)
         self.pool = nn.MaxPool2d(kernel_size=2)
     def forward(self, x_q, x_k, x_v):
@@ -238,7 +259,7 @@ class DownB(nn.Module):
 class UpB(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(UpB, self).__init__()
-        self.c_attn = SpatialCrossAttnBlock(out_ch)
+        self.c_attn = SpatialCrossAttnBlock(in_ch)
         self.up = nn.ConvTranspose2d(
             in_ch, out_ch, kernel_size=3, stride=2, padding = 1, output_padding = 1 )
         self.res = ResB(out_ch*2, out_ch)
@@ -260,9 +281,9 @@ class Outconv(nn.Module):
 
 ' Architecture of Res-UNet '
 @register_model(name='AuxUNet')
-class UNet(nn.Module):
-    def __init__(self):
-        super(UNet, self).__init__()
+class AuxUNet(nn.Module):
+    def __init__(self, config):
+        super(AuxUNet, self).__init__()
         self.down1 = DownB(1, 64)
         self.down2 = DownB(64, 128)
         self.down3 = DownB(128, 256)

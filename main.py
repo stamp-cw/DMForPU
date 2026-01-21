@@ -205,7 +205,9 @@ if __name__ == '__main__':
     from vae.latent_vae import LatentVAE
     from run.losses import VAEKLLossType, VAEPURELossType, UNetLOSSLossType
     # from model.unet.unet_model import UNet
-    from model.unet.unet import UNet as AuxUNet
+    # from model.unet.unet import UNet as AuxUNet
     # from model.unet.unet import UNet
-    from model.unet_mmodel import UnetMModel
+    from model.unet.aux_unet import AuxUNet
+    from model.unet_mmodel import UNetMModel
+    from model.aux_unet_mmodel import AuxUNetMModel
     main()

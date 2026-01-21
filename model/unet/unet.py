@@ -161,7 +161,7 @@ class Outconv(nn.Module):
 #         self.bilinear = bilinear
 
 ' Architecture of Res-UNet '
-@register_model(name=['UNet','PUUNet'])
+@register_model(name=['UNet','PuUNet'])
 class UNet(nn.Module):
     def __init__(self,config):
         super(UNet, self).__init__()

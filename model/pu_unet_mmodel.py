@@ -3,8 +3,8 @@ import torch
 from model.model_setup import ModelSetup
 from selector.mmodel_selector import register_mmodel
 
-@register_mmodel(name='UnetMModel')
-class UNetMModel:
+@register_mmodel(name='PUUnetMModel')
+class PuUNetMModel:
     def __init__(self, config):
         self.config = config
         self.device = config.training.device
@@ -19,13 +19,13 @@ class UNetMModel:
 
     def train_predict(self, gt):
         self.gt = gt.to(self.device)
-        self.pred, self.d_feats, self.u_feats = self.model(self.gt)
+        self.pred = self.model(self.gt)
         return self.pred
 
     def eval_predict(self, gt):
         with torch.no_grad():
             self.gt = gt.to(self.device)
-            self.pred, self.d_feats, self.u_feats = self.model(self.gt)
+            self.pred = self.model(self.gt)
         return self.pred
 
     @property
