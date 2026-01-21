@@ -30,14 +30,14 @@ class ModelSampler:
     #     load_weights = r"/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big/model_weights/weights.pth"
     #     checkpoint = torch.load(load_weights, map_location='cpu')
     #
-    #     ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{100}.pth')
+    #     # ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{100}.pth')
     #     # self.vae.model.save_pretrained(self.config.io.out_hf_ckpt_path)
-    #     state_dict = {
-    #         'model': checkpoint['state_dict'],
-    #         'optimizer': checkpoint['optimizer'],
-    #         'epoch': 100
-    #     }
-    #     torch.save(state_dict, ckpt_file_path)
+    #     # state_dict = {
+    #     #     'model': checkpoint['state_dict'],
+    #     #     'optimizer': checkpoint['optimizer'],
+    #     #     'epoch': 100
+    #     # }
+    #     # torch.save(state_dict, ckpt_file_path)
     #
     #     self.mmodel.model.load_state_dict(checkpoint['state_dict'])
 
@@ -57,12 +57,14 @@ class ModelSampler:
         with torch.no_grad():
             # self.diffusion.infer_sample()
             wrapped = batch_dict["wrapped"].to(self.device)
+            # wrapped = batch_dict["unwrapped"].to(self.device)
             pred_unwrapped = self.mmodel.eval_predict(wrapped)
             # self._save_samples_and_preview(wrapped, gt_unwrapped, pred_unwrapped)
             c_batch = {
                 "wrapped": batch_dict["wrapped"].to(self.device),
                 "gt_unwrapped": batch_dict["unwrapped"].to(self.device),
                 "pred_unwrapped": pred_unwrapped,
+                # "pred_unwrapped": wrapped,
                 "diff_unwrapped": batch_dict["unwrapped"].to(self.device) - pred_unwrapped,
                 # "gt_unwrapped_neg_norm": batch_dict["unwrapped_neg_norm"].to(self.device),
             }
@@ -107,7 +109,7 @@ class ModelSampler:
         for i in range(wrapped.shape[0]):
             compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
             imgs = [
-                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i])
+                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i])
             ]
             fig, axes = plt.subplots(1, 4, figsize=(16, 4))
             axes = axes.flatten()

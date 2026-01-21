@@ -44,6 +44,8 @@ class DphDDPMDiffusion:
 
         self.aux_unet = SecModelSetup(self.config, config.logger).model
 
+        self.load_checkpoint()
+
         # load aux_unet weights to aux_unet
         # self.aux_unet.load_state_dict(torch.load(self.config.model.aux_unet_path, map_location=self.device))
         self.aux_unet.eval()
@@ -51,13 +53,31 @@ class DphDDPMDiffusion:
         self.token_condition = ExtraTokenCondition(
             self.config,
             # in_channels_list=[256, 256],  # down4 + mid
-            in_channels_list=[512, 1024],  # down4 + mid
+            in_channels_list=[64, 128, 256, 512, 1024],  # down4 + mid
             cross_attention_dim=self.unet.config.cross_attention_dim
         ).to(self.device)
 
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
 
 
+    def unwrap_model(self, model):
+        return model.module if isinstance(model, torch.nn.DataParallel) else model
+
+
+    def load_checkpoint(self):
+        # self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
+        # loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
+        # self.mmodel.model.load_state_dict(loaded_state['model'], strict=True)
+        load_weights = r"/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big/model_weights/weights.pth"
+        checkpoint = torch.load(load_weights, map_location='cpu')
+        new_state_dict = {}
+        for k, v in checkpoint.items():
+            if k.startswith("module."):
+                new_state_dict[k[len("module."):]] = v
+            else:
+                new_state_dict[k] = v
+        self.aux_unet.load_state_dict(new_state_dict['state_dict'])
+        # self.aux_unet.load_state_dict(checkpoint['state_dict'])
 
     def setup_train(self):
         self.model.train()
@@ -80,20 +100,35 @@ class DphDDPMDiffusion:
 
         # unet = UNet(config).to(device)
 
+        aux = self.unwrap_model(self.aux_unet)
+
+        # hook = UNetFeatureHook(
+        #     aux,
+        #     hook_layers={
+        #         "down1": self.aux_unet.down1,
+        #         "down2": self.aux_unet.down2,
+        #         "down3": self.aux_unet.down3,
+        #         "down4": self.aux_unet.down4,
+        #         "mid":   self.aux_unet.res,
+        #     }
+        # )
         hook = UNetFeatureHook(
-            self.aux_unet,
+            aux,
             hook_layers={
-                "down1": self.aux_unet.down1,
-                "down2": self.aux_unet.down2,
-                "down3": self.aux_unet.down3,
-                "down4": self.aux_unet.down4,
-                "mid":   self.aux_unet.res,
+                "down1": aux.down1,
+                "down2": aux.down2,
+                "down3": aux.down3,
+                "down4": aux.down4,
+                "mid":   aux.res,
             }
         )
         hook.clear()
         self.aux_unet(self.wrapped)
 
         selected_feats = {
+            "down1": hook.features["down1"],  # [B, 64, H/8, W/8]
+            "down2": hook.features["down2"],  # [B, 128, H/8, W/8]
+            "down3": hook.features["down3"],  # [B, 256, H/8, W/8]
             "down4": hook.features["down4"],  # [B, 512, H/8, W/8]
             "mid": hook.features["mid"],    # [B,1024, H/8, W/8]
         }
@@ -136,20 +171,35 @@ class DphDDPMDiffusion:
         # }
 
 
+        aux = self.unwrap_model(self.aux_unet)
+
+        # hook = UNetFeatureHook(
+        #     aux,
+        #     hook_layers={
+        #         "down1": self.aux_unet.down1,
+        #         "down2": self.aux_unet.down2,
+        #         "down3": self.aux_unet.down3,
+        #         "down4": self.aux_unet.down4,
+        #         "mid":   self.aux_unet.res,
+        #     }
+        # )
         hook = UNetFeatureHook(
-            self.aux_unet,
+            aux,
             hook_layers={
-                "down1": self.aux_unet.down1,
-                "down2": self.aux_unet.down2,
-                "down3": self.aux_unet.down3,
-                "down4": self.aux_unet.down4,
-                "mid":   self.aux_unet.res,
+                "down1": aux.down1,
+                "down2": aux.down2,
+                "down3": aux.down3,
+                "down4": aux.down4,
+                "mid":   aux.res,
             }
         )
         hook.clear()
         self.aux_unet(self.wrapped)
 
         selected_feats = {
+            "down1": hook.features["down1"],  # [B, 64, H/8, W/8]
+            "down2": hook.features["down2"],  # [B, 128, H/8, W/8]
+            "down3": hook.features["down3"],  # [B, 256, H/8, W/8]
             "down4": hook.features["down4"],  # [B, 512, H/8, W/8]
             "mid": hook.features["mid"],    # [B,1024, H/8, W/8]
         }
