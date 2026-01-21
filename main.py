@@ -210,4 +210,6 @@ if __name__ == '__main__':
     from model.unet.aux_unet import AuxUNet
     from model.unet_mmodel import UNetMModel
     from model.aux_unet_mmodel import AuxUNetMModel
+    from model.diff_aux_unet_mmodel import DiffAuxUNetMModel
+    from model.unet.diff_aux_unet import DiffAuxUNet
     main()
