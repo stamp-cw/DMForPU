@@ -327,6 +327,8 @@ class DiffAuxUNet(nn.Module):
     def __init__(self, config):
         super(DiffAuxUNet, self).__init__()
 
+        # self.cached_up_feats = None
+        # self.cached_down_feats = None
         time_dim = 256
         self.time_mlp = nn.Sequential(
             nn.Linear(time_dim, time_dim * 4),
@@ -350,12 +352,20 @@ class DiffAuxUNet(nn.Module):
 
         if feats:
             d_feat_0, d_feat_1, d_feat_2, d_feat_3 = down_feats
+            # d_feat_0 = down_feats['down1']
+            # d_feat_1 = down_feats['down2']
+            # d_feat_2 = down_feats['down3']
+            # d_feat_3 = down_feats['down4']
             x1, x1_ = self.down1(x, d_feat_0, d_feat_0, t_emb)
             x2, x2_ = self.down2(x1, d_feat_1, d_feat_1, t_emb)
             x3, x3_ = self.down3(x2, d_feat_2, d_feat_2, t_emb)
             x4, x4_ = self.down4(x3, d_feat_3, d_feat_3, t_emb)
             x5  = self.res(x4, t_emb)
             u_feat_0, u_feat_1, u_feat_2, u_feat_3 = up_feats
+            # u_feat_0 = up_feats['up1']
+            # u_feat_1 = up_feats['up2']
+            # u_feat_2 = up_feats['up3']
+            # u_feat_3 = up_feats['up4']
             x6  = self.up1(x5, u_feat_0, u_feat_0, x4_, t_emb)
             x7  = self.up2(x6, u_feat_1, u_feat_1, x3_, t_emb)
             x8  = self.up3(x7, u_feat_2, u_feat_2, x2_, t_emb)
@@ -371,4 +381,23 @@ class DiffAuxUNet(nn.Module):
             x8  = self.up3(x7, x7, x7, x2_, t_emb)
             x9  = self.up4(x8, x8, x8, x1_, t_emb)
         x10 = self.outc(x9)
+        # self.cached_down_feats = (x1, x2, x3, x4)
+        # self.cached_up_feats   = (x5, x6, x7, x8)
+        # return x10, (x, x1, x2, x3), (x5, x6, x7, x8)
+
+        # dict_down_feats = {
+        #     'down1': x,
+        #     'down2': x1,
+        #     'down3': x2,
+        #     'down4': x3
+        # }
+        # dict_up_feats = {
+        #     'up1': x5,
+        #     'up2': x6,
+        #     'up3': x7,
+        #     'up4': x8
+        # }
+        # return x10, torch.stack([x, x1, x2, x3],dim=1), torch.stack([x5, x6, x7, x8],dim=1)
         return x10, (x, x1, x2, x3), (x5, x6, x7, x8)
+        # return x10
+        # return x10, dict_down_feats, dict_up_feats

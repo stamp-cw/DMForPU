@@ -20,12 +20,14 @@ class AuxUNetMModel:
     def train_predict(self, gt):
         self.gt = gt.to(self.device)
         self.pred, self.d_feats, self.u_feats = self.model(self.gt)
+        # self.pred= self.model(self.gt)
         return self.pred
 
     def eval_predict(self, gt):
         with torch.no_grad():
             self.gt = gt.to(self.device)
             self.pred, self.d_feats, self.u_feats = self.model(self.gt)
+            # self.pred= self.model(self.gt)
         return self.pred
 
     @property

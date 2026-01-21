@@ -284,6 +284,8 @@ class Outconv(nn.Module):
 class AuxUNet(nn.Module):
     def __init__(self, config):
         super(AuxUNet, self).__init__()
+        # self.cached_up_feats = None
+        # self.cached_down_feats = None
         self.down1 = DownB(1, 64)
         self.down2 = DownB(64, 128)
         self.down3 = DownB(128, 256)
@@ -297,12 +299,22 @@ class AuxUNet(nn.Module):
     def forward(self, x, feats=False, down_feats=None, up_feats=None):
         if feats:
             d_feat_0, d_feat_1, d_feat_2, d_feat_3 = down_feats
+            # d_feat_0, d_feat_1, d_feat_2, d_feat_3 = down_feats.unbind(dim=1)
+            # d_feat_0 = down_feats['down1']
+            # d_feat_1 = down_feats['down2']
+            # d_feat_2 = down_feats['down3']
+            # d_feat_3 = down_feats['down4']
             x1, x1_ = self.down1(x, d_feat_0, d_feat_0)
             x2, x2_ = self.down2(x1, d_feat_1, d_feat_1)
             x3, x3_ = self.down3(x2, d_feat_2, d_feat_2)
             x4, x4_ = self.down4(x3, d_feat_3, d_feat_3)
             x5  = self.res(x4)
             u_feat_0, u_feat_1, u_feat_2, u_feat_3 = up_feats
+            # u_feat_0, u_feat_1, u_feat_2, u_feat_3 = up_feats.unbind(dim=1)
+            # u_feat_0 = up_feats['up1']
+            # u_feat_1 = up_feats['up2']
+            # u_feat_2 = up_feats['up3']
+            # u_feat_3 = up_feats['up4']
             x6  = self.up1(x5, u_feat_0, u_feat_0, x4_)
             x7  = self.up2(x6, u_feat_1, u_feat_1, x3_)
             x8  = self.up3(x7, u_feat_2, u_feat_2, x2_)
@@ -318,4 +330,21 @@ class AuxUNet(nn.Module):
             x8  = self.up3(x7, x7, x7, x2_)
             x9  = self.up4(x8, x8, x8, x1_)
         x10 = self.outc(x9)
+        # dict_down_feats = {
+        #     'down1': x,
+        #     'down2': x1,
+        #     'down3': x2,
+        #     'down4': x3
+        # }
+        # dict_up_feats = {
+        #     'up1': x5,
+        #     'up2': x6,
+        #     'up3': x7,
+        #     'up4': x8
+        # }
+        # self.cached_down_feats = (x1, x2, x3, x4)
+        # self.cached_up_feats   = (x5, x6, x7, x8)
         return x10, (x, x1, x2, x3), (x5, x6, x7, x8)
+        # return x10, torch.stack([x, x1, x2, x3],dim=1), torch.stack([x5, x6, x7, x8],dim=1)
+        # return x10
+        # return x10, dict_down_feats, dict_up_feats

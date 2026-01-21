@@ -21,6 +21,7 @@ class DiffAuxUNetMModel:
         self.gt = gt.to(self.device)
         t_batch = torch.randint(0, 1, (1,), device=self.config.training.device).long().expand(self.config.training.batch_size)
         self.pred, self.d_feats, self.u_feats = self.model(self.gt, t_batch)
+        # self.pred = self.model(self.gt, t_batch)
         return self.pred
 
     def eval_predict(self, gt):
@@ -28,6 +29,7 @@ class DiffAuxUNetMModel:
             self.gt = gt.to(self.device)
             t_batch = torch.randint(0, 1, (1,), device=self.config.training.device).long().expand(self.config.training.batch_size)
             self.pred, self.d_feats, self.u_feats = self.model(self.gt, t_batch)
+            # self.pred = self.model(self.gt, t_batch)
         return self.pred
 
     @property
