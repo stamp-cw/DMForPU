@@ -47,7 +47,8 @@ class DphDDPMDiffusion:
                 new_state_dict[k[len("module."):]] = v
             else:
                 new_state_dict[k] = v
-        self.aux_unet.load_state_dict(new_state_dict['state_dict'])
+        # self.aux_unet.load_state_dict(new_state_dict['state_dict'])
+        self.aux_unet.load_state_dict(new_state_dict['model'])
         # self.aux_unet.load_state_dict(checkpoint['state_dict'])
 
     def setup_train(self):
@@ -72,7 +73,7 @@ class DphDDPMDiffusion:
 
         self.noise = torch.randn_like(self.gt_unwrapped_norm).to(self.device)
         self.noisy = self.scheduler.add_noise(self.gt_unwrapped_norm, self.noise, t).to(self.device)
-        self.noise_pred = self.model(self.noisy, t, feats=True, down_feats=d_feats, up_feats=u_feats)
+        self.noise_pred, _, _ = self.model(self.noisy, t, feats=True, down_feats=d_feats, up_feats=u_feats)
         self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.k_max - self.config.data.k_min)
@@ -88,7 +89,7 @@ class DphDDPMDiffusion:
 
         x = torch.randn_like(self.wrapped).to(self.device)
         for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
-            self.noise_pred = self.model(self.noisy, t, feats=True, down_feats=d_feats, up_feats=u_feats)
+            x, _, _ = self.model(x, t, feats=True, down_feats=d_feats, up_feats=u_feats)
             x = scheduler.step(self.noise_pred, t, x).prev_sample
         self.pred_unwrapped_neg_norm = x
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2

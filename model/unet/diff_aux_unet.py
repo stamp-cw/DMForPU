@@ -355,7 +355,7 @@ class DiffAuxUNet(nn.Module):
             x3, x3_ = self.down3(x2, d_feat_2, d_feat_2, t_emb)
             x4, x4_ = self.down4(x3, d_feat_3, d_feat_3, t_emb)
             x5  = self.res(x4, t_emb)
-            u_feat_3, u_feat_2, u_feat_1, u_feat_0 = up_feats
+            u_feat_0, u_feat_1, u_feat_2, u_feat_3 = up_feats
             x6  = self.up1(x5, u_feat_0, u_feat_0, x4_, t_emb)
             x7  = self.up2(x6, u_feat_1, u_feat_1, x3_, t_emb)
             x8  = self.up3(x7, u_feat_2, u_feat_2, x2_, t_emb)
@@ -371,4 +371,4 @@ class DiffAuxUNet(nn.Module):
             x8  = self.up3(x7, x7, x7, x2_, t_emb)
             x9  = self.up4(x8, x8, x8, x1_, t_emb)
         x10 = self.outc(x9)
-        return x10, (x1, x2, x3, x4), (x5, x6, x7, x8)
+        return x10, (x, x1, x2, x3), (x5, x6, x7, x8)
