@@ -1,7 +1,7 @@
 seed: 42
 
 data:
-  name: SyntheticPUMat128Big
+  name: SyntheticPUMat128Test
   image_size: 128
   color_channels: 1
   num_workers: 1
@@ -15,11 +15,12 @@ diffusion:
 #  name: LatentDDPMDiffusion
 #  name: NegNormDDPMDiffusion
 #  name: MchNegNormDDPMDiffusion
-  name: ElucidatedDiffusion
+#  name: DphDDPMDiffusion
+  name: UcnDDPMDiffusion
 #  name: DDPMDiffusion
   timesteps: 1000
   num_train_timesteps: 1000
-  num_infer_timesteps: 100
+  num_infer_timesteps: 1000
   use_custom_model: false
   on_conditioning: true
   conditioning_channels: 2
@@ -74,13 +75,13 @@ controlnet_model:
 
 training:
   device: cuda
-  brand_new_epochs: 10001
-  continue_training_epochs: 1000001
+  brand_new_epochs: 1001
+  continue_training_epochs: 1001
   batch_size: 8
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 2
+  snapshot_freq: 100
   eval_freq: 1
   snapshot_sampling: false
   snapshot_batch_size: 2
@@ -96,8 +97,8 @@ sampling:
 
 optim:
   optimizer: Adam
-  lr: 0.0001
-  weight_decay: 0.0001
+  lr: 0.001
+  weight_decay: 0
   beta1: 0.9
   eps: 1e-8
   warmup: 2
@@ -107,9 +108,8 @@ optim:
 loss_type:
 #  name: PHY3
 #  name: PHY11
-  name: GEWLOSS
 #  name: PHY4
-#  name: PURE
+  name: PURE
   lam_phys: 0.5
 
 iio:
@@ -118,7 +118,7 @@ iio:
   save_pth_to_wandb: false
 
 metrics:
-  l1: true
-  rmse: true
-  wrap_l1: true
-  wrap_rmse: true
+  l1: false
+  rmse: false
+  wrap_l1: false
+  wrap_rmse: false
