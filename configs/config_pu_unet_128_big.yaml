@@ -25,7 +25,7 @@ training:
   device: cuda
   brand_new_epochs: 1001
   continue_training_epochs: 10001
-  batch_size: 64
+  batch_size: 128
   use_all_data: false
   amp: true
   log_freq: 1
@@ -60,7 +60,7 @@ test:
 optim:
   optimizer: Adam
   lr: 0.0001
-  weight_decay: 0.01
+  weight_decay: 0.0001
   beta1: 0.9
   eps: 1e-8
   warmup: 2
