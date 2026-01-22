@@ -699,8 +699,8 @@ class ElucidatedDiffusion(nn.Module):
 
 
     def infer_sample(self):
-        # x_sample, images = self.gew_diffusion.sample(self.wrapped_neg_norm, batch_size=self.wrapped.shape[0], num_sample_steps=1000)
-        x_sample, images = self.gew_diffusion.sample(self.gt_unwrapped_norm, batch_size=self.wrapped.shape[0], num_sample_steps=100)
+        x_sample, images = self.gew_diffusion.sample(self.wrapped_neg_norm, batch_size=self.wrapped.shape[0], num_sample_steps=100)
+        # x_sample, images = self.gew_diffusion.sample(self.gt_unwrapped_norm, batch_size=self.wrapped.shape[0], num_sample_steps=100)
         self.pred_unwrapped_neg_norm = x_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.k_max - self.config.data.k_min)
