@@ -106,6 +106,7 @@ class Sampler:
             elif self.config.diffusion.name == 'NegNormDDPMDiffusion' or self.config.diffusion.name == 'DDPMDiffusion' or self.config.diffusion.name == 'MchNegNormDDPMDiffusion' or self.config.diffusion.name == 'DphDDPMDiffusion' or self.config.diffusion.name == 'ElucidatedDiffusion':
                 c_batch = {
                     "wrapped": self.diffusion.wrapped,
+                    "wrapped_neg_norm": batch_dict["wrapped_neg_norm"].to(self.device),
                     "gt_unwrapped": self.diffusion.gt_unwrapped,
                     "pred_unwrapped": self.diffusion.pred_unwrapped,
                     "diff_unwrapped": self.diffusion.diff_unwrapped,
@@ -302,12 +303,12 @@ class Sampler:
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
         wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped = c_batch['wrapped'], c_batch['gt_unwrapped'], c_batch['pred_unwrapped'], c_batch['diff_unwrapped']
-        wrapped, gt_unwrapped_neg_norm, pred_unwrapped_neg_norm, diff_unwrapped_neg_norm = c_batch['wrapped'], c_batch['gt_unwrapped_neg_norm'], c_batch['pred_unwrapped_neg_norm'], c_batch['diff_unwrapped_neg_norm']
+        wrapped_neg_norm, gt_unwrapped_neg_norm, pred_unwrapped_neg_norm, diff_unwrapped_neg_norm = c_batch['wrapped_neg_norm'], c_batch['gt_unwrapped_neg_norm'], c_batch['pred_unwrapped_neg_norm'], c_batch['diff_unwrapped_neg_norm']
         # wrapped, gt_k_mat_cont, pred_k_mat_cont, diff_k_mat_cont = c_batch['wrapped'], c_batch['gt_k_mat_cont'], c_batch['pred_k_mat_cont'], c_batch['diff_k_mat_cont']
         # wrapped, gt_k_mat_disc, pred_k_mat_disc, diff_k_mat_disc = c_batch['wrapped'], c_batch['gt_k_mat_disc'], c_batch['pred_k_mat_disc'], c_batch['diff_k_mat_disc']
 
         titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped",
-                  "Wrapped", "GT unwrapped_neg_norm", "Pred unwrapped_neg_norm", "Diff unwrapped_neg_norm",
+                  "Wrapped neg_norm", "GT unwrapped_neg_norm", "Pred unwrapped_neg_norm", "Diff unwrapped_neg_norm",
                   # "Wrapped", "GT k-mat Cont", "Pred k-mat Cont", "Diff k-mat Cont",
                   # "Wrapped", "GT k-mat Disc", "Pred k-mat Disc", "Diff k-mat Disc"
                   ]
@@ -316,7 +317,7 @@ class Sampler:
             compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
             imgs = [
                 _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i]),
-                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped_neg_norm[i]), _to_numpy_2d(pred_unwrapped_neg_norm[i]), _to_numpy_2d(diff_unwrapped_neg_norm[i]),
+                _to_numpy_2d(wrapped_neg_norm[i]), _to_numpy_2d(gt_unwrapped_neg_norm[i]), _to_numpy_2d(pred_unwrapped_neg_norm[i]), _to_numpy_2d(diff_unwrapped_neg_norm[i]),
                 # _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_cont[i]), _to_numpy_2d(pred_k_mat_cont[i]), _to_numpy_2d(diff_k_mat_cont[i]),
                 # _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_disc[i]), _to_numpy_2d(pred_k_mat_disc[i]), _to_numpy_2d(diff_k_mat_disc[i])
             ]
@@ -327,7 +328,7 @@ class Sampler:
                      # "twilight", "viridis", "viridis", "inferno",
                      # "twilight", "viridis", "viridis", "inferno"
                      ]
-            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[:5]:
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[:4]:
                 # im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)
@@ -335,7 +336,7 @@ class Sampler:
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
             color_norm = colors.Normalize(vmin=-1, vmax=1)
-            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[5:]:
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[4:]:
                 im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 # im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)
