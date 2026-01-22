@@ -76,11 +76,11 @@ training:
   device: cuda
   brand_new_epochs: 10001
   continue_training_epochs: 1000001
-  batch_size: 8
+  batch_size: 128
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 100
+  snapshot_freq: 10
   eval_freq: 1
   snapshot_sampling: false
   snapshot_batch_size: 2
@@ -96,8 +96,8 @@ sampling:
 
 optim:
   optimizer: Adam
-  lr: 0.001
-  weight_decay: 0
+  lr: 0.0001
+  weight_decay: 0.0001
   beta1: 0.9
   eps: 1e-8
   warmup: 2
