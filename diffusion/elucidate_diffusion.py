@@ -26,22 +26,25 @@ from diffusers import UNet2DModel,UNet3DConditionModel
 import matplotlib.pyplot as plt
 from copy import deepcopy
 
-class UNet2DModelWithBN(UNet2DModel):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Modify the convolutional layer of each DownBlock and UpBlock and add BatchNorm
-        for module in self.down_blocks:
-            for layer in module.resnets:
-                layer.conv2 = nn.Sequential(
-                    layer.conv2,
-                    nn.BatchNorm2d(layer.conv2.out_channels)
-                )
-        for module in self.up_blocks:
-            for layer in module.resnets:
-                layer.conv2 = nn.Sequential(
-                    layer.conv2,
-                    nn.BatchNorm2d(layer.conv2.out_channels)
-                )
+from selector.diffusion_selector import register_diffusion
+
+
+# class UNet2DModelWithBN(UNet2DModel):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # Modify the convolutional layer of each DownBlock and UpBlock and add BatchNorm
+#         for module in self.down_blocks:
+#             for layer in module.resnets:
+#                 layer.conv2 = nn.Sequential(
+#                     layer.conv2,
+#                     nn.BatchNorm2d(layer.conv2.out_channels)
+#                 )
+#         for module in self.up_blocks:
+#             for layer in module.resnets:
+#                 layer.conv2 = nn.Sequential(
+#                     layer.conv2,
+#                     nn.BatchNorm2d(layer.conv2.out_channels)
+#                 )
 
 
 class UNet2DModelWithBN(UNet2DModel):
@@ -380,7 +383,7 @@ def get_beta_schedule(num_diffusion_timesteps, beta_schedule='linear', beta_star
     assert betas.shape == (num_diffusion_timesteps,)
     return betas
 
-class ElucidatedDiffusion(nn.Module):
+class GewElucidatedDiffusion(nn.Module):
     def __init__(
             self,
             net,
@@ -398,9 +401,9 @@ class ElucidatedDiffusion(nn.Module):
             S_tmin=0.05,
             S_tmax=50,
             S_noise=1.003,
-            l1_lambda=1.0,
-            l2_lambda=1.0,
-            l3_lambda=1.0,
+            # l1_lambda=1.0,
+            # l2_lambda=1.0,
+            # l3_lambda=1.0,
     ):
         super().__init__()
         print("ElucidatedDiffusion initialized")
@@ -436,9 +439,10 @@ class ElucidatedDiffusion(nn.Module):
         self.S_noise = S_noise
         self.perceptual_loss = SpectralFeatureExtractorPretrained(in_channels=channels)
         self.gradient_loss = gradient_loss
-        self.l1_lambda = l1_lambda
-        self.l2_lambda = l2_lambda
-        self.l3_lambda = l3_lambda
+        # self.l1_lambda = l1_lambda
+        # self.l2_lambda = l2_lambda
+        # self.l3_lambda = l3_lambda
+
     @property
     def device(self):
         return next(self.net.parameters()).device
@@ -479,14 +483,14 @@ class ElucidatedDiffusion(nn.Module):
             sigma = sigma.expand(batch)
         sigma = sigma.clamp(min=1e-5)
         padded_sigma = rearrange(sigma, 'b -> b 1 1 1')
-        if mask is None:
-            mask = torch.ones([batch,1,self.image_size, self.image_size]).to(device, torch.float32)
-        mask=mask.reshape((batch,1,self.image_size,self.image_size))
+        # if mask is None:
+        #     mask = torch.ones([batch,1,self.image_size, self.image_size]).to(device, torch.float32)
+        # mask=mask.reshape((batch,1,self.image_size,self.image_size))
 
         combined_input = torch.cat([
             self.c_in(padded_sigma) * noised_images,
             img_lr,
-            mask
+            # mask
         ], dim=1).to(device, torch.float32)
 
         net_out = self.net(
@@ -520,8 +524,8 @@ class ElucidatedDiffusion(nn.Module):
         return (sigma ** 2 + self.sigma_data ** 2) * (sigma * self.sigma_data) ** -2
 
     def forward(self, img_lr, images,mask=None,edge=None):
-        batch_size, c, h, w, device, image_size, channels = *images.shape, images.device, self.image_size, self.channels
-
+        batch_size, c, h, w = images.shape
+        device, image_size, channels =  images.device, self.image_size, self.channels
         assert h == image_size and w == image_size, f'height and width of image must be {image_size}'
         assert c == channels, 'mismatch of image channels'
 
@@ -549,22 +553,24 @@ class ElucidatedDiffusion(nn.Module):
 
         denoised = self.preconditioned_network_forward(noised_images, img_lr,sigmas,mask, self_cond,i=None)
         #pixel_loss = F.mse_loss(denoised, images, reduction = 'none')
-        pixel_loss = 0.5*F.mse_loss(denoised, images, reduction = 'none') + 0.5*SAM(denoised, images)
+        # pixel_loss = 0.5*F.mse_loss(denoised, images, reduction = 'none') + 0.5*SAM(denoised, images)
         #sam_loss = SAM(denoised, images)
-        perception_loss = self.perceptual_loss(denoised, images)
-        geometric_loss = self.gradient_loss(denoised, images)
+        # perception_loss = self.perceptual_loss(denoised, images)
+        # geometric_loss = self.gradient_loss(denoised, images)
 
-        lambda1 = self.l1_lambda
-        lambda2 = self.l2_lambda
-        lambda3 = self.l3_lambda
-        losses = lambda1 * pixel_loss + lambda2 * perception_loss + lambda3 * geometric_loss
+        # lambda1 = self.l1_lambda
+        # lambda2 = self.l2_lambda
+        # lambda3 = self.l3_lambda
+        # losses = lambda1 * pixel_loss + lambda2 * perception_loss + lambda3 * geometric_loss
         #print(pixel_loss.mean(),perception_loss.mean(),geometric_loss.mean())
         #losses = 0.8*loss1 + 0.1*loss2 + 0.1*loss3
-        losses = reduce(losses, 'b ... -> b', 'mean')
+        # losses = reduce(losses, 'b ... -> b', 'mean')
 
-        losses = losses * self.loss_weight(sigmas)
+        # losses = losses * self.loss_weight(sigmas)
 
-        return losses.mean(),pixel_loss.mean(),perception_loss.mean(),geometric_loss.mean()
+        # return losses.mean(),pixel_loss.mean(),perception_loss.mean(),geometric_loss.mean()
+        return denoised
+
     @torch.no_grad()
     def sample(self, img_lr, batch_size = 1, num_sample_steps = None, mask=None):
         """
@@ -647,3 +653,58 @@ class ElucidatedDiffusion(nn.Module):
             images = (sigma_ip1 / sigma_i) * images - sigma_ip1 * (torch.exp(-h) - 1) * D_i
             images = torch.nan_to_num(images, nan=0.0)
         return images, images
+
+
+@register_diffusion(name='ElucidatedDiffusion')
+class ElucidatedDiffusion(nn.Module):
+    def __init__(self, config, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        channels = 1
+        self.config = config
+        self.device = config.training.device
+        self.net = UNet2DWithSpectralFidelity(
+            sample_size=128,
+            in_channels=channels + 1,
+            out_channels=1,
+            norm_type='group',
+            layers_per_block=4,
+            block_out_channels=(128, 128, 256, 256, 512, 512),
+            down_block_types=("DownBlock2D", "DownBlock2D", "DownBlock2D", "DownBlock2D", "AttnDownBlock2D", "DownBlock2D"),
+            up_block_types=("UpBlock2D", "AttnUpBlock2D", "UpBlock2D", "UpBlock2D", "UpBlock2D", "UpBlock2D"),
+        ).to(config.training.device)
+        self.model = self.net
+        # self.gew_diffusion = ElucidatedDiffusion(self.model,image_size=config.out_size, channels=config.pca_bands ,num_sample_steps=config.num_timesteps, l1_lambda=config.l1_lambda, l2_lambda=config.l2_lambda, l3_lambda=config.l3_lambda)
+        self.gew_diffusion = ElucidatedDiffusion(self.model,image_size=128, channels=1 ,num_sample_steps=100)
+
+
+    def setup_train(self):
+        self.model.train()
+
+    def setup_eval(self):
+        self.model.eval()
+
+    def setup_data(self, batch_dict):
+        self.wrapped = batch_dict["wrapped"].to(self.device)
+        self.wrapped_neg_norm = batch_dict["wrapped_neg_norm"].to(self.device)
+        # self.wrapped_cond = batch_dict["wrapped_cond"].to(self.device)
+        self.gt_unwrapped = batch_dict["unwrapped"].to(self.device)
+        self.gt_unwrapped_norm = batch_dict["unwrapped_neg_norm"].to(self.device)
+
+    def train_sample(self, t):
+        self.pred_unwrapped_neg_norm = self.gew_diffusion(self.wrapped,self.gt_unwrapped_norm,None,None)
+        self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
+        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.k_max - self.config.data.k_min)
+        self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
+
+
+    def infer_sample(self):
+        x_sample, images = self.gew_diffusion.sample(self.wrapped)
+        self.pred_unwrapped_neg_norm = x_sample
+        self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
+        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.k_max - self.config.data.k_min)
+        self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
+
+
+    @property
+    def optimize_parameters(self):
+        return self.model.parameters()
