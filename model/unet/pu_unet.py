@@ -162,9 +162,9 @@ class Outconv(nn.Module):
 
 ' Architecture of Res-UNet '
 @register_model(name=['UNet','PuUNet'])
-class UNet(nn.Module):
+class PuUNet(nn.Module):
     def __init__(self,config):
-        super(UNet, self).__init__()
+        super(PuUNet, self).__init__()
         self.down1 = DownB(1, 64)
         self.down2 = DownB(64, 128)
         self.down3 = DownB(128, 256)

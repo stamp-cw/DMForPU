@@ -3,7 +3,7 @@ import torch
 from model.model_setup import ModelSetup
 from selector.mmodel_selector import register_mmodel
 
-@register_mmodel(name='PUUnetMModel')
+@register_mmodel(name='PuUNetMModel')
 class PuUNetMModel:
     def __init__(self, config):
         self.config = config

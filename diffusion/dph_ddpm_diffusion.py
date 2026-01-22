@@ -39,7 +39,8 @@ class DphDDPMDiffusion:
         # loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
         # self.mmodel.model.load_state_dict(loaded_state['model'], strict=True)
         # load_weights = r"/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big/model_weights/weights.pth"
-        load_weights = r"/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/assets/SyntheticPUMat128Test/AuxUNet/ckpt/epoch_50.pth"
+        # load_weights = r"/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/assets/SyntheticPUMat128Test/AuxUNet/ckpt/epoch_50.pth"
+        load_weights = r"/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/assets/SyntheticPUMat128Big/DiffAuxUNet/ckpt/epoch_10.pth"
         checkpoint = torch.load(load_weights, map_location='cpu')
         new_state_dict = {}
         for k, v in checkpoint.items():
@@ -67,9 +68,11 @@ class DphDDPMDiffusion:
 
         # unet = UNet(config).to(device)
 
+        # aux_net = self.unwrap_model(self.aux_unet)
         aux_net = self.unwrap_model(self.aux_unet)
 
-        _, d_feats, u_feats = aux_net(self.wrapped)
+        t_batch = torch.randint(0, 1, (1,), device=self.config.training.device).long().expand(self.config.training.batch_size)
+        _, d_feats, u_feats = aux_net(self.wrapped, t_batch)
         # d_feats = aux_net.module.cached_down_feats
         # u_feats = aux_net.module.cached_up_feats
 
@@ -89,7 +92,9 @@ class DphDDPMDiffusion:
         aux_net = self.unwrap_model(self.aux_unet)
         # aux_net = self.aux_unet
 
-        _, d_feats, u_feats = aux_net(self.wrapped)
+        t_batch = torch.randint(0, 1, (1,), device=self.config.training.device).long().expand(self.config.training.batch_size)
+        _, d_feats, u_feats = aux_net(self.wrapped, t_batch)
+        # _, d_feats, u_feats = aux_net(self.wrapped)
         # d_feats = aux_net.module.cached_down_feats
         # u_feats = aux_net.module.cached_up_feats
 
