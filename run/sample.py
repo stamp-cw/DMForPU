@@ -128,6 +128,7 @@ class Sampler:
                 self._save_compare_png_latent(c_batch)
             elif self.config.diffusion.name == 'UcnDDPMDiffusion':
                 c_batch = {
+                    "gt_unwrapped_neg_norm": batch_dict["unwrapped_neg_norm"].to(self.device),
                     "pred_unwrapped_neg_norm": self.diffusion.pred_unwrapped_neg_norm,
                 }
                 self._save_compare_png_ucn(c_batch)
@@ -384,11 +385,11 @@ class Sampler:
     def _save_compare_png_ucn(self, c_batch):
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
-        pred_unwrapped_neg_norm = c_batch['pred_unwrapped_neg_norm']
+        gt_unwrapped_neg_norm, pred_unwrapped_neg_norm = c_batch['gt_unwrapped_neg_norm'],c_batch['pred_unwrapped_neg_norm']
         compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, 0)
-        # compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, 1)
+        compare_png_path2 = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, 1)
         nrow = 4
-        samples = _to_numpy_2d(pred_unwrapped_neg_norm)
+        samples = _to_numpy_2d(gt_unwrapped_neg_norm)
         B = pred_unwrapped_neg_norm.shape[0]
         ncol = (B + nrow - 1) // nrow
         plt.figure(figsize=(nrow * 3, ncol * 3))
@@ -398,6 +399,16 @@ class Sampler:
             plt.axis("off")
         plt.tight_layout()
         plt.savefig(compare_png_path)
+        plt.close()
+
+        samples2 = _to_numpy_2d(pred_unwrapped_neg_norm)
+        plt.figure(figsize=(nrow * 3, ncol * 3))
+        for i in range(B):
+            plt.subplot(ncol, nrow, i + 1)
+            plt.imshow(samples2[i], cmap="jet")
+            plt.axis("off")
+        plt.tight_layout()
+        plt.savefig(compare_png_path2)
         plt.close()
 
     def _update_stat(self):
