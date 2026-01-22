@@ -535,12 +535,12 @@ class GewElucidatedDiffusion(nn.Module):
         padded_sigmas = rearrange(sigmas, 'b -> b 1 1 1')
 
         noise = torch.randn_like(images)
-        if edge is not None:
-            noise = edge_aware_noise_schedule(noise, edge,sigmas= sigmas, strength=0.5)
-            #adjusted_noise = noise
-            #plt.imshow(adjusted_noise[0].cpu().detach().numpy()[:3,:,:].transpose(1,2,0))
-            #plt.colorbar()
-            #plt.savefig("/workspace/diff_sr/result/adjusted_sigmas.png")
+        # if edge is not None:
+        #     noise = edge_aware_noise_schedule(noise, edge,sigmas= sigmas, strength=0.5)
+        #     #adjusted_noise = noise
+        #     #plt.imshow(adjusted_noise[0].cpu().detach().numpy()[:3,:,:].transpose(1,2,0))
+        #     #plt.colorbar()
+        #     #plt.savefig("/workspace/diff_sr/result/adjusted_sigmas.png")
         noised_images = images + padded_sigmas * noise  # alphas are 1. in the paper
 
         self_cond = None
@@ -674,7 +674,7 @@ class ElucidatedDiffusion(nn.Module):
         ).to(config.training.device)
         self.model = self.net
         # self.gew_diffusion = ElucidatedDiffusion(self.model,image_size=config.out_size, channels=config.pca_bands ,num_sample_steps=config.num_timesteps, l1_lambda=config.l1_lambda, l2_lambda=config.l2_lambda, l3_lambda=config.l3_lambda)
-        self.gew_diffusion = ElucidatedDiffusion(self.model,image_size=128, channels=1 ,num_sample_steps=100)
+        self.gew_diffusion = GewElucidatedDiffusion(self.model,image_size=128, channels=1 ,num_sample_steps=100)
 
 
     def setup_train(self):
@@ -691,14 +691,14 @@ class ElucidatedDiffusion(nn.Module):
         self.gt_unwrapped_norm = batch_dict["unwrapped_neg_norm"].to(self.device)
 
     def train_sample(self, t):
-        self.pred_unwrapped_neg_norm = self.gew_diffusion(self.wrapped,self.gt_unwrapped_norm,None,None)
+        self.pred_unwrapped_neg_norm = self.gew_diffusion(self.wrapped_neg_norm,self.gt_unwrapped_norm,None,None)
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.k_max - self.config.data.k_min)
         self.diff_unwrapped = self.gt_unwrapped - self.pred_unwrapped
 
 
     def infer_sample(self):
-        x_sample, images = self.gew_diffusion.sample(self.wrapped)
+        x_sample, images = self.gew_diffusion.sample(self.wrapped_neg_norm, batch_size=self.wrapped.shape[0], num_sample_steps=100)
         self.pred_unwrapped_neg_norm = x_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * self.config.data.k_max - self.config.data.k_min)

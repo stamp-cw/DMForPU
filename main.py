@@ -214,4 +214,5 @@ if __name__ == '__main__':
     from model.unet.diff_aux_unet import DiffAuxUNet
     from model.pu_unet_mmodel import PuUNetMModel
     from model.unet.pu_unet import PuUNet
+    from diffusion.elucidate_diffusion import ElucidatedDiffusion
     main()

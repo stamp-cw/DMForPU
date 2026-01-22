@@ -126,6 +126,7 @@ class SyntheticPUMat(Dataset):
             "k_mat_cont_neg_norm": k_mat_cont_neg_norm,
             "k_mat_disc": k_mat_disc,
             "k_mat_disc_neg_norm": k_mat_disc_neg_norm,
+            "wrapped_neg_norm": wrapped_neg_norm,
             # "unwrapped_fp16": unwrapped.to(torch.float16),
             # "wrapped_norm": wrapped_norm,
             # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),

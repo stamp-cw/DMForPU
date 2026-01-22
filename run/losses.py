@@ -4,6 +4,8 @@ import torch
 import torch.nn.functional as F
 
 import torch
+
+from diffusion.elucidate_diffusion import SpectralFeatureExtractorPretrained
 from selector.loss_type_selector import register_loss_type, _LOSSTYPE
 from utils.util import wrap_phase
 
@@ -171,6 +173,83 @@ class PHY13LossType:
         phys_loss = self.neg_norm_l1_loss(diffusion.gt_unwrapped_neg_norm, diffusion.pred_unwrapped_neg_norm)
 
         total_loss = diff_loss + 0.5 * phys_loss
+
+        return total_loss
+
+def SAM(x, y):
+    cosine_sim = F.cosine_similarity(x, y, dim=1)
+    #remove nan values
+    if torch.isnan(cosine_sim).any():
+        print('nan values in cosine_sim')
+        cosine_sim[torch.isnan(cosine_sim)] = 1e-6
+    if torch.isnan(x).any():
+        print('nan values in x')
+        x[torch.isnan(x)] = 1e-6
+    return torch.acos(cosine_sim.clamp(-1+1e-6, 1-1e-6)).mean()
+
+@register_loss_type(name='GEWLOSS')
+class GEWLOSSType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        # self.lam_phys = config.loss_type.lam_phys
+        self.perceptual_loss = SpectralFeatureExtractorPretrained(in_channels=1)
+
+    # def neg_norm_kl_loss(self, gt_unwrapped_neg_norm, pred_unwrapped_neg_norm):
+    #     loss = torch.mean(gt_kmat_cont_neg_norm * torch.log((gt_kmat_cont_neg_norm + 1e-8) / (pred_k_mat_cont_neg_norm + 1e-8)))
+    #     return loss
+
+    def gradient_loss(self,x_generated, x_real):
+        """ Compute gradient consistency loss """
+        c = x_generated.shape[1]
+        device = x_generated.device
+        dtype = x_generated.dtype
+
+        # Create a Sobel filter (1, 1, 3, 3)
+        sobel_x = torch.tensor(
+            [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=dtype, device=device
+        ).view(1, 1, 3, 3)
+
+        sobel_y = sobel_x.transpose(2, 3)  # y direction Sobel
+
+        # Copy to multichannel to make it work with `groups=c`
+        sobel_x = sobel_x.repeat(c, 1, 1, 1)
+        sobel_y = sobel_y.repeat(c, 1, 1, 1)
+
+        grad_x_gen = F.conv2d(x_generated, sobel_x, padding=1, groups=c)
+        grad_y_gen = F.conv2d(x_generated, sobel_y, padding=1, groups=c)
+        grad_x_real = F.conv2d(x_real, sobel_x, padding=1, groups=c)
+        grad_y_real = F.conv2d(x_real, sobel_y, padding=1, groups=c)
+        # Calculating L1 loss
+        loss = F.l1_loss(grad_x_gen, grad_x_real) + F.l1_loss(grad_y_gen, grad_y_real)
+        loss = loss / 2  # Divide by 2 to make it smoother
+        return loss
+
+    def __call__(self, diffusion):
+        # unet pred noise diff
+        # noise_pred = diffusion.noise_pred
+        # noise = diffusion.noise
+        # diff_loss = F.mse_loss(noise_pred, noise)
+        #
+        # # diffusion solution pred unwrapped phase
+        # # wrapped = diffusion.wrapped
+        # # pred_wrapped = wrap_phase(diffusion.pred_unwrapped)
+        # # phys_loss = F.l1_loss(pred_wrapped, wrapped)
+        # phys_loss = self.neg_norm_l1_loss(diffusion.gt_unwrapped_neg_norm, diffusion.pred_unwrapped_neg_norm)
+
+        # total_loss = diff_loss + 0.5 * phys_loss
+
+
+        denoised = diffusion.pred_unwrapped_neg_norm
+        images = diffusion.gt_unwrapped_norm
+
+
+        pixel_loss = 0.5*F.mse_loss(denoised, images) + 0.5*SAM(denoised, images)
+        # perception_loss = self.perceptual_loss(denoised, images)
+        geometric_loss = self.gradient_loss(denoised, images)
+
+        # total_loss = 0.8*pixel_loss + 0.1*perception_loss + 0.1*geometric_loss
+        total_loss = 0.8*pixel_loss +  0.1*geometric_loss
 
         return total_loss
 
