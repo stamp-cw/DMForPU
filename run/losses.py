@@ -9,15 +9,6 @@ from diffusion.elucidate_diffusion import SpectralFeatureExtractorPretrained
 from selector.loss_type_selector import register_loss_type, _LOSSTYPE
 from utils.util import wrap_phase
 
-
-# def compute_losses(noise_pred: torch.Tensor, noise: torch.Tensor, scheduler: "DDPMScheduler", t: torch.Tensor, noisy: torch.Tensor, wrapped: torch.Tensor, lambda_phys: float) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
-#     """Compute diffusion MSE and physics-consistency L1 loss."""
-#     diff_loss = F.mse_loss(noise_pred, noise)
-#     pred_unwrapped = scheduler.step(noise_pred, t, noisy).prev_sample
-#     phys_loss = F.l1_loss(wrap_phase(pred_unwrapped), wrapped)
-#     total = diff_loss + lambda_phys * phys_loss
-#     return total, {"diff": diff_loss.detach(), "phys": phys_loss.detach()}
-
 @register_loss_type(name='PURE')
 class PureLossType:
     def __init__(self, config):

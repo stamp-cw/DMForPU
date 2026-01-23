@@ -13,6 +13,8 @@ from utils.logger import Logger
 import wandb
 from datetime import datetime
 from configs.dynamic_io import IOConfig
+from utils.util import dict2namespace, unflatten_dict, update_dict
+
 
 def main():
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
@@ -22,6 +24,7 @@ def main():
     parser.add_argument('--training_from_scratch', action='store_true', default=False, required=False, help='Train from scratch instead of resuming training')
     parser.add_argument('--sampling_from_epoch', type=int, required=False, default=None, help='Epoch number to load for sampling (default: latest checkpoint)')
     parser.add_argument('--hyper', required=False, action='store_true',default=False, help='hyper train')
+    parser.add_argument('--debug', required=False, action='store_true',default=False, help='debug')
 
     args = parser.parse_args()
 
@@ -97,14 +100,25 @@ def main():
     # Train or sample
     try:
         if args.mode == 'train':
-            from run.train import Trainer
-            trainer = Trainer(config)
-            trainer.train()
+            if args.debug:
+                from run.train_t import Trainer
+                trainer = Trainer(config)
+                trainer.train()
+            else:
+                from run.train import Trainer
+                trainer = Trainer(config)
+                trainer.train()
         elif args.mode == 'sample':
-            from run.sample import Sampler
-            sampler = Sampler(config)
-            sampler.load_checkpoint()
-            sampler.sample()
+            if args.debug:
+                from run.sample_t import Sampler
+                sampler = Sampler(config)
+                sampler.load_checkpoint()
+                sampler.sample()
+            else:
+                from run.sample import Sampler
+                sampler = Sampler(config)
+                sampler.load_checkpoint()
+                sampler.sample()
         elif args.mode == 'val':
             from run.val import Valuator
             valuator = Valuator(config)
@@ -156,62 +170,21 @@ def main():
         wandb.finish()
 
 
-def dict2namespace(config):
-    namespace = argparse.Namespace()
-    for key, value in config.items():
-        if isinstance(value, dict):
-            new_value = dict2namespace(value)
-        else:
-            # 自动尝试把字符串转成数字
-            if isinstance(value, str):
-                try:
-                    if value.lower() in ["true", "false"]:   # 转成 bool
-                        new_value = value.lower() == "true"
-                    elif "." in value or "e" in value.lower():  # float
-                        new_value = float(value)
-                    else:  # int
-                        new_value = int(value)
-                except Exception:
-                    new_value = value  # 转换失败就保持字符串
-            else:
-                new_value = value
 
-        setattr(namespace, key, new_value)
-    return namespace
-
-def update_dict(base: dict, override: dict):
-    for k, v in override.items():
-        if isinstance(v, dict) and isinstance(base.get(k), dict):
-            update_dict(base[k], v)
-        else:
-            base[k] = v
-    return base
-
-def unflatten_dict(flat_dict, sep="."):
-    result = {}
-    for key, value in flat_dict.items():
-        parts = key.split(sep)
-        d = result
-        for p in parts[:-1]:
-            d = d.setdefault(p, {})
-        d[parts[-1]] = value
-    return result
 
 if __name__ == '__main__':
+    # Import Optimizers
     from model.optimizer import AdamOptimizer,SGDOptimizer
-    from run.losses import PHY1LossType,PHY2LossType,PHY3LossType,PureLossType, PHY4LossType, PHY11LossType, PHY12LossType
-    from diffusion.ddpm_diffusion import DDPMDiffusion
-    from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
-    from diffusion.mch_neg_norm_ddpm_diffusion import MchNegNormDDPMDiffusion
-    from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
-    from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
-    from diffusion.latent_ddpm_diffusion import LatentDDPMDiffusion
-    from diffusion.dph_ddpm_diffusion import DphDDPMDiffusion
+    # Import Losses
+    from run.losses import PureLossType, Pure2LossType
+    from run.losses import GEWLOSSType
+    from run.losses import PHY1LossType,PHY2LossType,PHY3LossType, PHY4LossType
+    from run.losses import PHY11LossType, PHY12LossType, PHY13LossType
+    from run.losses import VAEKLLossType, VAEPURELossType
+    from run.losses import UNetLOSSLossType
+    # Import VAE Models
     from vae.latent_vae import LatentVAE
-    from run.losses import VAEKLLossType, VAEPURELossType, UNetLOSSLossType
-    # from model.unet.unet_model import UNet
-    # from model.unet.unet import UNet as AuxUNet
-    # from model.unet.unet import UNet
+    # Import Models
     from model.unet.aux_unet import AuxUNet
     from model.unet_mmodel import UNetMModel
     from model.aux_unet_mmodel import AuxUNetMModel
@@ -219,6 +192,14 @@ if __name__ == '__main__':
     from model.unet.diff_aux_unet import DiffAuxUNet
     from model.pu_unet_mmodel import PuUNetMModel
     from model.unet.pu_unet import PuUNet
+    # Import Diffusions
+    from diffusion.ddpm_diffusion import DDPMDiffusion
+    from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
+    from diffusion.mch_neg_norm_ddpm_diffusion import MchNegNormDDPMDiffusion
+    from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
+    from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
+    from diffusion.latent_ddpm_diffusion import LatentDDPMDiffusion
+    from diffusion.dph_ddpm_diffusion import DphDDPMDiffusion
     from diffusion.elucidate_diffusion import ElucidatedDiffusion
     from diffusion.ucn_ddpm_diffusion import UcnDDPMDiffusion
     from diffusion.phase_ddpm_diffusion import PhaseDDPMDiffusion

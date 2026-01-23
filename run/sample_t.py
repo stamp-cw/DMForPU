@@ -1,19 +1,11 @@
 from functools import cached_property
 
-import numpy as np
-from PIL import Image
-from tqdm import tqdm
 import torch
-# from torch_ema import ExponentialMovingAverage
-from torchvision.utils import make_grid
-from torchvision.transforms import ToPILImage
 
 from diffusion.diffusion_setup import DiffusionSetup
-from model.model_setup import ModelSetup
 from selector.data_selector import _DATA_LOADERS
 import matplotlib.pyplot as plt
 from matplotlib import colors
-
 
 class Sampler:
     def __init__(self, config):
@@ -22,52 +14,24 @@ class Sampler:
         self.device = config.sampling.device
         self.diffusion = DiffusionSetup(self.config, self.logger).diffusion
         self.data_loader = _DATA_LOADERS(self.config)
-        self.eval_iter = iter(self.eval_loader)
-        # with torch.no_grad(): self.ema = ExponentialMovingAverage(self.model.parameters(),
-        #                                                           decay=self.config.model.ema_rate)
 
     def sample(self):
-
+        sampling_iter = iter(self.sampling_loader)
         if self.config.sampling.fix_seed:
             torch.manual_seed(self.config.seed)  # 设置 CPU 随机数种子
             torch.cuda.manual_seed_all(self.config.seed)  # 设置所有 GPU 随机数种子
 
-        self.logger.info(
-            f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
+        self.logger.info(f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
         self.diffusion.setup_eval()
-        # with self.ema.average_parameters():
         while self.remaining_samples > 0:
             try:
-                batch_dict = next(self.eval_iter)
-
+                batch_dict = next(sampling_iter)
             except StopIteration:
-                self.eval_iter = iter(self.eval_loader)
-                batch_dict = next(self.eval_iter)
+                sampling_iter = iter(self.sampling_loader)
+                batch_dict = next(sampling_iter)
             self._sample(batch_dict)
-            # self._save_samples_pt()
             self._save_samples_png()
             self._update_stat()
-
-    @property
-    def saved_samples(self):
-        return self.config.io.latest_generated_sample_num
-
-    @property
-    def temp_batch_size(self):
-        return min(self.config.sampling.batch_size, self.remaining_samples)
-
-    @property
-    def remaining_samples(self):
-        return self.total_samples - self.saved_samples
-
-    @cached_property
-    def total_samples(self):
-        return self.config.sampling.total_samples
-
-    @cached_property
-    def total_repeat_iter_num(self):
-        return (
-                    self.remaining_samples // self.config.sampling.batch_size + 1) if self.remaining_samples % self.config.sampling.batch_size != 0 else self.remaining_samples // self.config.sampling.batch_size
 
     def _sample(self, batch_dict):
         with torch.no_grad():
@@ -138,7 +102,7 @@ class Sampler:
                     "wrapped_neg_norm": batch_dict["wrapped_neg_norm"].to(self.device),
                     "gt_unwrapped": self.diffusion.gt_unwrapped,
                     "pred_unwrapped": self.diffusion.pred_unwrapped,
-                    "diff_unwrapped": self.diffusion.gt_unwrapped - self.diffusion.pred_unwrapped,
+                    "diff_unwrapped": self.diffusion.diff_unwrapped,
                     "gt_unwrapped_std_norm": batch_dict["unwrapped_std_norm"].to(self.device),
                     "pred_unwrapped_std_norm": self.diffusion.pred_unwrapped_std_norm,
                     "diff_unwrapped_std_norm": batch_dict["unwrapped_std_norm"].to(self.device) - self.diffusion.pred_unwrapped_std_norm
@@ -151,11 +115,6 @@ class Sampler:
             self._save_compare_pt(c_batch)
             self.samples = self.diffusion.pred_unwrapped
 
-    @cached_property
-    def eval_loader(self):
-        # return self.data_loader.eval_loader
-        return self.data_loader.test_loader
-
     def _save_compare_pt(self, c_batch):
         pt_path = self.config.io.generated_compare_pt_file_path(self.saved_samples,
                                                                self.saved_samples + self.temp_batch_size)
@@ -163,14 +122,13 @@ class Sampler:
         self.logger.info(f"Saved {self.temp_batch_size} samples to {pt_path}")
 
     def _save_samples_png(self):
-
         samples = self.samples  # shape: [B, H, W] 或 [B, 1, H, W]
         for i, img_array in enumerate(samples):
             img = img_array.squeeze()  # [H, W]
             img = img.detach().cpu().numpy()
             img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1 + i)
             plt.figure(figsize=(4, 4))
-            plt.imshow(img, cmap="turbo")   # ⭐ 改这里的颜色
+            plt.imshow(img, cmap="turbo")
             plt.axis("off")
             plt.colorbar(fraction=0.046, pad=0.04)
             plt.savefig(img_path, bbox_inches="tight", pad_inches=0)
@@ -181,15 +139,9 @@ class Sampler:
     def load_checkpoint(self):
         self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
         loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
-        # self.ema.load_state_dict(loaded_state['ema'])
         self.diffusion.model.load_state_dict(loaded_state['model'])
-        if self.config.diffusion.use_controlnet:
-            self.diffusion.controlnet_model.load_state_dict(loaded_state['controlnet_model'])
-
-    def data_inverse_scaler(self, x):
-        from selector.data_selector import BaseDataLoader
-        data_loader = BaseDataLoader(self.config)
-        return data_loader.data_inverse_scaler(x)
+        # if self.config.diffusion.use_controlnet:
+        #     self.diffusion.controlnet_model.load_state_dict(loaded_state['controlnet_model'])
 
     def _save_compare_png(self, c_batch):
         def _to_numpy_2d(x: torch.Tensor):
@@ -241,10 +193,6 @@ class Sampler:
                 ax.set_title(title)
                 ax.axis("off")
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-            fig.tight_layout()
-            fig.savefig(compare_png_path, dpi=200)
-            plt.close(fig)
-
 
             fig.tight_layout()
             fig.savefig(compare_png_path, dpi=200)
@@ -346,14 +294,14 @@ class Sampler:
             fig.savefig(compare_png_path, dpi=200)
             plt.close(fig)
 
-    def _save_compare_png_std_norm(self, c_batch):
+    def _save_compare_png_neg_norm(self, c_batch):
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
         wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped = c_batch['wrapped'], c_batch['gt_unwrapped'], c_batch['pred_unwrapped'], c_batch['diff_unwrapped']
         wrapped_neg_norm, gt_unwrapped_std_norm, pred_unwrapped_std_norm, diff_unwrapped_std_norm = c_batch['wrapped_neg_norm'], c_batch['gt_unwrapped_std_norm'], c_batch['pred_unwrapped_std_norm'], c_batch['diff_unwrapped_std_norm']
 
         titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped",
-                  "Wrapped neg_norm", "GT unwrapped_std_norm", "Pred unwrapped_std_norm", "Diff unwrapped_std_norm",
+                  "Wrapped neg_norm", "GT unwrapped_neg_norm", "Pred unwrapped_neg_norm", "Diff unwrapped_neg_norm",
                   ]
         for i in range(wrapped.shape[0]):
             compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
@@ -466,4 +414,27 @@ class Sampler:
     def _update_stat(self):
         self.logger.info(
             f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
-        # self.iter_num += 1
+
+    @property
+    def sampling_loader(self):
+        return self.data_loader.test_loader
+
+    @property
+    def saved_samples(self):
+        return self.config.io.latest_generated_sample_num
+
+    @property
+    def temp_batch_size(self):
+        return min(self.config.sampling.batch_size, self.remaining_samples)
+
+    @property
+    def remaining_samples(self):
+        return self.total_samples - self.saved_samples
+
+    @cached_property
+    def total_samples(self):
+        return self.config.sampling.total_samples
+
+    @cached_property
+    def total_repeat_iter_num(self):
+        return (self.remaining_samples // self.config.sampling.batch_size + 1) if self.remaining_samples % self.config.sampling.batch_size != 0 else self.remaining_samples // self.config.sampling.batch_size

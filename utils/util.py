@@ -4,6 +4,59 @@ import torch
 
 import torch.nn.functional as F
 
+import argparse
+
+def dict2namespace(config):
+    namespace = argparse.Namespace()
+    for key, value in config.items():
+        if isinstance(value, dict):
+            new_value = dict2namespace(value)
+        else:
+            # 自动尝试把字符串转成数字
+            if isinstance(value, str):
+                try:
+                    if value.lower() in ["true", "false"]:   # 转成 bool
+                        new_value = value.lower() == "true"
+                    elif "." in value or "e" in value.lower():  # float
+                        new_value = float(value)
+                    else:  # int
+                        new_value = int(value)
+                except Exception:
+                    new_value = value  # 转换失败就保持字符串
+            else:
+                new_value = value
+
+        setattr(namespace, key, new_value)
+    return namespace
+
+def update_dict(base: dict, override: dict):
+    for k, v in override.items():
+        if isinstance(v, dict) and isinstance(base.get(k), dict):
+            update_dict(base[k], v)
+        else:
+            base[k] = v
+    return base
+
+def unflatten_dict(flat_dict, sep="."):
+    result = {}
+    for key, value in flat_dict.items():
+        parts = key.split(sep)
+        d = result
+        for p in parts[:-1]:
+            d = d.setdefault(p, {})
+        d[parts[-1]] = value
+    return result
+
+
+
+
+
+
+
+
+
+
+
 def wrap_phase(phi: torch.Tensor) -> torch.Tensor:
     """Wrap continuous phase to [-pi, pi]."""
     return torch.atan2(torch.sin(phi), torch.cos(phi))

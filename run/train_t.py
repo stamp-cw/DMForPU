@@ -15,16 +15,7 @@ from run.losses import LossFN
 from model.optimizer import OptimizerFN
 from selector.data_selector import _DATA_LOADERS
 from selector.optimizer_selector import _OPTIMIZERS
-from utils.metrics import l1_metric, rmse_metric, wrap_l1_metric, wrap_rmse_metric
-from utils.util import AverageMeter
 from torch.cuda.amp import autocast, GradScaler
-
-# METRIC_FUNCS = {
-#     "l1": l1_metric,
-#     "rmse": rmse_metric,
-#     "wrap_l1": wrap_l1_metric,
-#     "wrap_rmse": wrap_rmse_metric
-# }
 
 class Trainer:
     def __init__(self, config):

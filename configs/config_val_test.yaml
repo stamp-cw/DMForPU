@@ -49,6 +49,7 @@ training:
   eval_freq: 1
   snapshot_sampling: false
   snapshot_batch_size: 2
+  metric: ["loss", "l1", "rmse"]
 
 sampling:
   device: cuda
@@ -66,6 +67,7 @@ val:
   record_freq: 1
   eps: 1e-5
   fix_seed: true
+  metric: ["l1", "rmse"]
 
 optim:
   optimizer: Adam
@@ -85,6 +87,6 @@ iio:
   use_wandb: false
   save_pth_to_wandb: false
 
-metric:
-  name: PUREMetrics
-  metric_list: ["l1", "rmse", "wrap_l1", "wrap_rmse"]
+meter:
+  name: PUREMeter
+#  metric_list: ["l1", "rmse", "wrap_l1", "wrap_rmse"]
