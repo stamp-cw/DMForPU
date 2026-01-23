@@ -415,7 +415,7 @@ class Sampler:
         self.logger.info(
             f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
 
-    @property
+    @cached_property
     def sampling_loader(self):
         return self.data_loader.test_loader
 

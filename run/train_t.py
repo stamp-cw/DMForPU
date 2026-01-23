@@ -31,7 +31,7 @@ class Trainer:
             self.writer = SummaryWriter(self.config.io.tensorboard_path)
             config.writer = self.writer
         self.meter = MeterSetup(self.config, self.logger).meter
-        config.meter = self.meter
+        config.train_meter = self.meter
         self.meter.mode = 'train'
         self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
 
@@ -56,7 +56,7 @@ class Trainer:
             pbar = tqdm.tqdm(self.train_loader, desc=f"Epoch {epoch}/{self.end_epoch}")
             for batch_data in pbar:
                 self.acc_batch += 1
-                self.config.acc_step = self.acc_batch
+                self.meter.acc_step = self.acc_batch
                 self.meter = self.epoch_fn(self.diffusion, self.optimizer, self.meter, epoch, batch_data)
                 self.meter.epoch_meter.update(self.meter.batch_metric_dict)
 
@@ -114,14 +114,14 @@ class Trainer:
 
     @property
     def val_loader(self):
-        return self.data_loader.eval_loader
+        return self.data_loader.test_loader
 
     @property
     def sampling_loader(self):
-        return self.data_loader.eval_loader
+        return self.data_loader.test_loader
 
     def _snapshot_sampling(self):
-        from run.sample import Sampler
+        from run.sample_t import Sampler
         self.config.sampling.batch_size = self.config.training.snapshot_batch_size
         self.config.sampling.total_samples = self.config.training.snapshot_batch_size
         # self.config.sampling.eval = True

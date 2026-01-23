@@ -39,7 +39,6 @@ class Sampler:
         while self.remaining_samples > 0:
             try:
                 batch_dict = next(self.eval_iter)
-
             except StopIteration:
                 self.eval_iter = iter(self.eval_loader)
                 batch_dict = next(self.eval_iter)

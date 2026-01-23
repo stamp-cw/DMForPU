@@ -22,8 +22,7 @@ training:
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 100
-  eval_freq: 1
+  snapshot_freq: 10
   snapshot_sampling: false
   snapshot_val: false
   snapshot_batch_size: 2
@@ -52,6 +51,10 @@ sampling:
   fix_seed: true
 
 val:
+  device: cuda
+  batch_size: 8
+
+test:
   device: cuda
   batch_size: 8
 

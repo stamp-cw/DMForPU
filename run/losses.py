@@ -28,9 +28,10 @@ class Pure2LossType:
     def __init__(self, config):
         self.config = config
         self.name = config.loss_type.name
-        self.meter = config.meter
+        self.meter = config.train_meter
 
     def __call__(self, diffusion):
+        print(self.meter.batch_metric_dict)
         diff_loss = self.meter.batch_metric_dict['MSE']
         total_loss = diff_loss
         return total_loss
