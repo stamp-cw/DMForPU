@@ -96,13 +96,13 @@ class Sampler:
                     "pred_unwrapped_neg_norm": self.diffusion.pred_unwrapped_neg_norm,
                 }
                 self._save_compare_png_ucn(c_batch)
-            elif self.config.diffusion.name == 'PhaseDDPMDiffusion':
+            elif self.config.diffusion.name == 'PhaseDDPMDiffusion' or self.config.diffusion.name == 'PhaseCutDDPMDiffusion':
                 c_batch = {
                     "wrapped": self.diffusion.wrapped,
                     "wrapped_neg_norm": batch_dict["wrapped_neg_norm"].to(self.device),
                     "gt_unwrapped": self.diffusion.gt_unwrapped,
                     "pred_unwrapped": self.diffusion.pred_unwrapped,
-                    "diff_unwrapped": self.diffusion.diff_unwrapped,
+                    "diff_unwrapped": self.diffusion.gt_unwrapped - self.diffusion.pred_unwrapped,
                     "gt_unwrapped_std_norm": batch_dict["unwrapped_std_norm"].to(self.device),
                     "pred_unwrapped_std_norm": self.diffusion.pred_unwrapped_std_norm,
                     "diff_unwrapped_std_norm": batch_dict["unwrapped_std_norm"].to(self.device) - self.diffusion.pred_unwrapped_std_norm
@@ -294,14 +294,14 @@ class Sampler:
             fig.savefig(compare_png_path, dpi=200)
             plt.close(fig)
 
-    def _save_compare_png_neg_norm(self, c_batch):
+    def _save_compare_png_std_norm(self, c_batch):
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
         wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped = c_batch['wrapped'], c_batch['gt_unwrapped'], c_batch['pred_unwrapped'], c_batch['diff_unwrapped']
         wrapped_neg_norm, gt_unwrapped_std_norm, pred_unwrapped_std_norm, diff_unwrapped_std_norm = c_batch['wrapped_neg_norm'], c_batch['gt_unwrapped_std_norm'], c_batch['pred_unwrapped_std_norm'], c_batch['diff_unwrapped_std_norm']
 
         titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped",
-                  "Wrapped neg_norm", "GT unwrapped_neg_norm", "Pred unwrapped_neg_norm", "Diff unwrapped_neg_norm",
+                  "Wrapped neg_norm", "GT unwrapped_std_norm", "Pred unwrapped_std_norm", "Diff unwrapped_std_norm",
                   ]
         for i in range(wrapped.shape[0]):
             compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)

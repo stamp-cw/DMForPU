@@ -103,6 +103,7 @@ class Trainer:
     def _record_and_evaluate(self):
         if self.epoch % self.config.training.log_freq == 0:
             self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
+            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict}")
             # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict['loss']:.4f}")
         if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
             self._save_state(self.epoch)
@@ -173,5 +174,5 @@ class EpochFN:
             loss.backward()
             self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch)
         meter.batch_metric_dict["loss"] = loss.item()
-        print(meter.batch_metric_dict)
+        # print(meter.batch_metric_dict)
         return meter
