@@ -1,0 +1,90 @@
+seed: 42
+
+data:
+  name: SyntheticPUMat128Test
+  image_size: 128
+  color_channels: 1
+  num_workers: 1
+  k_min: 0
+  k_max: 3
+
+diffusion:
+  name: NegNormDDPMDiffusion
+#  name: ElucidatedDiffusion
+  timesteps: 1000
+  num_train_timesteps: 1000
+  num_infer_timesteps: 100
+  use_custom_model: false
+  on_conditioning: true
+  conditioning_channels: 2
+  use_controlnet: false
+  fusion_type: concat
+#  use_cross_attention: false
+  use_filter: false
+  scaling_factor: 0.18215
+  use_vae: false
+  use_custom_vae: true
+
+
+model:
+  name: DiffAuxUNet
+  sample_size: 32
+  in_channels: 1
+  out_channels: 1
+  layers_per_block: 2
+  block_out_channels: [64, 128, 256, 512]
+
+vae:
+  name: LatentVAE
+
+training:
+  device: cuda
+  brand_new_epochs: 10001
+  continue_training_epochs: 1000001
+  batch_size: 8
+  use_all_data: false
+  amp: true
+  log_freq: 1
+  snapshot_freq: 100
+  eval_freq: 1
+  snapshot_sampling: false
+  snapshot_batch_size: 2
+
+sampling:
+  device: cuda
+  batch_size: 8
+  eval: true
+  total_samples: 8
+  record_freq: 1
+  eps: 1e-5
+  fix_seed: true
+
+val:
+  device: cuda
+  batch_size: 8
+  total_samples: 8
+  record_freq: 1
+  eps: 1e-5
+  fix_seed: true
+
+optim:
+  optimizer: Adam
+  lr: 0.001
+  weight_decay: 0
+  beta1: 0.9
+  eps: 1e-8
+  warmup: 2
+  grad_clip: 1.0
+  momentum: 0.9
+
+loss_type:
+  name: PURE
+
+iio:
+  use_tensorboard: true
+  use_wandb: false
+  save_pth_to_wandb: false
+
+metric:
+  name: PUREMetrics
+  metric_list: ["l1", "rmse", "wrap_l1", "wrap_rmse"]

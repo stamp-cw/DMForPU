@@ -17,7 +17,7 @@ from configs.dynamic_io import IOConfig
 def main():
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
     parser.add_argument('--config', type=str, required=True, help='Path to the configs file')
-    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'eval', 'train_vae', 'test_vae','train_model','test_model','val_model','sample_model'], help='Train the model or generate samples')
+    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'val', 'test','train_vae', 'test_vae','train_model','test_model','val_model','sample_model'], help='Train the model or generate samples')
     parser.add_argument('--user_logging_level', type=str, required=False, default='info', choices=['debug', 'info', 'warning', 'error'], help='Set logging level (debug, info, warning, error)')
     parser.add_argument('--training_from_scratch', action='store_true', default=False, required=False, help='Train from scratch instead of resuming training')
     parser.add_argument('--sampling_from_epoch', type=int, required=False, default=None, help='Epoch number to load for sampling (default: latest checkpoint)')
@@ -105,11 +105,16 @@ def main():
             sampler = Sampler(config)
             sampler.load_checkpoint()
             sampler.sample()
-        elif args.mode == 'eval':
-            from run.eval import Evaluator
-            evaluator = Evaluator(config)
-            evaluator.load_checkpoint()
-            evaluator.evaluate()
+        elif args.mode == 'val':
+            from run.val import Valuator
+            valuator = Valuator(config)
+            valuator.load_checkpoint()
+            valuator.valuate()
+        elif args.mode == 'test':
+            from run.test import Tester
+            tester = Tester(config)
+            tester.load_checkpoint()
+            tester.test()
         elif args.mode == 'train_vae':
             from run.train_vae import VAETrainer
             vae_trainer = VAETrainer(config)

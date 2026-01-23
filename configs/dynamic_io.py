@@ -19,8 +19,8 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return "sample"
 
     @property
-    def out_eval_suffix(self):
-        return "eval"
+    def out_val_suffix(self):
+        return "val"
 
     @property
     def out_stat_suffix(self):
@@ -35,8 +35,8 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return 'sample'
 
     @property
-    def out_eval_filename_prefix(self):
-        return 'eval'
+    def out_val_filename_prefix(self):
+        return 'val'
 
     @property
     def out_ckpt_suffix(self):
@@ -127,8 +127,8 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return path
 
     @property
-    def out_eval_path(self):
-        path = os.path.join(self.out_asset_prefix, self.out_asset_suffix, self.out_eval_suffix,
+    def out_val_path(self):
+        path = os.path.join(self.out_asset_prefix, self.out_asset_suffix, self.out_val_suffix,
                             str(self.sampling_epoch))
         if not os.path.exists(path):
             os.makedirs(path)
@@ -143,8 +143,8 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return path
 
     @property
-    def out_raw_eval_path(self):
-        path = os.path.join(self.out_asset_prefix, self.out_asset_suffix, self.out_eval_suffix,
+    def out_raw_val_path(self):
+        path = os.path.join(self.out_asset_prefix, self.out_asset_suffix, self.out_val_suffix,
                             str(self.sampling_epoch), self.out_sample_raw_suffix)
         if not os.path.exists(path):
             os.makedirs(path)
@@ -220,6 +220,13 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         else:
             return self.latest_checkpoint_file_path
 
+    @property
+    def val_ckpt_file_path(self):
+        if self.sampling_from_epoch is not None:
+            return os.path.join(self.out_ckpt_path, f'{self.out_ckpt_filename_prefix}_{self.sampling_from_epoch}.pth')
+        else:
+            return self.latest_checkpoint_file_path
+
     def generated_sample_pt_file_path(self, start_image_count, end_image_count):
         if self.latest_generated_sample_num is None:
             return None
@@ -232,11 +239,13 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return os.path.join(self.out_sample_path,
                             f"{self.out_sample_filename_prefix}s_{start_image_count}_{end_image_count}.pt")
 
-    def generated_eval_pt_file_path(self, start_image_count, end_image_count):
-        if self.latest_generated_eval_num is None:
-            return None
-        return os.path.join(self.out_eval_path,
-                            f"{self.out_eval_filename_prefix}s_{start_image_count}_{end_image_count}.pt")
+    def generated_val_pt_file_path(self, epoch):
+        return os.path.join(self.out_val_path, f"val_epoch{epoch}.pt")
+
+    # def val_pt_file_path(self, epoch):
+    #     # if self.latest_generated_val_num is None:
+    #     #     return None
+    #     return os.path.join(self.out_val_path, f"val_{epoch}.pt")
 
     def generated_sample_png_file_path(self, image_count):
         if self.latest_generated_sample_num is None:
@@ -248,10 +257,10 @@ class DynamicIOConfig(ml_collections.ConfigDict):
             return None
         return os.path.join(self.out_sample_path, f"{self.out_sample_filename_prefix}s_c{current_step}_s{start_image_count}_e{end_image_count}_compare.png")
 
-    def generated_eval_png_file_path(self, image_count):
-        if self.latest_generated_eval_num is None:
+    def generated_val_png_file_path(self, image_count):
+        if self.latest_generated_val_num is None:
             return None
-        return os.path.join(self.out_raw_eval_path, f"{self.out_eval_filename_prefix}_{image_count:05d}.png")
+        return os.path.join(self.out_raw_val_path, f"{self.out_val_filename_prefix}_{image_count:05d}.png")
 
     def sample_pdf_file_path(self, step):
         return os.path.join(self.out_sample_path, f"{self.out_sample_filename_prefix}_{step}.pdf")
@@ -262,11 +271,11 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return os.path.join(self.out_sample_path,
                             f"{self.out_sample_filename_prefix}s_{start_image_count}_{end_image_count}_{step}.pdf")
 
-    def generated_eval_pdf_file_path(self, start_image_count, end_image_count, step):
-        if self.latest_generated_eval_num is None:
+    def generated_val_pdf_file_path(self, start_image_count, end_image_count, step):
+        if self.latest_generated_val_num is None:
             return None
-        return os.path.join(self.out_eval_path,
-                            f"{self.out_eval_filename_prefix}s_{start_image_count}_{end_image_count}_{step}.pdf")
+        return os.path.join(self.out_val_path,
+                            f"{self.out_val_filename_prefix}s_{start_image_count}_{end_image_count}_{step}.pdf")
 
     @staticmethod
     def get_sample_num(filename):
@@ -284,8 +293,8 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return latest_sample_num
 
     @property
-    def latest_generated_eval_num(self):
-        pattern = os.path.join(self.out_raw_eval_path, f'{self.out_eval_filename_prefix}_*.png')
+    def latest_generated_val_num(self):
+        pattern = os.path.join(self.out_raw_val_path, f'{self.out_val_filename_prefix}_*.png')
         sample_files = glob.glob(pattern)
         if not sample_files:
             return 0
