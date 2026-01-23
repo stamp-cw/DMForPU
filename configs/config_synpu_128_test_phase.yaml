@@ -1,15 +1,15 @@
 seed: 42
 
 data:
-  name: SyntheticPUMat128Mid
+  name: SyntheticPUMat128MidTest
   image_size: 128
   color_channels: 1
   num_workers: 1
   method: kdf
 #  k_min: 0
 #  k_max: 3
-  mean : 10.01
-  std: 5.74
+  mean : 9.60
+  std: 5.43
 
 diffusion:
 #  name: KdfDDPMDiffusion
@@ -86,7 +86,7 @@ training:
   snapshot_freq: 100
   eval_freq: 1
   snapshot_sampling: false
-  snapshot_batch_size: 2
+  snapshot_batch_size: 10
 
 sampling:
   device: cuda

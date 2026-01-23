@@ -351,7 +351,7 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMat128Mid'])
+@register_data_loader(name=['SyntheticPUMat128Mid','SyntheticPUMat128MidTest'])
 class SyntheticPUMatMidDataLoader(BaseDataLoader):
 
     @cached_property

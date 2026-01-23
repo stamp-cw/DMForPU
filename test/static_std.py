@@ -7,7 +7,9 @@ from dataset.SyntheticPUMatMid import SyntheticPUMatMid
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mid', split='train')
+# train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mid', split='train')
+# train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mid', split='test')
+train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128MidTest', split='test')
 
 
 data_loader = torch.utils.data.DataLoader(
