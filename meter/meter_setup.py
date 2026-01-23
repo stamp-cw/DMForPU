@@ -8,7 +8,7 @@ class MeterSetup:
         self._log_meter_info()
 
     def _create_meter(self):
-        self.meter = _METERS[self.config.metric.name](self.config)
+        self.meter = _METERS[self.config.meter.name](self.config)
 
     def _log_meter_info(self):
         self.logger.debug(self.meter)

@@ -1,0 +1,73 @@
+seed: 42
+
+loss_type:
+  name: PURE
+
+data:
+  name: SyntheticPUMatCut32Mid
+  image_size: 32
+  color_channels: 1
+  num_workers: 1
+  mean : 7.44
+  std: 4.37
+
+training:
+  device: cuda
+  brand_new_epochs: 10001
+  continue_training_epochs: 1000001
+  batch_size: 128
+  use_all_data: false
+  amp: true
+  log_freq: 1
+  snapshot_freq: 2
+  eval_freq: 1
+  snapshot_sampling: false
+  snapshot_batch_size: 2
+
+diffusion:
+  name: PhaseCutDDPMDiffusion
+  timesteps: 1000
+  num_train_timesteps: 1000
+  num_infer_timesteps: 100
+  use_custom_model: false
+  on_conditioning: true
+  conditioning_channels: 2
+  use_controlnet: false
+  fusion_type: concat
+  use_filter: false
+  scaling_factor: 0.18215
+  use_vae: false
+  use_custom_vae: true
+
+sampling:
+  device: cuda
+  batch_size: 8
+  eval: true
+  total_samples: 8
+  record_freq: 1
+  eps: 1e-5
+  fix_seed: true
+
+optim:
+  optimizer: Adam
+  lr: 0.0001
+  weight_decay: 0.0001
+  beta1: 0.9
+  eps: 1e-8
+  warmup: 2
+  grad_clip: 1.0
+  momentum: 0.9
+
+vae:
+  name: LatentVAE
+
+iio:
+  use_tensorboard: true
+  use_wandb: false
+  save_pth_to_wandb: false
+
+metrics:
+  l1: true
+  rmse: true
+  wrap_l1: true
+  wrap_rmse: true

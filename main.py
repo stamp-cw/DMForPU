@@ -203,4 +203,7 @@ if __name__ == '__main__':
     from diffusion.elucidate_diffusion import ElucidatedDiffusion
     from diffusion.ucn_ddpm_diffusion import UcnDDPMDiffusion
     from diffusion.phase_ddpm_diffusion import PhaseDDPMDiffusion
+    from diffusion.phase_cut_ddpm_diffusion import PhaseCutDDPMDiffusion
+    # Import Meter
+    from meter.pure_meter import PureMeter
     main()

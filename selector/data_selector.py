@@ -17,6 +17,7 @@ from dataset.InSARDLPUMatCut import InSARDLPUMatCut
 from dataset.SyntheticData import SyntheticData
 from dataset.SyntheticPUMat import SyntheticPUMat
 from dataset.SyntheticPUMatCut import SyntheticPUMatCut
+from dataset.SyntheticPUMatCutMid import SyntheticPUMatCutMid
 from dataset.SyntheticPUMatMid import SyntheticPUMatMid
 
 
@@ -392,6 +393,49 @@ class SyntheticPUMatMidDataLoader(BaseDataLoader):
     def all_loader(self):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
+
+@register_data_loader(name=['SyntheticPUMatCut32Mid','SyntheticPUMatCut32MidTest'])
+class SyntheticPUMatMidCutDataLoader(BaseDataLoader):
+
+    @cached_property
+    def train_dataset(self):
+        return SyntheticPUMatCutMid(root=self.config.io.in_dataset_path, split='train',
+                                 transform=self.transform,
+                                 target_transform=self.gt_transform,
+                                 joint_transform=self.joint_transform,
+                                 mean = self.config.data.mean,
+                                 std = self.config.data.std,
+                                 )
+
+    @cached_property
+    def test_dataset(self):
+        return SyntheticPUMatCutMid(root=self.config.io.in_dataset_path, split='test',
+                                 transform=self.eval_transform,
+                                 target_transform=self.eval_gt_transform,
+                                 joint_transform=self.eval_joint_transform,
+                                 mean = self.config.data.mean,
+                                 std = self.config.data.std,
+                                 )
+
+    @cached_property
+    def all_dataset(self):
+        return torch.utils.data.ConcatDataset([self.train_dataset, self.test_dataset])
+
+    @cached_property
+    def train_loader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
+                          num_workers=self.config.data.num_workers, pin_memory=True, drop_last=True)
+
+    @cached_property
+    def test_loader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+    @cached_property
+    def all_loader(self):
+        return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
 
 @register_data_loader(name=['SyntheticPUMatCut','SyntheticPUMatCut128Big','SyntheticPUMatCut32','SyntheticPUMatCut32Big','SyntheticPUMatCut32Test','SyntheticPUMatCut64','SyntheticPUMatCut64Test'])
 class SyntheticPUMatCutMatDataLoader(BaseDataLoader):

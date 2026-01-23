@@ -3,13 +3,16 @@ import os
 import torch
 import tqdm
 
+from dataset.SyntheticPUMatCutMid import SyntheticPUMatCutMid
 from dataset.SyntheticPUMatMid import SyntheticPUMatMid
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 # train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mid', split='train')
 # train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mid', split='test')
-train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128MidTest', split='test')
+# train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128MidTest', split='test')
+# train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMatCut32Mid', split='train')
+train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMatCut32MidTest', split='train')
 
 
 data_loader = torch.utils.data.DataLoader(

@@ -22,7 +22,6 @@ class PureMeter:
         l_one = l1_metric(self.pred, self.gt)
         rmse = rmse_metric(self.pred, self.gt)
         self.batch_metric_dict = {'MSE': mse, 'L1': l_one, 'RMSE': rmse}
-        self.epoch_meter.update(self.batch_metric_dict)
         self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.config.acc_step)
 
     def compute_epoch_metric(self):

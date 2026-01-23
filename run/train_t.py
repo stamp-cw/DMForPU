@@ -26,14 +26,15 @@ class Trainer:
         self.optimizer = _OPTIMIZERS(self.config)(self.diffusion.optimize_parameters)
         self.data_loader = _DATA_LOADERS(self.config)
         self.optimize_fn = OptimizerFN(self.config)
-        self.meter = MeterSetup(self.config, self.logger).meter
-        self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
-        config.train_meter = self.meter
-        self.meter.mode = 'train'
         if self.config.io.use_tensorboard:
             from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(self.config.io.tensorboard_path)
             config.writer = self.writer
+        self.meter = MeterSetup(self.config, self.logger).meter
+        config.meter = self.meter
+        self.meter.mode = 'train'
+        self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
+
 
     def train(self):
         if self.config.io.training_from_scratch or self.config.io.latest_checkpoint_file_path is None:
@@ -56,8 +57,12 @@ class Trainer:
             for batch_data in pbar:
                 self.acc_batch += 1
                 self.config.acc_step = self.acc_batch
-                self.epoch_fn(self.diffusion, self.optimizer, epoch, batch_data)
+                self.meter = self.epoch_fn(self.diffusion, self.optimizer, self.meter, epoch, batch_data)
+                self.meter.epoch_meter.update(self.meter.batch_metric_dict)
+
             self.meter.compute_epoch_metric()
+            # print(self.meter.batch_metric_dict['loss'])
+            self.avg_loss= self.meter.epoch_metric_dict['loss']
             self._record_and_evaluate()
 
     def _save_state(self, epoch):
@@ -96,8 +101,9 @@ class Trainer:
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
     def _record_and_evaluate(self):
-        if self.epoch % self.config.training.log_freq == 0: self.logger.info(
-            f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
+        if self.epoch % self.config.training.log_freq == 0:
+            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
+            # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict['loss']:.4f}")
         if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
             self._save_state(self.epoch)
 
@@ -140,20 +146,20 @@ class EpochFN:
         self.optimize_fn = optimize_fn
         self.config = config
         self.loss_fn = LossFN(self.config)
-        self.meter = config.meter
+        # self.meter = config.meter
 
-    def __call__(self, diffusion, optimizer, epoch, batch):
-        return self.epoch_fn(diffusion, optimizer, epoch, batch)
+    def __call__(self, diffusion, optimizer, meter, epoch, batch):
+        return self.epoch_fn(diffusion, optimizer, meter, epoch, batch)
 
-    def epoch_fn(self, diffusion, optimizer, epoch, batch):
+    def epoch_fn(self, diffusion, optimizer, meter, epoch, batch):
         diffusion.setup_data(batch)
         t_batch = torch.randint(0, self.config.diffusion.num_train_timesteps, (1,), device=self.config.training.device).long().expand(self.config.training.batch_size)
         diffusion.train_sample(t_batch)
         pred_batch = diffusion.pred_batch
 
-        self.meter.epoch = epoch
-        self.meter.setup_batch_data(pred_batch)
-        self.meter.compute_batch_metric()
+        meter.epoch = epoch
+        meter.setup_data(pred_batch)
+        meter.compute_batch_metric()
         if self.config.training.amp:
             scaler = GradScaler()
             optimizer.zero_grad()
@@ -166,4 +172,6 @@ class EpochFN:
             loss = self.loss_fn(diffusion)
             loss.backward()
             self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch)
-        self.meter.batch_metric_dict["loss"] = loss.item()
+        meter.batch_metric_dict["loss"] = loss.item()
+        print(meter.batch_metric_dict)
+        return meter

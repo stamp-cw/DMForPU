@@ -1,8 +1,8 @@
 seed: 42
 
 data:
-  name: SyntheticPUMat128Test
-  image_size: 128
+  name: SyntheticPUMatCut32Test
+  image_size: 32
   color_channels: 1
   num_workers: 1
   k_min: 0
