@@ -132,6 +132,18 @@ class Sampler:
                     "pred_unwrapped_neg_norm": self.diffusion.pred_unwrapped_neg_norm,
                 }
                 self._save_compare_png_ucn(c_batch)
+            elif self.config.diffusion.name == 'PhaseDDPMDiffusion':
+                c_batch = {
+                    "wrapped": self.diffusion.wrapped,
+                    "wrapped_neg_norm": batch_dict["wrapped_neg_norm"].to(self.device),
+                    "gt_unwrapped": self.diffusion.gt_unwrapped,
+                    "pred_unwrapped": self.diffusion.pred_unwrapped,
+                    "diff_unwrapped": self.diffusion.diff_unwrapped,
+                    "gt_unwrapped_std_norm": batch_dict["unwrapped_std_norm"].to(self.device),
+                    "pred_unwrapped_std_norm": self.diffusion.pred_unwrapped_std_norm,
+                    "diff_unwrapped_std_norm": batch_dict["unwrapped_std_norm"].to(self.device) - self.diffusion.pred_unwrapped_std_norm
+                }
+                self._save_compare_png_std_norm(c_batch)
             else:
                 # c_batch = {}
                 assert "NotImplementedError"
@@ -326,6 +338,46 @@ class Sampler:
             for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[4:]:
                 im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 # im = ax.imshow(img, cmap=cmap)
+                ax.set_title(title)
+                ax.axis("off")
+                fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+            fig.tight_layout()
+            fig.savefig(compare_png_path, dpi=200)
+            plt.close(fig)
+
+    def _save_compare_png_neg_norm(self, c_batch):
+        def _to_numpy_2d(x: torch.Tensor):
+            return x.detach().cpu().squeeze().numpy()
+        wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped = c_batch['wrapped'], c_batch['gt_unwrapped'], c_batch['pred_unwrapped'], c_batch['diff_unwrapped']
+        wrapped_neg_norm, gt_unwrapped_std_norm, pred_unwrapped_std_norm, diff_unwrapped_std_norm = c_batch['wrapped_neg_norm'], c_batch['gt_unwrapped_std_norm'], c_batch['pred_unwrapped_std_norm'], c_batch['diff_unwrapped_std_norm']
+
+        titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped",
+                  "Wrapped neg_norm", "GT unwrapped_neg_norm", "Pred unwrapped_neg_norm", "Diff unwrapped_neg_norm",
+                  ]
+        for i in range(wrapped.shape[0]):
+            compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
+            imgs = [
+                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i]),
+                _to_numpy_2d(wrapped_neg_norm[i]), _to_numpy_2d(gt_unwrapped_std_norm[i]), _to_numpy_2d(pred_unwrapped_std_norm[i]), _to_numpy_2d(diff_unwrapped_std_norm[i]),
+            ]
+            fig, axes = plt.subplots(2, 4, figsize=(16, 8))
+            axes = axes.flatten()
+            cmaps = [
+                    "twilight", "turbo", "turbo", "inferno",
+                     "twilight", "turbo", "turbo", "inferno",
+                     ]
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[:4]:
+                # im = ax.imshow(img, cmap=cmap, norm=color_norm)
+                im = ax.imshow(img, cmap=cmap)
+                ax.set_title(title)
+                ax.axis("off")
+                fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+            # color_norm = colors.Normalize(vmin=-2, vmax=2)
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[4:]:
+                # im = ax.imshow(img, cmap=cmap, norm=color_norm)
+                im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)
                 ax.axis("off")
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)

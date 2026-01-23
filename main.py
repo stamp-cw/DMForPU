@@ -216,4 +216,5 @@ if __name__ == '__main__':
     from model.unet.pu_unet import PuUNet
     from diffusion.elucidate_diffusion import ElucidatedDiffusion
     from diffusion.ucn_ddpm_diffusion import UcnDDPMDiffusion
+    from diffusion.phase_ddpm_diffusion import PhaseDDPMDiffusion
     main()

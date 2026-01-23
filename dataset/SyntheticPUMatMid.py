@@ -1,0 +1,150 @@
+# -*- coding: utf-8 -*-
+
+from pathlib import Path
+from typing import Dict
+import scipy.io as sio
+import torch
+from torch.utils.data import Dataset
+
+
+class SyntheticPUMatMid(Dataset):
+    """
+    InSARDLPU 数据集，Mat文件格式
+    """
+
+    def __init__(
+        self,
+        root,
+        split='train',
+        transform=None,
+        target_transform=None,
+        joint_transform=None,
+        # k_min = 0,
+        # k_max = 3,
+        mean = 0,
+        std = 1
+    ):
+        """
+        Args:
+            root (str): 数据集根目录
+            split (str): 'train' 或 'test'
+            transform (callable, optional): 对图像的变换
+            target_transform (callable, optional):
+            joint_transform (callable, optional):
+        """
+        # super().__init__(root, transform=transform, target_transform=target_transform)
+        super().__init__()
+
+        assert split in ['train', 'test'], "split 必须是 'train' 或 'test'"
+
+        # self.scale_k = k_max - k_min
+        # self.k_min = k_min
+        # self.k_max = k_max
+        self.mean = mean
+        self.std = std
+
+        self.transform = transform
+        self.target_transform = target_transform
+        self.joint_transform = joint_transform
+
+        self.data_root = Path(root)
+
+        self.wrapped_dir = self.data_root / f"{split}_in"
+        self.unwrapped_dir = self.data_root / f"{split}_gt"
+
+        wrapped_files = {p.stem: p for p in self.wrapped_dir.glob("*.mat")}
+        unwrapped_files = {p.stem: p for p in self.unwrapped_dir.glob("*.mat")}
+        self.keys = sorted(set(wrapped_files).intersection(unwrapped_files))
+        if not self.keys:
+            raise FileNotFoundError(f"No paired files found under {self.data_root} for split {split}")
+
+        self.paths = {
+            "wrapped": wrapped_files,
+            "unwrapped": unwrapped_files,
+        }
+
+    def __len__(self) -> int:
+        return len(self.keys)
+
+    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+        key = self.keys[idx]
+        wrapped = sio.loadmat(str(self.paths["wrapped"][key]))['input']
+        unwrapped = sio.loadmat(str(self.paths["unwrapped"][key]))['gt']
+        wrapped = torch.as_tensor(wrapped).unsqueeze(0)
+        unwrapped = torch.as_tensor(unwrapped).unsqueeze(0)
+
+        if self.joint_transform:
+            wrapped, unwrapped = self.joint_transform(wrapped, unwrapped)
+        if self.transform:
+            wrapped = self.transform(wrapped)
+        if self.target_transform:
+            unwrapped = self.target_transform(unwrapped)
+
+        # unwrapped = unwrapped - (torch.min(unwrapped) // (torch.pi * 2)) * (torch.pi * 2)
+        # unwrapped = torch.clamp(unwrapped, min=0.0) # [0, inf]
+        # k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi) # [-0.5, inf]
+        # k_mat_cont_plus_one = k_mat_cont + 1.0 # [0.5, inf]
+        # k_mat_cont_neg_norm = ((k_mat_cont_plus_one - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
+        # k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
+        # k_mat_cont_neg_norm = torch.clamp(k_mat_cont_neg_norm, min= -1, max= 1) # [-1, 1]
+        # k_mat_disc = torch.round(k_mat_cont) # [0, inf]
+        # k_mat_disc_plus_one = torch.round(k_mat_cont_plus_one)
+        # k_mat_disc_neg_norm = ((k_mat_disc - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-1, 1]
+
+        wrapped_neg_norm = wrapped / torch.pi
+        wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
+
+
+        # wrapped = wrapped + torch.pi
+        # wrapped_norm = wrapped / torch.pi
+
+        # wrapped_cond = torch.stack([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
+        # wrapped_cond = wrapped / (2 * torch.pi)
+        # wrapped_cond = wrapped / torch.pi
+
+        # neg_norm_diffusion
+        # unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
+        # unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
+        # unwrapped_neg_norm = unwrapped_norm * 2 - 1
+
+        unwrapped_std_norm = (unwrapped - self.mean) / self.std  # normalize
+
+        # wrapped_cond
+        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped], dim=0)
+        # wrapped_cond = unwrapped
+        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped_neg_norm], dim=0)
+        wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
+        # wrapped_cond = torch.cat([torch.sin(unwrapped), torch.cos(unwrapped)], dim=0)
+        # wrapped_cond = torch.cat([unwrapped_neg_norm, -unwrapped_neg_norm], dim=0)
+        # wrapped_cond = wrapped_neg_norm
+
+        # dfn_diffusion
+        # unwrapped_sub_wrapped = unwrapped - wrapped
+        # unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (2 * torch.pi * self.scale_k)
+        # unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
+        # unwrapped_sub_wrapped_neg_norm = unwrapped_sub_wrapped_norm * 2 - 1
+
+        sample = {
+            "wrapped": wrapped,
+            # "wrapped_fp16": wrapped.to(torch.float16),
+            "unwrapped": unwrapped,
+            # "k_mat_cont": k_mat_cont,
+            # "k_mat_cont_neg_norm": k_mat_cont_neg_norm,
+            # "k_mat_disc": k_mat_disc,
+            # "k_mat_disc_neg_norm": k_mat_disc_neg_norm,
+            "wrapped_neg_norm": wrapped_neg_norm,
+            # "unwrapped_fp16": unwrapped.to(torch.float16),
+            # "wrapped_norm": wrapped_norm,
+            # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
+            # "unwrapped_norm": unwrapped_norm,
+            "unwrapped_std_norm": unwrapped_std_norm,
+            # "unwrapped_neg_norm": unwrapped_neg_norm,
+            "wrapped_cond": wrapped_cond,
+            # "wrapped_cond_fp16": wrapped_cond.to(torch.float16),
+            # "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
+            # "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
+            # "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,
+            # "unwrapped_sub_wrapped_neg_norm": unwrapped_sub_wrapped_neg_norm,
+            # "unwrapped_sub_wrapped_norm_fp16": unwrapped_sub_wrapped_norm.to(torch.float16)
+        }
+        return sample

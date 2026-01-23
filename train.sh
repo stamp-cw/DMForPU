@@ -7,3 +7,5 @@ python3 main.py --config config_synpu_128_small.yaml --mode train --training_fro
 python3 main.py --config config_synpu_128_test_dph.yaml --mode train --training_from_scratch
 
 python3 main.py --config config_synpu_128_test_ucn.yaml --mode train --training_from_scratch
+
+python3 main.py --config config_synpu_128_mid_phase.yaml --mode train --training_from_scratch
