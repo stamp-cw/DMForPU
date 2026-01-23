@@ -87,6 +87,7 @@ def main():
 
     config = dict2namespace(config)
     config.mode = args.mode
+    config.sampling_from_epoch = args.sampling_from_epoch
     config.io = ioo
 
     # Print and log the Current configuration

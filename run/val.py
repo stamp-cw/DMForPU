@@ -19,6 +19,10 @@ class Valuator:
         self.config = config
         self.logger = config.logger
         self.epoch = config.sampling_from_epoch
+        if self.config.io.use_tensorboard:
+            from torch.utils.tensorboard import SummaryWriter
+            self.writer = SummaryWriter(self.config.io.tensorboard_path)
+            config.writer = self.writer
         self.meter = MeterSetup(self.config, self.logger).meter
         self.device = config.val.device
         self.data_loader = _DATA_LOADERS(self.config)
@@ -44,8 +48,10 @@ class Valuator:
             self.diffusion.infer_sample()
             pred_batch = self.diffusion.pred_batch
             self.meter.epoch = self.epoch
-            self.meter.setup_batch_data(pred_batch)
+            self.meter.setup_data(pred_batch)
+            self.meter.acc_step += 1
             self.meter.compute_batch_metric()
+            self.meter.epoch_meter.update(self.meter.batch_metric_dict)
 
     def _save_val_pt(self):
         pt_path = self.config.io.generated_val_pt_file_path(self.epoch)
@@ -54,6 +60,7 @@ class Valuator:
 
     def _update_stat(self):
         # self.logger.info(f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
+        # print(self.meter.epoch_metric_dict)
         self.logger.info(f"Epoch {self.epoch}, L1: {self.meter.epoch_metric_dict['L1']:.4f}, RMSE: {self.meter.epoch_metric_dict['RMSE']:.4f}")
 
     @cached_property

@@ -12,6 +12,7 @@ class PureMeter:
         self.mode = config.mode
         self.writer = config.writer
         self.epoch = 0
+        self.acc_step = 0
 
     def setup_data(self, batch_dict):
         self.gt = batch_dict["gt"].to(self.device)
@@ -22,7 +23,7 @@ class PureMeter:
         l_one = l1_metric(self.pred, self.gt)
         rmse = rmse_metric(self.pred, self.gt)
         self.batch_metric_dict = {'MSE': mse, 'L1': l_one, 'RMSE': rmse}
-        self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.config.acc_step)
+        self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.acc_step)
 
     def compute_epoch_metric(self):
         self.epoch_metric_dict = self.epoch_meter.avg()

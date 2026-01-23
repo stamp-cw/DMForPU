@@ -136,6 +136,7 @@ class Trainer:
         valuator = Valuator(self.config)
         valuator.epoch = epoch
         valuator.meter = self.meter
+        valuator.meter.writer = self.writer if self.config.io.use_tensorboard else None
         valuator.meter.mode = 'val'
         valuator.diffusion = self.diffusion
         valuator.val_loader = self.val_loader
