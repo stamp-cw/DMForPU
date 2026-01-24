@@ -68,7 +68,8 @@ class PhaseCutDDPMDiffusion:
             encoder_hidden_states=self.phase_emb
         ).sample
         self.pred_unwrapped_std_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), x_t).pred_original_sample
-        self.pred_unwrapped = self.pred_unwrapped_std_norm * self.config.data.std + self.config.data.mean
+        # self.pred_unwrapped = self.pred_unwrapped_std_norm * self.config.data.std + self.config.data.mean
+        self.pred_unwrapped = ((self.pred_unwrapped_std_norm + 1 ) /2 ) * (3 * 2  * torch.pi)
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_std_norm"] = self.pred_unwrapped_std_norm
         self.pred_batch["pred"] = self.pred_unwrapped_std_norm
@@ -89,7 +90,8 @@ class PhaseCutDDPMDiffusion:
                 ).sample
                 x = scheduler.step(self.noise_pred, t, x).prev_sample
         self.pred_unwrapped_std_norm = x
-        self.pred_unwrapped = self.pred_unwrapped_std_norm * self.config.data.std + self.config.data.mean
+        # self.pred_unwrapped = self.pred_unwrapped_std_norm * self.config.data.std + self.config.data.mean
+        self.pred_unwrapped = ((self.pred_unwrapped_std_norm + 1 ) /2 ) * (3 * 2  * torch.pi)
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_std_norm"] = self.pred_unwrapped_std_norm
         self.pred_batch["pred"] = self.pred_unwrapped_std_norm

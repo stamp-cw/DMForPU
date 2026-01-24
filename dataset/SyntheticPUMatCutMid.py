@@ -111,10 +111,11 @@ class SyntheticPUMatCutMid(Dataset):
 
         # neg_norm_diffusion
         # unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
-        # unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
-        # unwrapped_neg_norm = unwrapped_norm * 2 - 1
+        unwrapped_norm = unwrapped / (2 * torch.pi * 3)
+        unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
+        unwrapped_neg_norm = unwrapped_norm * 2 - 1
 
-        unwrapped_std_norm = (unwrapped - self.mean) / self.std  # normalize
+        # unwrapped_std_norm = (unwrapped - self.mean) / self.std  # normalize
 
         # wrapped_cond
         # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped], dim=0)
@@ -144,7 +145,8 @@ class SyntheticPUMatCutMid(Dataset):
             # "wrapped_norm": wrapped_norm,
             # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
             # "unwrapped_norm": unwrapped_norm,
-            "unwrapped_std_norm": unwrapped_std_norm,
+            # "unwrapped_std_norm": unwrapped_std_norm,
+            "unwrapped_std_norm": unwrapped_neg_norm,
             # "unwrapped_neg_norm": unwrapped_neg_norm,
             "wrapped_cond": wrapped_cond,
             # "wrapped_cond_fp16": wrapped_cond.to(torch.float16),

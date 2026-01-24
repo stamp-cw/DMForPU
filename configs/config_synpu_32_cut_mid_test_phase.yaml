@@ -1,7 +1,8 @@
 seed: 42
 
 loss_type:
-  name: PURE2
+#  name: PURE2
+  name: PHY11
 
 meter:
   name: PUREMeter
@@ -75,3 +76,9 @@ iio:
   use_tensorboard: true
   use_wandb: false
   save_pth_to_wandb: false
+
+metrics:
+  l1: true
+  rmse: true
+  wrap_l1: true
+  wrap_rmse: true

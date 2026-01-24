@@ -131,7 +131,7 @@ class Sampler:
                     "pred_unwrapped_neg_norm": self.diffusion.pred_unwrapped_neg_norm,
                 }
                 self._save_compare_png_ucn(c_batch)
-            elif self.config.diffusion.name == 'PhaseDDPMDiffusion':
+            elif self.config.diffusion.name == 'PhaseDDPMDiffusion' or self.config.diffusion.name == 'PhaseCutDDPMDiffusion':
                 c_batch = {
                     "wrapped": self.diffusion.wrapped,
                     "wrapped_neg_norm": batch_dict["wrapped_neg_norm"].to(self.device),
@@ -373,7 +373,7 @@ class Sampler:
                 ax.axis("off")
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-            # color_norm = colors.Normalize(vmin=-2, vmax=2)
+            # color_norm = colors.Normalize(vmin=-1, vmax=1)
             for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[4:]:
                 # im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 im = ax.imshow(img, cmap=cmap)
