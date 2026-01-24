@@ -67,13 +67,14 @@ class Sampler:
                     "diff_unwrapped_sub_wrapped_neg_norm": batch_dict["unwrapped_sub_wrapped_neg_norm"].to(self.device) - self.diffusion.pred_unwrapped_sub_wrapped_neg_norm ,
                 }
                 self._save_compare_png_dfn(c_batch)
-            elif self.config.diffusion.name == 'NegNormDDPMDiffusion' or self.config.diffusion.name == 'DDPMDiffusion' or self.config.diffusion.name == 'MchNegNormDDPMDiffusion' or self.config.diffusion.name == 'DphDDPMDiffusion' or self.config.diffusion.name == 'ElucidatedDiffusion':
+            elif self.config.diffusion.name == 'NegNormDDPMDiffusion' or self.config.diffusion.name == 'DDPMDiffusion' or self.config.diffusion.name == 'MchNegNormDDPMDiffusion' \
+                    or self.config.diffusion.name == 'DphDDPMDiffusion' or self.config.diffusion.name == 'ElucidatedDiffusion' or self.config.diffusion.name == 'MchDDPMDiffusion':
                 c_batch = {
                     "wrapped": self.diffusion.wrapped,
                     "wrapped_neg_norm": batch_dict["wrapped_neg_norm"].to(self.device),
                     "gt_unwrapped": self.diffusion.gt_unwrapped,
                     "pred_unwrapped": self.diffusion.pred_unwrapped,
-                    "diff_unwrapped": self.diffusion.diff_unwrapped,
+                    "diff_unwrapped": self.diffusion.gt_unwrapped - self.diffusion.pred_unwrapped,
                     "gt_unwrapped_neg_norm": batch_dict["unwrapped_neg_norm"].to(self.device),
                     "pred_unwrapped_neg_norm": self.diffusion.pred_unwrapped_neg_norm,
                     "diff_unwrapped_neg_norm": batch_dict["unwrapped_neg_norm"].to(self.device) - self.diffusion.pred_unwrapped_neg_norm

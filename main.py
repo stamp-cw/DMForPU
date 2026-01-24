@@ -205,6 +205,8 @@ if __name__ == '__main__':
     from diffusion.ucn_ddpm_diffusion import UcnDDPMDiffusion
     from diffusion.phase_ddpm_diffusion import PhaseDDPMDiffusion
     from diffusion.phase_cut_ddpm_diffusion import PhaseCutDDPMDiffusion
+    from diffusion.mch_ddpm_diffusion import MchDDPMDiffusion
     # Import Meter
     from meter.pure_meter import PureMeter
+    from meter.mch_meter import MchMeter
     main()

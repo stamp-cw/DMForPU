@@ -24,7 +24,6 @@ diffusion:
   conditioning_channels: 2
   use_controlnet: false
   fusion_type: concat
-#  use_cross_attention: false
   use_filter: false
   scaling_factor: 0.18215
   use_vae: false

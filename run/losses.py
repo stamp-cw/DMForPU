@@ -96,6 +96,45 @@ class PHY11LossType:
 
         return total_loss
 
+
+@register_loss_type(name='MchLoss')
+class MchLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        self.meter = config.train_meter
+
+    def __call__(self, diffusion):
+        noise_mse_loss = self.meter.batch_metric_dict['NoiseMSE']
+        phys_loss = self.meter.batch_metric_dict['UnwrappedL1']
+        total_loss = noise_mse_loss + 0.5 * phys_loss
+        return total_loss
+
+@register_loss_type(name='MchPuLoss')
+class MchPuLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        self.meter = config.train_meter
+
+    def __call__(self, diffusion):
+        # noise_mse_loss = self.meter.batch_metric_dict['NoiseMSE']
+        # phys_loss = self.meter.batch_metric_dict['UnwrappedL1']
+        # total_loss = noise_mse_loss + 0.5 * phys_loss
+        noise_pred = diffusion.noise_pred
+        noise = diffusion.noise
+        diff_loss = F.mse_loss(noise_pred, noise)
+
+        r_loss = self.residue_loss(diffusion.wrapped, diffusion.pred_unwrapped)
+        c_loss = self.cross_loss(diffusion.gt_k_mat_disc, diffusion.pred_k_mat_disc)
+        l_one_loss = self.l1_loss(diffusion.gt_unwrapped, diffusion.pred_unwrapped)
+
+        # print(f"diff_loss: {diff_loss.item()}, r_loss: {r_loss.item()}, c_loss: {c_loss.item()}, l_one_loss: {l_one_loss.item()}")
+
+        total_loss = diff_loss + 0.1 * r_loss + 0.1 * c_loss + 0.1 * l_one_loss
+        return total_loss
+
+
 @register_loss_type(name='PHY12')
 class PHY12LossType:
     def __init__(self, config):
