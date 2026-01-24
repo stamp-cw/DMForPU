@@ -437,7 +437,7 @@ class SyntheticPUMatMidCutDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name=['SyntheticPUMatCut','SyntheticPUMatCut128Big','SyntheticPUMatCut32','SyntheticPUMatCut32Big','SyntheticPUMatCut32Test','SyntheticPUMatCut64','SyntheticPUMatCut64Test'])
+@register_data_loader(name=['SyntheticPUMatCut','SyntheticPUMatCut128Big','SyntheticPUMatCut32','SyntheticPUMatCut32Big','SyntheticPUMatCut32Test','SyntheticPUMatCut64','SyntheticPUMatCut64Test','SyntheticPUMatCut32Mch'])
 class SyntheticPUMatCutMatDataLoader(BaseDataLoader):
 
     @cached_property
