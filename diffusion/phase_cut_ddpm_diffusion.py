@@ -95,7 +95,7 @@ class PhaseCutDDPMDiffusion:
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_std_norm"] = self.pred_unwrapped_std_norm
         self.pred_batch["pred"] = self.noise_pred
-        self.pred_batch["gt"] = self.noise
+        self.pred_batch["gt"] = None
 
     @property
     def optimize_parameters(self):
