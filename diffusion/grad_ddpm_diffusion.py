@@ -4,7 +4,7 @@ from diffusers import UNet2DConditionModel, DDPMScheduler, ControlNetModel
 from selector.diffusion_selector import register_diffusion
 import tqdm
 
-from utils.util import poisson_reconstruct_phase_fft_torch
+from utils.util import poisson_reconstruct_phase
 
 
 @register_diffusion(name='GradDDPMDiffusion')
@@ -50,12 +50,14 @@ class GradDDPMDiffusion:
         ).sample
         self.pred_unwrapped_grad_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         # self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm * 2
+        self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm / 10
         pred_unwrapped_grad_x, pred_unwrapped_grad_y = torch.chunk(self.pred_unwrapped_grad, chunks=2, dim=1)
-        self.pred_unwrapped_neg_norm = poisson_reconstruct_phase_fft_torch(pred_unwrapped_grad_x, pred_unwrapped_grad_y)
+        self.pred_unwrapped_neg_norm = poisson_reconstruct_phase(pred_unwrapped_grad_x, pred_unwrapped_grad_y)
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
+        self.pred_batch["pred_unwrapped_grad_neg_norm"] = self.pred_unwrapped_grad_neg_norm
         self.pred_batch["pred"] = self.noise_pred
         self.pred_batch["gt"] = self.noise
 
@@ -75,13 +77,15 @@ class GradDDPMDiffusion:
             x = scheduler.step(self.noise_pred, t, x).prev_sample
         # self.pred_unwrapped_neg_norm = x
         self.pred_unwrapped_grad_neg_norm = x
-        self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm * 2
+        # self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm * 2
+        self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm / 10
         pred_unwrapped_grad_x, pred_unwrapped_grad_y = torch.chunk(self.pred_unwrapped_grad, chunks=2, dim=1)
-        self.pred_unwrapped_neg_norm = poisson_reconstruct_phase_fft_torch(pred_unwrapped_grad_x, pred_unwrapped_grad_y)
+        self.pred_unwrapped_neg_norm = poisson_reconstruct_phase(pred_unwrapped_grad_x, pred_unwrapped_grad_y)
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
+        self.pred_batch["pred_unwrapped_grad_neg_norm"] = self.pred_unwrapped_grad_neg_norm
         self.pred_batch["pred"] = self.noise_pred
         self.pred_batch["gt"] = self.noise_pred
 

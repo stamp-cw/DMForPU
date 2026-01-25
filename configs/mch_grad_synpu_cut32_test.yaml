@@ -2,10 +2,12 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-  name: MchLoss
+#  name: MchLoss
+  name: MchGradLoss
 
 meter:
-  name: MchMeter
+#  name: MchMeter
+  name: MchGradMeter
 
 data:
 #  name: SyntheticPUMatCut32Mch

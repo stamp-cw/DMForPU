@@ -21,16 +21,20 @@ class MchGradMeter:
         self.pred_unwrapped = batch_dict["pred_unwrapped"].to(self.device)
         self.gt_wrapped = batch_dict["wrapped"].to(self.device)
         self.pred_wrapped = wrap_phase(self.pred_unwrapped)
+        self.gt_unwrapped_grad_neg_norm = batch_dict["unwrapped_grad_neg_norm"].to(self.device)
+        self.pred_unwrapped_grad_neg_norm = batch_dict["pred_unwrapped_grad_neg_norm"].to(self.device)
 
     def compute_batch_metric(self):
         noise_mse = F.mse_loss(self.pred, self.gt)
         unwrapped_l1_loss = F.l1_loss(self.gt_unwrapped, self.pred_unwrapped)
+        unwrapped_grad_l1_loss = F.l1_loss(self.gt_unwrapped_grad_neg_norm, self.pred_unwrapped_grad_neg_norm)
         unwrapped_rmse_loss = rmse_metric(self.pred_unwrapped, self.gt_unwrapped)
         unwrapped_nrmse_loss = unwrapped_rmse_loss / (self.gt_unwrapped.max() - self.gt_unwrapped.min() + 1e-8)
         wrapped_l1_loss = F.l1_loss(self.gt_wrapped, self.pred_wrapped)
         wrapped_rmse_loss = rmse_metric(self.pred_wrapped, self.gt_wrapped)
 
         self.batch_metric_dict = {'NoiseMSE': noise_mse,
+                                  'UnwrappedGradL1': unwrapped_grad_l1_loss,
                                   'UnwrappedL1': unwrapped_l1_loss, 'UnwrappedRMSE': unwrapped_rmse_loss,'UnwrappedNRMSE': unwrapped_nrmse_loss,
                                   'WrappedL1': wrapped_l1_loss, 'WrappedRMSE': wrapped_rmse_loss
                                   }

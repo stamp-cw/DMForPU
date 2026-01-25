@@ -6,51 +6,89 @@ import torch.nn.functional as F
 
 import argparse
 
+from scipy.fft import dctn, idctn
+import numpy as np
 
-def poisson_reconstruct_phase_fft_torch(gx, gy):
-    """
-    Reconstruct phase from gradients using FFT-based Poisson solver
-    (periodic boundary condition).
+# def poisson_reconstruct_phase_fft_torch(gx, gy):
+#     """
+#     Reconstruct phase from gradients using FFT-based Poisson solver
+#     (periodic boundary condition).
+#
+#     Args:
+#         gx: torch.Tensor, (B, 1, H, W-1)
+#         gy: torch.Tensor, (B, 1, H-1, W)
+#
+#     Returns:
+#         phase: torch.Tensor, (B, 1, H, W)
+#     """
+#     # 1. divergence
+#     # div = gradient_divergence_torch(gx, gy)  # (B,1,H,W)
+#     div = gx  + gy                            # (B,1,H,W)
+#     div = div.squeeze(1)                     # (B,H,W)
+#
+#     B, H, W = div.shape
+#     device = div.device
+#
+#     # 2. FFT of divergence
+#     div_hat = torch.fft.fft2(div)
+#
+#     # 3. Laplacian eigenvalues (periodic)
+#     ky = torch.fft.fftfreq(H, device=device).view(-1, 1)
+#     kx = torch.fft.fftfreq(W, device=device).view(1, -1)
+#
+#     denom = (
+#             2 * torch.cos(2 * torch.pi * kx) +
+#             2 * torch.cos(2 * torch.pi * ky) -
+#             4
+#     )
+#
+#     denom[0, 0] = 1.0  # avoid division by zero (DC component)
+#
+#     # 4. Solve in Fourier domain
+#     phase_hat = div_hat / denom
+#
+#     phase_hat[:, 0, 0] = 0.0  # fix global constant (mean = 0)
+#
+#     # 5. inverse FFT
+#     phase = torch.fft.ifft2(phase_hat).real
+#
+#     return phase.unsqueeze(1)  # (B,1,H,W)
 
-    Args:
-        gx: torch.Tensor, (B, 1, H, W-1)
-        gy: torch.Tensor, (B, 1, H-1, W)
 
-    Returns:
-        phase: torch.Tensor, (B, 1, H, W)
-    """
-    # 1. divergence
-    # div = gradient_divergence_torch(gx, gy)  # (B,1,H,W)
-    div = gx  + gy                            # (B,1,H,W)
-    div = div.squeeze(1)                     # (B,H,W)
+def poisson_reconstruct_phase(gx_tensor, gy_tensor):
+    gx = gx_tensor.cpu().detach().numpy()
+    gy = gy_tensor.cpu().detach().numpy()
 
-    B, H, W = div.shape
-    device = div.device
+    b, c, h, w = gx.shape
 
-    # 2. FFT of divergence
-    div_hat = torch.fft.fft2(div)
+    # Compute the divergence（保持与你原始代码一致的差分风格）
+    # div = torch.zeros((h, w), dtype=np.float64)
+    # div[:, :-1] += gx[:, :-1]
+    # div[:, 1:]  -= gx[:, :-1]
+    # div[:-1, :] += gy[:-1, :]
+    # div[1:,  :] -= gy[:-1, :]
 
-    # 3. Laplacian eigenvalues (periodic)
-    ky = torch.fft.fftfreq(H, device=device).view(-1, 1)
-    kx = torch.fft.fftfreq(W, device=device).view(1, -1)
+    div = gx + gy
 
-    denom = (
-            2 * torch.cos(2 * torch.pi * kx) +
-            2 * torch.cos(2 * torch.pi * ky) -
-            4
-    )
+    # Solve Poisson equation using DCT (Neumann BC)
+    b = dctn(div, type=2, norm='ortho')
 
-    denom[0, 0] = 1.0  # avoid division by zero (DC component)
+    ky = np.arange(h).reshape(h, 1)
+    kx = np.arange(w).reshape(1, w)
+    denom = (2 * np.cos(np.pi * kx / w) - 2) + (2 * np.cos(np.pi * ky / h) - 2)
 
-    # 4. Solve in Fourier domain
-    phase_hat = div_hat / denom
+    # Neumann Laplacian has a zero eigenvalue at (0,0): fix gauge by enforcing zero-mean
+    denom[0, 0] = 1.0
+    f_hat = b / denom
+    f_hat[0, 0] = 0.0
 
-    phase_hat[:, 0, 0] = 0.0  # fix global constant (mean = 0)
+    f = idctn(f_hat, type=2, norm='ortho')
 
-    # 5. inverse FFT
-    phase = torch.fft.ifft2(phase_hat).real
+    # f_tensor = torch.as_tensor(f,device=gx_tensor.device).unsqueeze(0).unsqueeze(0)  # (1,1,H,W)
+    f_tensor = torch.as_tensor(f,device=gx_tensor.device) # (1,1,H,W)
+    # return f.astype(np.float32)
+    return f_tensor
 
-    return phase.unsqueeze(1)  # (B,1,H,W)
 
 
 def dict2namespace(config):
