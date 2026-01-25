@@ -14,3 +14,4 @@ python3 main.py --config config_synpu_32_cut_mid_phase.yaml --mode train --train
 python3 main.py --config config_synpu_32_cut_mid_test_phase.yaml --mode train --training_from_scratch --debug
 python3 main.py --config config_mch_synpu_32_mid.yaml --mode train --training_from_scratch
 python3 main.py --config mch_synpu_cut32_test.yaml --mode train --training_from_scratch --debug
+python3 main.py --config mch_grad_synpu_cut32_test.yaml --mode train --training_from_scratch --debug

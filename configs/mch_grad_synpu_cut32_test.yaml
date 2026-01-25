@@ -13,7 +13,7 @@ data:
 #  name: SyntheticPUMatCut32MchGrad
   name: SyntheticPUMatCut32MchGradTest
   image_size: 32
-  color_channels: 2
+  color_channels: 1
   num_workers: 1
   k_min: 0
   k_max: 3
@@ -36,7 +36,7 @@ training:
 model:
   name: UNet2DConditionModel
   sample_size: 32
-  in_channels: 1
+  in_channels: 2
   out_channels: 1
   layers_per_block: 2
   block_out_channels: [64, 128, 256, 512]

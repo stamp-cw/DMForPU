@@ -41,6 +41,7 @@ class GradDDPMDiffusion:
         encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
         self.noise = torch.randn_like(self.gt_unwrapped_grad_neg_norm).to(self.device)
         self.noisy = self.scheduler.add_noise(self.gt_unwrapped_grad_neg_norm, self.noise, t).to(self.device)
+        # print(f"noisy shape: {self.noisy.shape}, wrapped_cond shape: {self.wrapped_cond.shape}")
         model_input = torch.cat([self.noisy] * self.config.diffusion.repeat_channels + [self.wrapped_cond], dim=1)
         self.noise_pred = self.model(
             model_input,

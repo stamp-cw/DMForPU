@@ -78,15 +78,16 @@ class SyntheticPUMatCutGrad(Dataset):
 
         # gx = phase[..., :, 1:] - phase[..., :, :-1]
         # gy = phase[..., 1:, :] - phase[..., :-1, :]
+        phase.unsqueeze(0)
 
         kx = torch.tensor(
             [[0, 0, 0],
              [-1, 1, 0],
              [0, 0, 0]],
             device=phase.device, dtype=phase.dtype
-        ).view(1, 3, 3)
+        ).view(1, 1, 3, 3)
 
-        gx = F.conv2d(phase, kx, padding=1, groups=1)
+        gx = F.conv2d(phase, kx, padding=1, groups=1, stride=1)
         gx[..., :, 0] = gx[..., :, 1] - (gx[..., :, 2] - gx[..., :, 1])
 
         ky = torch.tensor(
@@ -94,8 +95,8 @@ class SyntheticPUMatCutGrad(Dataset):
              [0,  1, 0],
              [0,  0, 0]],
             device=phase.device, dtype=phase.dtype
-        ).view(1, 3, 3)
-        gy = F.conv2d(phase, ky, padding=1, groups=1)
+        ).view(1, 1, 3, 3)
+        gy = F.conv2d(phase, ky, padding=1, groups=1, stride=1)
         gy[..., 0, :] = gy[..., 1, :] - (gy[..., 2, :] - gy[..., 1, :])
 
         return gx, gy
@@ -129,6 +130,7 @@ class SyntheticPUMatCutGrad(Dataset):
         # unwrapped_grad_x_neg_norm = unwrapped_grad_x / 2 # [-1,1]
         # unwrapped_grad_y_neg_norm = unwrapped_grad_y / 2 # [-1,1]
         # unwrapped_grad_neg_norm = torch.cat([unwrapped_grad_x, unwrapped_grad_y], dim=0)
+        # print(f"unwrapped_grad_x shape: {unwrapped_grad_x.shape}, unwrapped_grad_y shape: {unwrapped_grad_y.shape}")
         unwrapped_grad_neg_norm = torch.cat([unwrapped_grad_x, unwrapped_grad_y], dim=0) / 2
 
         wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
