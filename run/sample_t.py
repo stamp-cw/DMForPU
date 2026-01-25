@@ -178,9 +178,17 @@ class Sampler:
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
             color_norm = colors.Normalize(vmin=-1, vmax=1)
-            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[4:]:
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[4:8]:
                 im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 # im = ax.imshow(img, cmap=cmap)
+                ax.set_title(title)
+                ax.axis("off")
+                fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+            # color_norm = colors.Normalize(vmin=-1, vmax=1)
+            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[8:]:
+                # im = ax.imshow(img, cmap=cmap, norm=color_norm)
+                im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)
                 ax.axis("off")
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
