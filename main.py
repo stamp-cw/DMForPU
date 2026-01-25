@@ -183,6 +183,7 @@ if __name__ == '__main__':
     from run.losses import PHY11LossType, PHY12LossType, PHY13LossType
     from run.losses import VAEKLLossType, VAEPURELossType
     from run.losses import UNetLOSSLossType
+    from run.losses import MchGradLossType
     # Import VAE Models
     from vae.latent_vae import LatentVAE
     # Import Models
@@ -210,4 +211,5 @@ if __name__ == '__main__':
     # Import Meter
     from meter.pure_meter import PureMeter
     from meter.mch_meter import MchMeter
+    from meter.mch_grad_meter import MchGradMeter
     main()
