@@ -119,8 +119,9 @@ class MchGradLossType:
 
     def __call__(self, diffusion):
         noise_mse_loss = self.meter.batch_metric_dict['NoiseMSE']
-        # phys_loss = self.meter.batch_metric_dict['UnwrappedL1']
+        # phys_loss2 = self.meter.batch_metric_dict['UnwrappedL1']
         phys_loss = self.meter.batch_metric_dict['UnwrappedGradL1']
+        # total_loss = noise_mse_loss + 0.5 * phys_loss + 0.001 * phys_loss2
         total_loss = noise_mse_loss + 0.5 * phys_loss
         return total_loss
 

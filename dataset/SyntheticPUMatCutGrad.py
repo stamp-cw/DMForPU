@@ -129,7 +129,7 @@ class SyntheticPUMatCutGrad(Dataset):
         unwrapped_grad_x , unwrapped_grad_y = self.phase_gradient_torch(unwrapped_neg_norm) # [-2,2]
         # unwrapped_grad_x_neg_norm = unwrapped_grad_x / 2 # [-1,1]
         # unwrapped_grad_y_neg_norm = unwrapped_grad_y / 2 # [-1,1]
-        unwrapped_grad_neg_norm = torch.cat([unwrapped_grad_x, unwrapped_grad_y], dim=0) * 10
+        unwrapped_grad_neg_norm = torch.cat([unwrapped_grad_x, unwrapped_grad_y], dim=0) * 8
         # unwrapped_grad_neg_norm = torch.cat([unwrapped_grad_x, unwrapped_grad_y], dim=0)
         # print(f"unwrapped_grad_x shape: {unwrapped_grad_x.shape}, unwrapped_grad_y shape: {unwrapped_grad_y.shape}")
         # unwrapped_grad_neg_norm = torch.cat([unwrapped_grad_x, unwrapped_grad_y], dim=0) / 2

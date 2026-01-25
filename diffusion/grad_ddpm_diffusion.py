@@ -50,7 +50,7 @@ class GradDDPMDiffusion:
         ).sample
         self.pred_unwrapped_grad_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         # self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm * 2
-        self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm / 10
+        self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm / 8
         pred_unwrapped_grad_x, pred_unwrapped_grad_y = torch.chunk(self.pred_unwrapped_grad, chunks=2, dim=1)
         self.pred_unwrapped_neg_norm = poisson_reconstruct_phase(pred_unwrapped_grad_x, pred_unwrapped_grad_y)
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
@@ -78,7 +78,7 @@ class GradDDPMDiffusion:
         # self.pred_unwrapped_neg_norm = x
         self.pred_unwrapped_grad_neg_norm = x
         # self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm * 2
-        self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm / 10
+        self.pred_unwrapped_grad = self.pred_unwrapped_grad_neg_norm / 8
         pred_unwrapped_grad_x, pred_unwrapped_grad_y = torch.chunk(self.pred_unwrapped_grad, chunks=2, dim=1)
         self.pred_unwrapped_neg_norm = poisson_reconstruct_phase(pred_unwrapped_grad_x, pred_unwrapped_grad_y)
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
