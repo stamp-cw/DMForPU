@@ -94,6 +94,17 @@ if __name__ == '__main__':
     # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/test_wrapped", d_name='InSARDLPUMat', d_type='wrapped', raw_zie=256, cut_size=64)
     # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/train_absolute", d_name='InSARDLPUMat', d_type='unwrapped', raw_zie=256, cut_size=64)
     # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/test_absolute", d_name='InSARDLPUMat', d_type='unwrapped', raw_zie=256, cut_size=64)
+
+    # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/train_wrapped", d_name='InSARDLPUMat', d_type='wrapped', raw_zie=256, cut_size=32)
+    # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/test_wrapped", d_name='InSARDLPUMat', d_type='wrapped', raw_zie=256, cut_size=32)
+    # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/train_absolute", d_name='InSARDLPUMat', d_type='unwrapped', raw_zie=256, cut_size=32)
+    # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat/test_absolute", d_name='InSARDLPUMat', d_type='unwrapped', raw_zie=256, cut_size=32)
+
+    cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat256Mid/train_wrapped", d_name='InSARDLPUMat', d_type='wrapped', raw_zie=256, cut_size=32)
+    cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat256Mid/test_wrapped", d_name='InSARDLPUMat', d_type='wrapped', raw_zie=256, cut_size=32)
+    cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat256Mid/train_absolute", d_name='InSARDLPUMat', d_type='unwrapped', raw_zie=256, cut_size=32)
+    cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat256Mid/test_absolute", d_name='InSARDLPUMat', d_type='unwrapped', raw_zie=256, cut_size=32)
+
     # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat/train_in", d_name='SyntheticPUMat', d_type='wrapped', raw_zie=128, cut_size=64)
     # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat/test_in", d_name='SyntheticPUMat', d_type='wrapped', raw_zie=128, cut_size=64)
     # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat/train_gt", d_name='SyntheticPUMat', d_type='gt', raw_zie=128, cut_size=64)
@@ -108,7 +119,7 @@ if __name__ == '__main__':
     # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/train_gt", d_name='SyntheticPUMat', d_type='gt', raw_zie=128, cut_size=64)
     # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/test_gt", d_name='SyntheticPUMat', d_type='gt', raw_zie=128, cut_size=64)
 
-    cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/train_in", d_name='SyntheticPUMat', d_type='wrapped', raw_zie=128, cut_size=32)
-    cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/test_in", d_name='SyntheticPUMat', d_type='wrapped', raw_zie=128, cut_size=32)
-    cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/train_gt", d_name='SyntheticPUMat', d_type='gt', raw_zie=128, cut_size=32)
-    cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/test_gt", d_name='SyntheticPUMat', d_type='gt', raw_zie=128, cut_size=32)
+    # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/train_in", d_name='SyntheticPUMat', d_type='wrapped', raw_zie=128, cut_size=32)
+    # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/test_in", d_name='SyntheticPUMat', d_type='wrapped', raw_zie=128, cut_size=32)
+    # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/train_gt", d_name='SyntheticPUMat', d_type='gt', raw_zie=128, cut_size=32)
+    # cut_mat("/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128/test_gt", d_name='SyntheticPUMat', d_type='gt', raw_zie=128, cut_size=32)

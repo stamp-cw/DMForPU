@@ -9,7 +9,9 @@ meter:
 
 data:
 #  name: SyntheticPUMatCut32Mch
-  name: SyntheticPUMatCut32MchTest
+#  name: SyntheticPUMatCut32MchTest
+#  name: InSARDLPUMatCut32Small
+  name: InSARDLPUMatCut32SmallTest
   image_size: 32
   color_channels: 1
   num_workers: 1
@@ -22,7 +24,8 @@ training:
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
 #  batch_size: 128
-  batch_size: 32
+#  batch_size: 32
+  batch_size: 64
   use_all_data: false
   amp: true
   log_freq: 1
@@ -45,7 +48,7 @@ diffusion:
   num_train_timesteps: 1000
   num_infer_timesteps: 100
   conditioning_channels: 2
-  repeat_channels: 6
+  repeat_channels: 7
 
 sampling:
   device: cuda

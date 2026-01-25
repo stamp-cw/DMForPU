@@ -15,3 +15,5 @@ python3 main.py --config config_synpu_32_cut_mid_test_phase.yaml --mode sample -
 python3 main.py --config mch_synpu_cut32_test.yaml --mode sample --sampling_from_epoch 100 --debug
 python3 main.py --config mch_grad_synpu_cut32_test.yaml --mode sample --sampling_from_epoch 100 --debug
 python3 main.py --config mch_grad_synpu_cut32_tid.yaml --mode sample --sampling_from_epoch 100 --debug
+
+python3 main.py --config mch_dlpu_cut32_big.yaml --mode sample --sampling_from_epoch 100 --debug

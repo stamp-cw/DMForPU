@@ -271,7 +271,7 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name=['InSARDLPUMatCut','InSARDLPUMatCut32','InSARDLPUMatCut32Test','InSARDLPUMatCut64','InSARDLPUMatCut64Test'])
+@register_data_loader(name=['InSARDLPUMatCut','InSARDLPUMatCut32','InSARDLPUMatCut32Test','InSARDLPUMatCut64','InSARDLPUMatCut64Test','InSARDLPUMatCut32Small','InSARDLPUMatCut32SmallTest'])
 class InSARDLPUMatCutDataLoader(BaseDataLoader):
 
     @cached_property
@@ -280,7 +280,8 @@ class InSARDLPUMatCutDataLoader(BaseDataLoader):
                             transform=self.transform,
                             target_transform=self.gt_transform,
                             joint_transform=self.joint_transform,
-                            scale_k=self.config.data.scale_k,
+                               k_max=self.config.data.k_max,
+                               k_min=self.config.data.k_min
                             )
 
     @cached_property
@@ -289,7 +290,8 @@ class InSARDLPUMatCutDataLoader(BaseDataLoader):
                             transform=self.eval_transform,
                             target_transform=self.eval_gt_transform,
                             joint_transform=self.eval_joint_transform,
-                            scale_k=self.config.data.scale_k,
+                               k_max=self.config.data.k_max,
+                               k_min=self.config.data.k_min
                             )
 
     @cached_property
