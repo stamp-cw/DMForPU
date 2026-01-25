@@ -14,7 +14,8 @@ diffusion:
 #  name: DFNDDPMDiffusion
 #  name: LatentDDPMDiffusion
 #  name: NegNormDDPMDiffusion
-  name: MchNegNormDDPMDiffusion
+#  name: MchNegNormDDPMDiffusion
+  name: MchDDPMDiffusion
 #  name: DDPMDiffusion
   timesteps: 1000
   num_train_timesteps: 1000
@@ -28,6 +29,10 @@ diffusion:
   scaling_factor: 0.18215
   use_vae: false
   use_custom_vae: true
+  repeat_channels: 7
+
+meter:
+  name: MchMeter
 
 
 model:
@@ -91,6 +96,10 @@ optim:
   warmup: 2
   grad_clip: 1.0
   momentum: 0.9
+
+val:
+  device: cuda
+  batch_size: 128
 
 loss_type:
 #  name: PHY3

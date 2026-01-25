@@ -6,6 +6,53 @@ import torch.nn.functional as F
 
 import argparse
 
+
+def poisson_reconstruct_phase_fft_torch(gx, gy):
+    """
+    Reconstruct phase from gradients using FFT-based Poisson solver
+    (periodic boundary condition).
+
+    Args:
+        gx: torch.Tensor, (B, 1, H, W-1)
+        gy: torch.Tensor, (B, 1, H-1, W)
+
+    Returns:
+        phase: torch.Tensor, (B, 1, H, W)
+    """
+    # 1. divergence
+    # div = gradient_divergence_torch(gx, gy)  # (B,1,H,W)
+    div = gx  + gy                            # (B,1,H,W)
+    div = div.squeeze(1)                     # (B,H,W)
+
+    B, H, W = div.shape
+    device = div.device
+
+    # 2. FFT of divergence
+    div_hat = torch.fft.fft2(div)
+
+    # 3. Laplacian eigenvalues (periodic)
+    ky = torch.fft.fftfreq(H, device=device).view(-1, 1)
+    kx = torch.fft.fftfreq(W, device=device).view(1, -1)
+
+    denom = (
+            2 * torch.cos(2 * torch.pi * kx) +
+            2 * torch.cos(2 * torch.pi * ky) -
+            4
+    )
+
+    denom[0, 0] = 1.0  # avoid division by zero (DC component)
+
+    # 4. Solve in Fourier domain
+    phase_hat = div_hat / denom
+
+    phase_hat[:, 0, 0] = 0.0  # fix global constant (mean = 0)
+
+    # 5. inverse FFT
+    phase = torch.fft.ifft2(phase_hat).real
+
+    return phase.unsqueeze(1)  # (B,1,H,W)
+
+
 def dict2namespace(config):
     namespace = argparse.Namespace()
     for key, value in config.items():
