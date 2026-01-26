@@ -19,6 +19,7 @@ from dataset.SyntheticPUMat import SyntheticPUMat
 from dataset.SyntheticPUMatCut import SyntheticPUMatCut
 from dataset.SyntheticPUMatCutGrad import SyntheticPUMatCutGrad
 from dataset.SyntheticPUMatCutMid import SyntheticPUMatCutMid
+from dataset.SyntheticPUMatCutWav import SyntheticPUMatCutWav
 from dataset.SyntheticPUMatMid import SyntheticPUMatMid
 
 
@@ -313,7 +314,7 @@ class InSARDLPUMatCutDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMat','SyntheticPUMat64Test','SyntheticPUMat128Big','SyntheticPUMat128Small','SyntheticPUMat128Test'])
+@register_data_loader(name=['SyntheticPUMat','SyntheticPUMat64Test','SyntheticPUMat128Big','SyntheticPUMat128Small','SyntheticPUMat128Test','SyntheticPUMat128Mid','SyntheticPUMat128MidTest'])
 class SyntheticPUMatDataLoader(BaseDataLoader):
 
     @cached_property
@@ -355,7 +356,7 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMat128Mid','SyntheticPUMat128MidTest'])
+@register_data_loader(name=['xSyntheticPUMat128Mid','xSyntheticPUMat128MidTest'])
 class SyntheticPUMatMidDataLoader(BaseDataLoader):
 
     @cached_property
@@ -397,7 +398,7 @@ class SyntheticPUMatMidDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMatCut32Mid','SyntheticPUMatCut32MidTest'])
+@register_data_loader(name=['xSyntheticPUMatCut32Mid','xSyntheticPUMatCut32MidTest'])
 class SyntheticPUMatMidCutDataLoader(BaseDataLoader):
 
     @cached_property
@@ -440,7 +441,7 @@ class SyntheticPUMatMidCutDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name=['SyntheticPUMatCut','SyntheticPUMatCut128Big','SyntheticPUMatCut32','SyntheticPUMatCut32Big','SyntheticPUMatCut32Test','SyntheticPUMatCut64','SyntheticPUMatCut64Test','SyntheticPUMatCut32Mch','SyntheticPUMatCut32MchTest'])
+@register_data_loader(name=['SyntheticPUMatCut','SyntheticPUMatCut128Big','SyntheticPUMatCut32','SyntheticPUMatCut32Big','SyntheticPUMatCut32Test','SyntheticPUMatCut64','SyntheticPUMatCut64Test','SyntheticPUMatCut32Mch','SyntheticPUMatCut32MchTest','SyntheticPUMatCut32Mid','SyntheticPUMatCut32MidTest'])
 class SyntheticPUMatCutMatDataLoader(BaseDataLoader):
 
     @cached_property
@@ -545,6 +546,52 @@ class SyntheticPUMatMchGradDataLoader(BaseDataLoader):
                                  joint_transform=self.eval_joint_transform,
                                      k_max=self.config.data.k_max,
                                      k_min=self.config.data.k_min
+                                 )
+
+    @cached_property
+    def all_dataset(self):
+        return torch.utils.data.ConcatDataset([self.train_dataset, self.test_dataset])
+
+    @cached_property
+    def train_loader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
+                          num_workers=self.config.data.num_workers, pin_memory=True, drop_last=True)
+
+    @cached_property
+    def test_loader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+    @cached_property
+    def all_loader(self):
+        return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+@register_data_loader(name=['SyntheticPUMatCut32Wav','SyntheticPUMatCut32WavTest'])
+class SyntheticPUMatCutWavDataLoader(BaseDataLoader):
+
+    @cached_property
+    def train_dataset(self):
+        return SyntheticPUMatCutWav(root=self.config.io.in_dataset_path, split='train',
+                                 transform=self.transform,
+                                 target_transform=self.gt_transform,
+                                 joint_transform=self.joint_transform,
+                                 k_max=self.config.data.k_max,
+                                 k_min=self.config.data.k_min,
+                                wavelet_level=self.config.data.wavelet_level,
+                                wavelet_type=self.config.data.wavelet_type
+                                 )
+
+    @cached_property
+    def test_dataset(self):
+        return SyntheticPUMatCutWav(root=self.config.io.in_dataset_path, split='test',
+                                 transform=self.eval_transform,
+                                 target_transform=self.eval_gt_transform,
+                                 joint_transform=self.eval_joint_transform,
+                                 k_max=self.config.data.k_max,
+                                 k_min=self.config.data.k_min,
+                                    wavelet_level=self.config.data.wavelet_level,
+                                    wavelet_type=self.config.data.wavelet_type
                                  )
 
     @cached_property

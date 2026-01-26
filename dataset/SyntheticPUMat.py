@@ -79,14 +79,14 @@ class SyntheticPUMat(Dataset):
 
         # unwrapped = unwrapped - (torch.min(unwrapped) // (torch.pi * 2)) * (torch.pi * 2)
         # unwrapped = torch.clamp(unwrapped, min=0.0) # [0, inf]
-        k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi) # [-0.5, inf]
+        # k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi) # [-0.5, inf]
         # k_mat_cont_plus_one = k_mat_cont + 1.0 # [0.5, inf]
         # k_mat_cont_neg_norm = ((k_mat_cont_plus_one - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
-        k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
-        k_mat_cont_neg_norm = torch.clamp(k_mat_cont_neg_norm, min= -1, max= 1) # [-1, 1]
-        k_mat_disc = torch.round(k_mat_cont) # [0, inf]
+        # k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
+        # k_mat_cont_neg_norm = torch.clamp(k_mat_cont_neg_norm, min= -1, max= 1) # [-1, 1]
+        # k_mat_disc = torch.round(k_mat_cont) # [0, inf]
         # k_mat_disc_plus_one = torch.round(k_mat_cont_plus_one)
-        k_mat_disc_neg_norm = ((k_mat_disc - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-1, 1]
+        # k_mat_disc_neg_norm = ((k_mat_disc - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-1, 1]
 
         wrapped_neg_norm = wrapped / torch.pi
         wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
@@ -113,19 +113,19 @@ class SyntheticPUMat(Dataset):
         # wrapped_cond = wrapped_neg_norm
 
         # dfn_diffusion
-        unwrapped_sub_wrapped = unwrapped - wrapped
-        unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (2 * torch.pi * self.scale_k)
-        unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
-        unwrapped_sub_wrapped_neg_norm = unwrapped_sub_wrapped_norm * 2 - 1
+        # unwrapped_sub_wrapped = unwrapped - wrapped
+        # unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (2 * torch.pi * self.scale_k)
+        # unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
+        # unwrapped_sub_wrapped_neg_norm = unwrapped_sub_wrapped_norm * 2 - 1
 
         sample = {
             "wrapped": wrapped,
             # "wrapped_fp16": wrapped.to(torch.float16),
             "unwrapped": unwrapped,
-            "k_mat_cont": k_mat_cont,
-            "k_mat_cont_neg_norm": k_mat_cont_neg_norm,
-            "k_mat_disc": k_mat_disc,
-            "k_mat_disc_neg_norm": k_mat_disc_neg_norm,
+            # "k_mat_cont": k_mat_cont,
+            # "k_mat_cont_neg_norm": k_mat_cont_neg_norm,
+            # "k_mat_disc": k_mat_disc,
+            # "k_mat_disc_neg_norm": k_mat_disc_neg_norm,
             "wrapped_neg_norm": wrapped_neg_norm,
             # "unwrapped_fp16": unwrapped.to(torch.float16),
             # "wrapped_norm": wrapped_norm,
@@ -137,7 +137,7 @@ class SyntheticPUMat(Dataset):
             # "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
             # "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
             # "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,
-            "unwrapped_sub_wrapped_neg_norm": unwrapped_sub_wrapped_neg_norm,
+            # "unwrapped_sub_wrapped_neg_norm": unwrapped_sub_wrapped_neg_norm,
             # "unwrapped_sub_wrapped_norm_fp16": unwrapped_sub_wrapped_norm.to(torch.float16)
         }
         return sample

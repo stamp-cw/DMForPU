@@ -8,6 +8,49 @@ import argparse
 
 from scipy.fft import dctn, idctn
 import numpy as np
+import pywt
+
+def multi_scale_wavelet(phase, wavelet, level):
+    # phase: [1, H, W]
+    p = phase.squeeze(0).detach().cpu().numpy()
+    coeffs = wavelet_multiscale_decompose(p, wavelet, level)
+    concat_list = []
+    concat_list.append(F.interpolate(torch.as_tensor(coeffs[0], device=phase.device).unsqueeze(0).unsqueeze(0), size=phase.shape[-2:],mode='bilinear',align_corners=False).squeeze(0))
+
+    for l in range(1, level+1):
+        cH, cV, cD = coeffs[l]
+        for c in (cH, cV, cD):
+            t = torch.as_tensor(c, device=phase.device).unsqueeze(0).unsqueeze(0)
+            concat_list.append(F.interpolate(t, size=phase.shape[-2:],mode='bilinear',align_corners=False).squeeze(0))
+    return torch.concat(concat_list, dim=0)
+
+def wavelet_multiscale_decompose(
+        phase: np.ndarray,
+        wavelet: str = 'db4',
+        level: int = 3
+):
+    """
+    单通道相位矩阵的小波多尺度分解
+
+    Args:
+        phase (np.ndarray): shape (H, W)，单通道相位矩阵
+        wavelet (str): 小波基，如 'db4', 'haar', 'sym5'
+        level (int): 分解层数
+
+    Returns:
+        coeffs: list
+            coeffs[0]              -> cA_n（最粗尺度低频）
+            coeffs[1:] 每层为 (cH, cV, cD)
+    """
+    if phase.ndim != 2:
+        raise ValueError("phase 必须是二维单通道矩阵")
+
+    coeffs = pywt.wavedec2(
+        data=phase,
+        wavelet=wavelet,
+        level=level
+    )
+    return coeffs
 
 # def poisson_reconstruct_phase_fft_torch(gx, gy):
 #     """
