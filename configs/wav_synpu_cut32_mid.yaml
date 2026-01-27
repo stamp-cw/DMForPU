@@ -17,7 +17,7 @@ data:
   k_min: 0
 #  k_max: 3
   k_max: 6
-  wavelet_level: 1
+  wavelet_level: 3
   wavelet_type: db4
 
 training:
