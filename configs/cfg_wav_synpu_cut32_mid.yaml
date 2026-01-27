@@ -1,0 +1,83 @@
+seed: 42
+
+loss_type:
+#  name: PHY11
+  name: MchLoss
+
+meter:
+  name: MchMeter
+
+data:
+#  name: SyntheticPUMatCut32Mch
+#  name: SyntheticPUMatCut32MchTest
+  name: SyntheticPUMatCut32Wav
+  image_size: 32
+  color_channels: 1
+  num_workers: 1
+  k_min: 0
+#  k_max: 3
+  k_max: 6
+  wavelet_level: 3
+  wavelet_type: db4
+
+training:
+  device: cuda
+  brand_new_epochs: 100001
+  continue_training_epochs: 1000001
+  batch_size: 128
+#  batch_size: 32
+  use_all_data: false
+  amp: true
+  log_freq: 1
+  snapshot_freq: 100
+  snapshot_sampling: false
+  snapshot_val: false
+  snapshot_batch_size: 32
+
+model:
+  name: UNet2DConditionModel
+  sample_size: 32
+  in_channels: 1
+  out_channels: 1
+  layers_per_block: 2
+  block_out_channels: [64, 128, 256, 512]
+
+diffusion:
+  name: CfgDDPMDiffusion
+  timesteps: 1000
+  num_train_timesteps: 1000
+  num_infer_timesteps: 100
+  conditioning_channels: 2
+  repeat_channels: 6
+  cfg_scale: 3.0
+
+sampling:
+  device: cuda
+  batch_size: 128
+  total_samples: 16
+  record_freq: 1
+  eps: 1e-5
+  fix_seed: true
+
+val:
+  device: cuda
+  batch_size: 128
+
+test:
+  device: cuda
+  batch_size: 128
+
+optim:
+  optimizer: Adam
+  lr: 0.0001
+  weight_decay: 0.0001
+  beta1: 0.9
+  eps: 1e-8
+  warmup: 2
+  grad_clip: 1.0
+  momentum: 0.9
+
+iio:
+  use_tensorboard: true
+  use_wandb: false
+  save_pth_to_wandb: false
