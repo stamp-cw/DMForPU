@@ -195,19 +195,19 @@ if __name__ == '__main__':
     from model.pu_unet_mmodel import PuUNetMModel
     from model.unet.pu_unet import PuUNet
     # Import Diffusions
-    from diffusion.ddpm_diffusion import DDPMDiffusion
-    from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
-    from diffusion.mch_neg_norm_ddpm_diffusion import MchNegNormDDPMDiffusion
-    from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
-    from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
-    from diffusion.latent_ddpm_diffusion import LatentDDPMDiffusion
-    from diffusion.dph_ddpm_diffusion import DphDDPMDiffusion
-    from diffusion.elucidate_diffusion import ElucidatedDiffusion
-    from diffusion.ucn_ddpm_diffusion import UcnDDPMDiffusion
-    from diffusion.phase_ddpm_diffusion import PhaseDDPMDiffusion
-    from diffusion.phase_cut_ddpm_diffusion import PhaseCutDDPMDiffusion
+    # from diffusion.ddpm_diffusion import DDPMDiffusion
+    # from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
+    # from diffusion.mch_neg_norm_ddpm_diffusion import MchNegNormDDPMDiffusion
+    # from diffusion.dfn_ddpm_diffusion import  DFNDDPMDiffusion
+    # from diffusion.kdf_ddpm_diffusion import  KdfDDPMDiffusion
+    # from diffusion.latent_ddpm_diffusion import LatentDDPMDiffusion
+    # from diffusion.dph_ddpm_diffusion import DphDDPMDiffusion
+    # from diffusion.elucidate_diffusion import ElucidatedDiffusion
+    # from diffusion.ucn_ddpm_diffusion import UcnDDPMDiffusion
+    # from diffusion.phase_ddpm_diffusion import PhaseDDPMDiffusion
+    # from diffusion.phase_cut_ddpm_diffusion import PhaseCutDDPMDiffusion
     from diffusion.mch_ddpm_diffusion import MchDDPMDiffusion
-    from diffusion.grad_ddpm_diffusion import GradDDPMDiffusion
+    # from diffusion.grad_ddpm_diffusion import GradDDPMDiffusion
     from diffusion.wav_ddpm_diffusion import WavDDPMDiffusion
     from diffusion.cfg_ddpm_diffusion import CfgDDPMDiffusion
     # Import Meter
