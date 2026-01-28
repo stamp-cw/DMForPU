@@ -18,7 +18,7 @@ data:
   k_min: 0
 #  k_max: 3
   k_max: 6
-  wavelet_level: 3
+  wavelet_level: 2
   wavelet_type: db4
 
 training:
@@ -50,7 +50,7 @@ diffusion:
   num_infer_timesteps: 100
   conditioning_channels: 2
   repeat_channels: 6
-  cfg_scale: 3.0
+  cfg_scale: 1.5
 
 sampling:
   device: cuda

@@ -23,3 +23,5 @@ python3 main.py --config wav_synpu_cut32_mid.yaml --mode train --training_from_s
 python3 main.py --config wav_synpu_cut32_test.yaml --mode train --training_from_scratch --debug
 
 python3 main.py --config cfg_wav_synpu_cut32_test.yaml --mode train --training_from_scratch --debug
+
+python3 main.py --config cfg_wav_synpu_cut32_mid.yaml --mode train --training_from_scratch --debug
