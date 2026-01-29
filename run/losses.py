@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 import torch
 
-from diffusion.elucidate_diffusion import SpectralFeatureExtractorPretrained
+# from diffusion.elucidate_diffusion import SpectralFeatureExtractorPretrained
 from selector.loss_type_selector import register_loss_type, _LOSSTYPE
 from utils.util import wrap_phase
 

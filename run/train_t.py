@@ -42,7 +42,7 @@ class Trainer:
             self.acc_batch = 0
             self.end_epoch = self.config.training.brand_new_epochs
         elif not self.config.io.training_from_scratch and self.config.io.latest_checkpoint_file_path is not None:
-            self.start_epoch = self.config.io.latest_checkpoint_epoch
+            self.start_epoch = self.config.io.latest_checkpoint_epoch + 1
             self.acc_batch = self.start_epoch * len(self.train_loader)
             self.end_epoch = self.start_epoch + self.config.training.continue_training_epochs
             self.logger.info(f"Continuing training from epoch {self.start_epoch}")
@@ -86,8 +86,8 @@ class Trainer:
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
         self.diffusion.model.load_state_dict(ckpt['model'])
         # self.ema.load_state_dict(ckpt['ema'])
-        if self.config.diffusion.use_controlnet:
-            self.diffusion.controlnet_model.load_state_dict(ckpt['controlnet_model'])
+        # if self.config.diffusion.use_controlnet:
+        #     self.diffusion.controlnet_model.load_state_dict(ckpt['controlnet_model'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
     def _record_and_evaluate(self):

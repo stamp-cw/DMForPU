@@ -19,6 +19,7 @@ python3 main.py --config mch_grad_synpu_cut32_tid.yaml --mode train --training_f
 
 python3 main.py --config mch_dlpu_cut32_big.yaml --mode train --training_from_scratch --debug
 
+python3 main.py --config wav_synpu_128_mid.yaml --mode train --training_from_scratch --debug
 python3 main.py --config wav_synpu_cut32_mid.yaml --mode train --training_from_scratch --debug
 python3 main.py --config wav_synpu_cut32_test.yaml --mode train --training_from_scratch --debug
 
