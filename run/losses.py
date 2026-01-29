@@ -246,43 +246,43 @@ def SAM(x, y):
         x[torch.isnan(x)] = 1e-6
     return torch.acos(cosine_sim.clamp(-1+1e-6, 1-1e-6)).mean()
 
-@register_loss_type(name='GEWLOSS')
-class GEWLOSSType:
-    def __init__(self, config):
-        self.config = config
-        self.name = config.loss_type.name
-        # self.lam_phys = config.loss_type.lam_phys
-        self.perceptual_loss = SpectralFeatureExtractorPretrained(in_channels=1)
-
-    # def neg_norm_kl_loss(self, gt_unwrapped_neg_norm, pred_unwrapped_neg_norm):
-    #     loss = torch.mean(gt_kmat_cont_neg_norm * torch.log((gt_kmat_cont_neg_norm + 1e-8) / (pred_k_mat_cont_neg_norm + 1e-8)))
-    #     return loss
-
-    def gradient_loss(self,x_generated, x_real):
-        """ Compute gradient consistency loss """
-        c = x_generated.shape[1]
-        device = x_generated.device
-        dtype = x_generated.dtype
-
-        # Create a Sobel filter (1, 1, 3, 3)
-        sobel_x = torch.tensor(
-            [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=dtype, device=device
-        ).view(1, 1, 3, 3)
-
-        sobel_y = sobel_x.transpose(2, 3)  # y direction Sobel
-
-        # Copy to multichannel to make it work with `groups=c`
-        sobel_x = sobel_x.repeat(c, 1, 1, 1)
-        sobel_y = sobel_y.repeat(c, 1, 1, 1)
-
-        grad_x_gen = F.conv2d(x_generated, sobel_x, padding=1, groups=c)
-        grad_y_gen = F.conv2d(x_generated, sobel_y, padding=1, groups=c)
-        grad_x_real = F.conv2d(x_real, sobel_x, padding=1, groups=c)
-        grad_y_real = F.conv2d(x_real, sobel_y, padding=1, groups=c)
-        # Calculating L1 loss
-        loss = F.l1_loss(grad_x_gen, grad_x_real) + F.l1_loss(grad_y_gen, grad_y_real)
-        loss = loss / 2  # Divide by 2 to make it smoother
-        return loss
+# @register_loss_type(name='GEWLOSS')
+# class GEWLOSSType:
+#     def __init__(self, config):
+#         self.config = config
+#         self.name = config.loss_type.name
+#         # self.lam_phys = config.loss_type.lam_phys
+#         self.perceptual_loss = SpectralFeatureExtractorPretrained(in_channels=1)
+#
+#     # def neg_norm_kl_loss(self, gt_unwrapped_neg_norm, pred_unwrapped_neg_norm):
+#     #     loss = torch.mean(gt_kmat_cont_neg_norm * torch.log((gt_kmat_cont_neg_norm + 1e-8) / (pred_k_mat_cont_neg_norm + 1e-8)))
+#     #     return loss
+#
+#     def gradient_loss(self,x_generated, x_real):
+#         """ Compute gradient consistency loss """
+#         c = x_generated.shape[1]
+#         device = x_generated.device
+#         dtype = x_generated.dtype
+#
+#         # Create a Sobel filter (1, 1, 3, 3)
+#         sobel_x = torch.tensor(
+#             [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=dtype, device=device
+#         ).view(1, 1, 3, 3)
+#
+#         sobel_y = sobel_x.transpose(2, 3)  # y direction Sobel
+#
+#         # Copy to multichannel to make it work with `groups=c`
+#         sobel_x = sobel_x.repeat(c, 1, 1, 1)
+#         sobel_y = sobel_y.repeat(c, 1, 1, 1)
+#
+#         grad_x_gen = F.conv2d(x_generated, sobel_x, padding=1, groups=c)
+#         grad_y_gen = F.conv2d(x_generated, sobel_y, padding=1, groups=c)
+#         grad_x_real = F.conv2d(x_real, sobel_x, padding=1, groups=c)
+#         grad_y_real = F.conv2d(x_real, sobel_y, padding=1, groups=c)
+#         # Calculating L1 loss
+#         loss = F.l1_loss(grad_x_gen, grad_x_real) + F.l1_loss(grad_y_gen, grad_y_real)
+#         loss = loss / 2  # Divide by 2 to make it smoother
+#         return loss
 
     def __call__(self, diffusion):
         # unet pred noise diff

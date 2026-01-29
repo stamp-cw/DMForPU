@@ -178,7 +178,7 @@ if __name__ == '__main__':
     from model.optimizer import AdamOptimizer,SGDOptimizer
     # Import Losses
     from run.losses import PureLossType, Pure2LossType
-    from run.losses import GEWLOSSType
+    # from run.losses import GEWLOSSType
     from run.losses import PHY1LossType,PHY2LossType,PHY3LossType, PHY4LossType
     from run.losses import PHY11LossType, PHY12LossType, PHY13LossType
     from run.losses import VAEKLLossType, VAEPURELossType
