@@ -181,6 +181,8 @@ if __name__ == '__main__':
     from run.losses import VAEKLLossType, VAEPURELossType
     from run.losses import UNetLOSSLossType
     from run.losses import MchGradLossType
+    from run.losses import SqdLstmLossType
+    from run.losses import PUNetLossType
     # Import VAE Models
     from vae.latent_vae import LatentVAE
     # Import Models
@@ -191,6 +193,7 @@ if __name__ == '__main__':
     from model.unet.diff_aux_unet import DiffAuxUNet
     from model.punet_mmodel import PUNetMModel
     from model.unet.punet import PUNet
+    from model.lstm.sqd_lstm import JointConvSQDLSTMNet
     # Import Diffusions
     # from diffusion.ddpm_diffusion import DDPMDiffusion
     # from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
@@ -212,4 +215,7 @@ if __name__ == '__main__':
     from meter.mch_meter import MchMeter
     from meter.mch_grad_meter import MchGradMeter
     from meter.punet_meter import PUNetMeter
+    from meter.sqd_lstm_meter import SqdLstmMeter
+    # Import MModel
+    from model.sqd_lstm_mmodel import SqdLstmMModel
     main()

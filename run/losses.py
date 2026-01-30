@@ -514,8 +514,9 @@ class SqdLstmLossType:
         self.meter = config.train_meter
 
     def __call__(self, vae):
-        recon_loss = self.meter.batch_metric_dict['L1']
-        total_loss = recon_loss
+        var_loss = self.meter.batch_metric_dict['VAR']
+        tv_loss = self.meter.batch_metric_dict['TV']
+        total_loss =  var_loss + 0.1 * tv_loss
         return total_loss
 
 class LossFN:
