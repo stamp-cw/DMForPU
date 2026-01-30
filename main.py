@@ -101,25 +101,14 @@ def main():
     # Train or sample
     try:
         if args.mode == 'train':
-            if args.debug:
-                from run.train_t import Trainer
-                trainer = Trainer(config)
-                trainer.train()
-            else:
-                from run.train import Trainer
-                trainer = Trainer(config)
-                trainer.train()
+            from run.train import Trainer
+            trainer = Trainer(config)
+            trainer.train()
         elif args.mode == 'sample':
-            if args.debug:
-                from run.sample_t import Sampler
-                sampler = Sampler(config)
-                sampler.load_checkpoint()
-                sampler.sample()
-            else:
-                from run.sample import Sampler
-                sampler = Sampler(config)
-                sampler.load_checkpoint()
-                sampler.sample()
+            from run.sample import Sampler
+            sampler = Sampler(config)
+            sampler.load_checkpoint()
+            sampler.sample()
         elif args.mode == 'val':
             from run.val import Valuator
             valuator = Valuator(config)
