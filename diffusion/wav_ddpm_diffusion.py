@@ -40,13 +40,13 @@ class WavDDPMDiffusion:
                 "CrossAttnDownBlock2D",
                 "DownBlock2D",
                 "DownBlock2D",
-                # "DownBlock2D",
+                "DownBlock2D",
             ),
             up_block_types=(
                 "UpBlock2D",
                 "UpBlock2D",
+                "UpBlock2D",
                 "CrossAttnUpBlock2D",
-                # "CrossAttnUpBlock2D",
             )
         ).to(self.device)
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
