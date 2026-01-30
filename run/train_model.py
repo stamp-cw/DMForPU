@@ -10,20 +10,13 @@ import tqdm
 import torch
 import wandb
 
+from meter.meter_setup import MeterSetup
 from model.mmodel_setup import MModelSetup
 from run.losses import LossFN
 from model.optimizer import OptimizerFN
 from selector.data_selector import _DATA_LOADERS
 from selector.optimizer_selector import _OPTIMIZERS
-from utils.metrics import l1_metric
-from utils.util import AverageMeter
 from torch.cuda.amp import autocast, GradScaler
-
-from vae.vae_setup import VAESetup
-
-METRIC_FUNCS = {
-    "l1": l1_metric,
-}
 
 class ModelTrainer:
     def __init__(self, config):
@@ -34,12 +27,13 @@ class ModelTrainer:
         self.optimizer = _OPTIMIZERS(self.config)(self.mmodel.optimize_parameters)
         self.data_loader = _DATA_LOADERS(self.config)
         self.optimize_fn = OptimizerFN(self.config)
-        self.epoch_fn = EpochFN(train=True, optimize_fn=self.optimize_fn, config=self.config)
-        # self.eval_epoch_fn = EpochFN(train=False, optimize_fn=self.optimize_fn, config=self.config)
-        # self.best_evaluate_loss = self.config.training.best_evaluate_loss
         if self.config.io.use_tensorboard:
             from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(self.config.io.tensorboard_path)
+        self.meter = MeterSetup(self.config, self.logger).meter
+        config.train_meter = self.meter
+        self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
+
 
     def train(self):
         if self.config.io.training_from_scratch or self.config.io.latest_checkpoint_file_path is None:
@@ -47,7 +41,7 @@ class ModelTrainer:
             self.acc_batch = 0
             self.end_epoch = self.config.training.brand_new_epochs
         elif not self.config.io.training_from_scratch and self.config.io.latest_checkpoint_file_path is not None:
-            self.start_epoch = self.config.io.latest_checkpoint_epoch
+            self.start_epoch = self.config.io.latest_checkpoint_epoch + 1
             self.acc_batch = self.start_epoch * len(self.train_loader)
             self.end_epoch = self.start_epoch + self.config.training.continue_training_epochs
             self.logger.info(f"Continuing training from epoch {self.start_epoch}")
@@ -58,25 +52,18 @@ class ModelTrainer:
         for epoch in range(self.start_epoch, self.end_epoch):
             self.epoch = epoch
             self.mmodel.setup_train()
-            avg_meter = AverageMeter()
-            # avg_eval_meter = AverageMeter()
             pbar = tqdm.tqdm(self.train_loader, desc=f"Epoch {epoch}/{self.end_epoch}")
-            # for batch_data in self.train_loader:
             for step, batch_data in enumerate(pbar):
                 self.acc_batch += 1
-                metrics_dict = self.epoch_fn(self.mmodel, self.optimizer, epoch, batch_data)
-                self._record_metrics(metrics_dict, "train_per_batch", self.acc_batch)
-                avg_meter.update(metrics_dict)
-            avg_metrics = avg_meter.avg()
-            # avg_eval_metrics = avg_eval_meter.avg()
-            self._record_metrics(avg_metrics, "train_per_epoch", self.epoch)
-            # self._record_metrics(avg_eval_metrics, "eval_per_epoch", self.epoch)
-            self.avg_loss = avg_metrics["loss"]
+                self.meter.acc_step = self.acc_batch
+                self.meter = self.epoch_fn(self.mmodel, self.optimizer, self.meter, epoch, batch_data)
+                self.meter.epoch_meter.update(self.meter.batch_metric_dict)
+            self.meter.compute_epoch_metric()
+            self.avg_loss= self.meter.epoch_metric_dict['loss']
             self._record_and_evaluate()
 
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
-        # self.vae.model.save_pretrained(self.config.io.out_hf_ckpt_path)
         state_dict = {
             'model': self.mmodel.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
@@ -89,23 +76,24 @@ class ModelTrainer:
             artifact.add_file(ckpt_file_path)
             wandb.log_artifact(artifact)
 
-        # if self.config.training.snapshot_sampling: self._snapshot_sampling()
+        if self.config.training.snapshot_sampling: self._snapshot_sampling()
+        if self.config.training.snapshot_val: self._snapshot_val(epoch)
 
     def _load_state(self):
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
         self.mmodel.load_state_dict(ckpt['model'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
-    def _record_metrics(self, metrics, prefix, step):
-        if self.config.io.use_tensorboard:
-            for k, v in metrics.items():
-                self.writer.add_scalar(f"{prefix}/{k}", v, step)
+    # def _record_metrics(self, metrics, prefix, step):
+    #     if self.config.io.use_tensorboard:
+    #         for k, v in metrics.items():
+    #             self.writer.add_scalar(f"{prefix}/{k}", v, step)
 
     def _record_and_evaluate(self):
         if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
-        if self.epoch % self.config.training.log_freq == 0: self.logger.info(
-            f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
-        # self._evaluate()
+        if self.epoch % self.config.training.log_freq == 0:
+            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
+            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict}")
         if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
             self._save_state(self.epoch)
 
@@ -114,8 +102,12 @@ class ModelTrainer:
         return self.data_loader.train_loader if not self.config.training.use_all_data else self.data_loader.all_loader
 
     @property
-    def eval_loader(self):
-        return self.data_loader.eval_loader
+    def val_loader(self):
+        return self.data_loader.test_loader
+
+    @property
+    def sampling_loader(self):
+        return self.data_loader.test_loader
 
     def _snapshot_sampling(self):
         from run.test_model import ModelTester as Tester
@@ -123,54 +115,41 @@ class ModelTrainer:
         self.config.sampling.total_samples = self.config.training.snapshot_batch_size
         self.config.sampling.eval = True
         sampler = Tester(self.config)
-        # sampler.ema = self.ema
-        # sampler.model = self.model
         sampler.mmodel = self.mmodel
         sampler.sample()
 
+    def _snapshot_val(self, epoch):
+        pass
 
 class EpochFN:
-    def __init__(self, train, optimize_fn, config):
-        self.train = train
+    def __init__(self, optimize_fn, config):
         self.optimize_fn = optimize_fn
         self.config = config
         self.loss_fn = LossFN(self.config)
-        metrics_dict = vars(self.config.metrics)
-        self.metrics = {k: [] for k, v in metrics_dict.items() if v}
-        self.metrics_keys = list(self.metrics.keys())
 
-    def __call__(self, diffusion, optimizer, epoch, batch):
-        return self.epoch_fn(diffusion, optimizer, epoch, batch)
+    def __call__(self, mmodel, optimizer, meter, epoch, batch):
+        return self.epoch_fn(mmodel, optimizer, meter, epoch, batch)
 
-    def epoch_fn(self, mmodel, optimizer, epoch, batch):
-        # gt = batch['unwrapped_neg_norm'].to(self.config.training.device)
-        gt = batch['unwrapped'].to(self.config.training.device)
-        # print("gt shape:", gt.shape)
-        pred = mmodel.train_predict(gt)
+    def epoch_fn(self, mmodel, optimizer, meter, epoch, batch):
+        mmodel.setup_data(batch)
+        pred_batch = mmodel.train_predict(batch)
 
-        if self.train:
-            if self.config.training.amp:
-                scaler = GradScaler()
-                optimizer.zero_grad()
-                with autocast():
-                    loss = self.loss_fn(mmodel)
-                scaler.scale(loss).backward()
-                self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch, scaler=scaler)
-                self.metrics["loss"] = loss.item()
-            else:
-                optimizer.zero_grad()
+        meter.epoch = epoch
+        meter.setup_data(pred_batch)
+        meter.compute_batch_metric()
+        if self.config.training.amp:
+            scaler = GradScaler()
+            optimizer.zero_grad()
+            with autocast():
                 loss = self.loss_fn(mmodel)
-                loss.backward()
-                self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch)
-                self.metrics["loss"] = loss.item()
+            scaler.scale(loss).backward()
+            self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch, scaler=scaler)
         else:
+            optimizer.zero_grad()
             loss = self.loss_fn(mmodel)
-            self.metrics["loss"] = loss.item()
+            loss.backward()
+            self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch)
+        meter.batch_metric_dict["loss"] = loss.item()
+        return meter
 
-        for k in self.metrics_keys:
-            func = METRIC_FUNCS[k]
-            value = func(pred, gt)
-            self.metrics[k] = value.item()
-
-        return self.metrics
 

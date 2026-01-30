@@ -61,7 +61,6 @@ class Trainer:
                 self.meter.epoch_meter.update(self.meter.batch_metric_dict)
 
             self.meter.compute_epoch_metric()
-            # print(self.meter.batch_metric_dict['loss'])
             self.avg_loss= self.meter.epoch_metric_dict['loss']
             self._record_and_evaluate()
 
@@ -85,9 +84,6 @@ class Trainer:
     def _load_state(self):
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
         self.diffusion.model.load_state_dict(ckpt['model'])
-        # self.ema.load_state_dict(ckpt['ema'])
-        # if self.config.diffusion.use_controlnet:
-        #     self.diffusion.controlnet_model.load_state_dict(ckpt['controlnet_model'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
     def _record_and_evaluate(self):
@@ -111,7 +107,7 @@ class Trainer:
         return self.data_loader.test_loader
 
     def _snapshot_sampling(self):
-        from run.sample_t import Sampler
+        from run.sample import Sampler
         self.config.sampling.batch_size = self.config.training.snapshot_batch_size
         self.config.sampling.total_samples = self.config.training.snapshot_batch_size
         # self.config.sampling.eval = True

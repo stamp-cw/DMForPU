@@ -148,18 +148,6 @@ class Outconv(nn.Module):
         x1 = self.conv(x)
         return x1
 
-
-# @register_model(name='UNet')
-# class UNet:
-#     def __init__(self, config):
-#         super(UNet, self).__init__()
-#         n_channels = config.model.in_channels
-#         n_classes = config.model.out_channels
-#         bilinear = config.model.bilinear
-#         self.n_channels = n_channels
-#         self.n_classes = n_classes
-#         self.bilinear = bilinear
-
 ' Architecture of Res-UNet '
 @register_model(name=['UNet','PuUNet'])
 class PuUNet(nn.Module):
