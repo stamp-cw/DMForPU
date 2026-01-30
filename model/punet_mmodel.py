@@ -11,8 +11,8 @@ class PUNetMModel:
         model_setup = ModelSetup(self.config, config.logger)
         self.model = model_setup.model
 
-    def setup_batch(self,batch):
-        self.gt = batch['gt'].to(self.device)
+    def setup_data(self,batch):
+        self.gt = batch['unwrapped'].to(self.device)
         self.pred_batch = batch
 
     def setup_train(self):
@@ -22,6 +22,7 @@ class PUNetMModel:
         self.model.eval()
 
     def train_predict(self, batch):
+        self.pred_batch['gt'] = self.gt
         self.pred_batch['pred'] = self.model(self.gt)
 
     def eval_predict(self, gt):

@@ -30,6 +30,7 @@ class ModelTrainer:
         if self.config.io.use_tensorboard:
             from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(self.config.io.tensorboard_path)
+            config.writer = self.writer
         self.meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter
         self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)

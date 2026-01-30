@@ -181,8 +181,8 @@ if __name__ == '__main__':
     from model.aux_unet_mmodel import AuxUNetMModel
     from model.diff_aux_unet_mmodel import DiffAuxUNetMModel
     from model.unet.diff_aux_unet import DiffAuxUNet
-    from model.pu_unet_mmodel import PuUNetMModel
-    from model.unet.pu_unet import PuUNet
+    from model.punet_mmodel import PUNetMModel
+    from model.unet.punet import PUNet
     # Import Diffusions
     # from diffusion.ddpm_diffusion import DDPMDiffusion
     # from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
@@ -203,4 +203,5 @@ if __name__ == '__main__':
     from meter.pure_meter import PureMeter
     from meter.mch_meter import MchMeter
     from meter.mch_grad_meter import MchGradMeter
+    from meter.punet_meter import PUNetMeter
     main()

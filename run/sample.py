@@ -209,7 +209,7 @@ class Sampler:
         for i, img_array in enumerate(samples):
             img = img_array.squeeze()  # [H, W]
             img = img.detach().cpu().numpy()
-            img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1 + i)
+            img_path = self.config.io.generated_sample_png_file_path(self.saved_samples + 1)
             plt.figure(figsize=(4, 4))
             plt.imshow(img, cmap="turbo")
             plt.axis("off")
