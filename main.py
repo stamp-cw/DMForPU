@@ -19,7 +19,7 @@ from utils.util import dict2namespace, unflatten_dict, update_dict
 def main():
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
     parser.add_argument('--config', type=str, required=True, help='Path to the configs file')
-    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'val', 'test','train_vae', 'test_vae','train_model','test_model','val_model','sample_model'], help='Train the model or generate samples')
+    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'val', 'test','train_vae', 'test_vae','train_model','test_model','val_model','sample_model','train_multi_model'], help='Train the model or generate samples')
     parser.add_argument('--user_logging_level', type=str, required=False, default='info', choices=['debug', 'info', 'warning', 'error'], help='Set logging level (debug, info, warning, error)')
     parser.add_argument('--training_from_scratch', action='store_true', default=False, required=False, help='Train from scratch instead of resuming training')
     parser.add_argument('--sampling_from_epoch', type=int, required=False, default=None, help='Epoch number to load for sampling (default: latest checkpoint)')
@@ -45,7 +45,7 @@ def main():
         tmp_config.iio.out_asset_suffix = os.path.join("hyper",tmp_config.data.name, tmp_config.model.name, f"exp-{run_time}")
     elif args.mode == 'train_vae' or args.mode == 'test_vae':
         tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.model.name)
-    elif args.mode == 'train_model' or args.mode == 'test_model' or args.mode == 'val_model' or args.mode == 'sample_model':
+    elif args.mode == 'train_model' or args.mode == 'test_model' or args.mode == 'val_model' or args.mode == 'sample_model' or args.mode == 'train_multi_model':
         tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.model.name)
     else:
         tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.diffusion.name)
@@ -132,6 +132,10 @@ def main():
             from run.train_model import ModelTrainer
             model_trainer = ModelTrainer(config)
             model_trainer.train()
+        elif args.mode  == 'train_multi_model':
+            from run.train_multi_model import ModelTrainer as MultiModelTrainer
+            multi_model_trainer = MultiModelTrainer(config)
+            multi_model_trainer.train()
         elif args.mode  == 'test_model':
             from run.test_model import ModelTester
             model_tester = ModelTester(config)

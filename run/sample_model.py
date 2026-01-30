@@ -4,10 +4,8 @@ import torch
 from functools import cached_property
 
 from model.mmodel_setup import MModelSetup
-# from model.model_setup import ModelSetup
 from selector.data_selector import _DATA_LOADERS
 import matplotlib.pyplot as plt
-from matplotlib import colors
 
 class ModelSampler:
     def __init__(self, config):
@@ -16,12 +14,29 @@ class ModelSampler:
         self.device = config.test.device
         self.mmodel = MModelSetup(self.config, self.logger).mmodel
         self.data_loader = _DATA_LOADERS(self.config)
-        self.test_iter = iter(self.eval_loader)
 
     def load_checkpoint(self):
-        self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
-        loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
-        self.mmodel.model.load_state_dict(loaded_state['model'], strict=True)
+        ckpt_path = self.config.io.sampling_ckpt_file_path
+        self.logger.info(f"Loading checkpoint from {ckpt_path}")
+
+        # 加载 state_dict
+        checkpoint = torch.load(ckpt_path, map_location=self.device)
+        if 'model' not in checkpoint:
+            raise KeyError(f"'model' key not found in checkpoint {ckpt_path}")
+
+        state_dict = checkpoint['model']
+
+        # 判断是否是多卡权重
+        is_multi_card = any(k.startswith("module.") for k in state_dict.keys())
+        if is_multi_card:
+            self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
+            state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+        else:
+            self.logger.info("Detected single-card checkpoint.")
+
+        # 加载到模型
+        self.mmodel.model.load_state_dict(state_dict, strict=True)
+        self.logger.info("Checkpoint loaded successfully.")
 
     # def load_checkpoint(self):
     #     # self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
@@ -42,42 +57,35 @@ class ModelSampler:
     #     self.mmodel.model.load_state_dict(checkpoint['state_dict'])
 
     def sample(self):
-        self.logger.info(
-            f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
+        sampling_iter = iter(self.sampling_loader)
+        self.logger.info(f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
         self.mmodel.setup_eval()
         while self.remaining_samples > 0:
             try:
-                batch_dict = next(self.test_iter)
+                batch_dict = next(sampling_iter)
             except StopIteration:
-                self.test_iter = iter(self.eval_loader)
-                batch_dict = next(self.test_iter)
+                sampling_iter = iter(self.sampling_loader)
+                batch_dict = next(sampling_iter)
             self._sample(batch_dict)
+            self._save_samples_png()
+            self._update_stat()
 
     def _sample(self, batch_dict):
         with torch.no_grad():
-            # self.diffusion.infer_sample()
-            wrapped = batch_dict["wrapped"].to(self.device)
-            # wrapped = batch_dict["unwrapped"].to(self.device)
-            pred_unwrapped = self.mmodel.eval_predict(wrapped)
-            # self._save_samples_and_preview(wrapped, gt_unwrapped, pred_unwrapped)
+            self.mmodel.setup_data(batch_dict)
+            self.mmodel.eval_predict(batch_dict)
+            pred_batch = self.mmodel.pred_batch
             c_batch = {
-                "wrapped": batch_dict["wrapped"].to(self.device),
-                "gt_unwrapped": batch_dict["unwrapped"].to(self.device),
-                "pred_unwrapped": pred_unwrapped,
-                # "pred_unwrapped": wrapped,
-                "diff_unwrapped": batch_dict["unwrapped"].to(self.device) - pred_unwrapped,
-                # "gt_unwrapped_neg_norm": batch_dict["unwrapped_neg_norm"].to(self.device),
+                "wrapped": pred_batch["wrapped"].to(self.device),
+                "gt_unwrapped": pred_batch["unwrapped"].to(self.device),
+                "pred_unwrapped": pred_batch["pred"].to(self.device),
+                "diff_unwrapped": pred_batch["unwrapped"].to(self.device) - pred_batch["pred"].to(self.device),
             }
             self._save_compare_png(c_batch)
             self._save_compare_pt(c_batch)
             self.samples = self.mmodel.pred
         self._save_samples_png()
         self._update_stat()
-
-    @cached_property
-    def eval_loader(self):
-        # return self.data_loader.eval_loader
-        return self.data_loader.test_loader
 
     def _save_compare_pt(self, c_batch):
         pt_path = self.config.io.generated_compare_pt_file_path(self.saved_samples,
@@ -134,7 +142,11 @@ class ModelSampler:
     def _update_stat(self):
         self.logger.info(
             f"Total samples to generate: {self.total_samples}; Already generated {self.saved_samples}; Remaining: {self.remaining_samples}")
-        # self.iter_num += 1
+
+
+    @cached_property
+    def sampling_loader(self):
+        return self.data_loader.test_loader
 
     @property
     def saved_samples(self):

@@ -25,7 +25,8 @@ class PUNetMModel:
         self.pred_batch['gt'] = self.gt
         self.pred_batch['pred'] = self.model(self.gt)
 
-    def eval_predict(self, gt):
+    def eval_predict(self, batch):
+        self.pred_batch['gt'] = self.gt
         with torch.no_grad():
             self.pred_batch['pred'] = self.model(self.gt)
 

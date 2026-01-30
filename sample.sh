@@ -20,3 +20,5 @@ python3 main.py --config wav_synpu_cut32_test.yaml --mode sample --sampling_from
 
 python3 main.py --config cfg_wav_synpu_cut32_test.yaml --mode sample --sampling_from_epoch 1200 --debug
 python3 main.py --config cfg_wav_synpu_cut32_mid.yaml --mode sample --sampling_from_epoch 1100 --debug
+
+

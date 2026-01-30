@@ -16,7 +16,7 @@ data:
   name: SyntheticPUMat128Wav
   image_size: 128
   color_channels: 1
-  num_workers: 1
+  num_workers: 4
   k_min: 0
 #  k_max: 3
   k_max: 6
@@ -28,12 +28,13 @@ training:
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
 #  batch_size: 128
-  batch_size: 8
+#  batch_size: 8
+  batch_size: 128
 #  batch_size: 32
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 10
+  snapshot_freq: 100
   snapshot_sampling: false
   snapshot_val: false
   snapshot_batch_size: 32
