@@ -1,0 +1,13 @@
+export CUDA_VISIBLE_DEVICES=0
+
+python3 main.py --config wav_synpu_128_mid.yaml --mode train --training_from_scratch --debug
+python3 main.py --config wav_synpu_cut32_mid.yaml --mode train --training_from_scratch --debug
+python3 main.py --config wav_synpu_cut32_test.yaml --mode train --training_from_scratch --debug
+
+
+CUDA_VISIBLE_DEVICES=0,1 accelerate launch main.py --config wav_synpu_cut32_mid.yaml --mode train --training_from_scratch
+
+CUDA_VISIBLE_DEVICES=0,1 accelerate launch main.py --config wav_synpu_128_mid.yaml --mode train_multi --training_from_scratch
+
+
+

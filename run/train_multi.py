@@ -15,7 +15,6 @@ from run.losses import LossFN
 from model.optimizer import OptimizerFN
 from selector.data_selector import _DATA_LOADERS
 from selector.optimizer_selector import _OPTIMIZERS
-from torch.cuda.amp import autocast, GradScaler
 from accelerate import Accelerator
 
 class Trainer:

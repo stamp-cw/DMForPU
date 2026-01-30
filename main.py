@@ -19,7 +19,7 @@ from utils.util import dict2namespace, unflatten_dict, update_dict
 def main():
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
     parser.add_argument('--config', type=str, required=True, help='Path to the configs file')
-    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'val', 'test','train_vae', 'test_vae','train_model','test_model','val_model','sample_model','train_multi_model'], help='Train the model or generate samples')
+    parser.add_argument('--mode', type=str, required=True, choices=['train', 'sample', 'val', 'test','train_vae', 'test_vae','train_model','test_model','val_model','sample_model','train_multi_model','train_multi'], help='Train the model or generate samples')
     parser.add_argument('--user_logging_level', type=str, required=False, default='info', choices=['debug', 'info', 'warning', 'error'], help='Set logging level (debug, info, warning, error)')
     parser.add_argument('--training_from_scratch', action='store_true', default=False, required=False, help='Train from scratch instead of resuming training')
     parser.add_argument('--sampling_from_epoch', type=int, required=False, default=None, help='Epoch number to load for sampling (default: latest checkpoint)')
@@ -104,6 +104,10 @@ def main():
             from run.train import Trainer
             trainer = Trainer(config)
             trainer.train()
+        elif args.mode == 'train_multi':
+            from run.train_multi import Trainer as MultiTrainer
+            multi_trainer = MultiTrainer(config)
+            multi_trainer.train()
         elif args.mode == 'sample':
             from run.sample import Sampler
             sampler = Sampler(config)

@@ -35,6 +35,19 @@ class WavDDPMDiffusion:
             out_channels=config.model.out_channels,
             layers_per_block=config.model.layers_per_block,
             block_out_channels=tuple(config.model.block_out_channels),
+            cross_attention_dim=config.model.cross_attention_dim,
+            down_block_types=(
+                "CrossAttnDownBlock2D",
+                "DownBlock2D",
+                "DownBlock2D",
+                # "DownBlock2D",
+            ),
+            up_block_types=(
+                "UpBlock2D",
+                "UpBlock2D",
+                "CrossAttnUpBlock2D",
+                # "CrossAttnUpBlock2D",
+            )
         ).to(self.device)
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
 
@@ -52,8 +65,9 @@ class WavDDPMDiffusion:
         self.gt_unwrapped_neg_norm = batch_dict["unwrapped_neg_norm"].to(self.device)
 
     def train_sample(self, t):
-        cross_dim = getattr(self.model.config, "cross_attention_dim", None)
-        encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
+        # cross_dim = getattr(self.model.config, "cross_attention_dim", None)
+        # encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
+        encoder_hidden_states = torch.zeros(self.wrapped.shape[0], 1, self.config.model.cross_attention_dim, device=self.device)
         self.noise = torch.randn_like(self.gt_unwrapped_neg_norm).to(self.device)
         self.noisy = self.scheduler.add_noise(self.gt_unwrapped_neg_norm, self.noise, t).to(self.device)
         model_input = torch.cat([self.noisy] * self.config.diffusion.repeat_channels + [self.wrapped_cond], dim=1)
@@ -73,8 +87,9 @@ class WavDDPMDiffusion:
         self.pred_batch["gt"] = self.noise
 
     def infer_sample(self):
-        cross_dim = getattr(self.model.config, "cross_attention_dim", None)
-        encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
+        # cross_dim = getattr(self.model.config, "cross_attention_dim", None)
+        # encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
+        encoder_hidden_states = torch.zeros(self.wrapped.shape[0], 1, self.config.model.cross_attention_dim, device=self.device)
         scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
         x = torch.randn_like(self.wrapped).to(self.device)
         for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
