@@ -149,7 +149,7 @@ class Outconv(nn.Module):
         return x1
 
 ' Architecture of Res-UNet '
-@register_model(name=['UNet','PuUNet'])
+@register_model(name=['PUNet'])
 class PuUNet(nn.Module):
     def __init__(self,config):
         super(PuUNet, self).__init__()

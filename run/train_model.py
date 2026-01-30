@@ -84,11 +84,6 @@ class ModelTrainer:
         self.mmodel.load_state_dict(ckpt['model'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
-    # def _record_metrics(self, metrics, prefix, step):
-    #     if self.config.io.use_tensorboard:
-    #         for k, v in metrics.items():
-    #             self.writer.add_scalar(f"{prefix}/{k}", v, step)
-
     def _record_and_evaluate(self):
         if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
         if self.epoch % self.config.training.log_freq == 0:
@@ -132,7 +127,8 @@ class EpochFN:
 
     def epoch_fn(self, mmodel, optimizer, meter, epoch, batch):
         mmodel.setup_data(batch)
-        pred_batch = mmodel.train_predict(batch)
+        mmodel.train_predict(batch)
+        pred_batch = mmodel.pred_batch
 
         meter.epoch = epoch
         meter.setup_data(pred_batch)

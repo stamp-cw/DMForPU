@@ -493,6 +493,19 @@ class UNetLOSSLossType:
         return total_loss
 
 
+@register_loss_type(name='PUNetLoss')
+class PUNetLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        self.meter = config.train_meter
+
+    def __call__(self, vae):
+        recon_loss = self.meter.batch_metric_dict['L1']
+        total_loss = recon_loss
+        return total_loss
+
+
 class LossFN:
     def __init__(self, config):
         self.config = config
