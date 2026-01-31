@@ -5,3 +5,5 @@ matplotlib
 diffusers
 ml_collections
 torchvision
+# extra packages
+timm

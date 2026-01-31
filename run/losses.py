@@ -532,6 +532,18 @@ class RestormerLossType:
         return total_loss
 
 
+@register_loss_type(name='UformerLoss')
+class UformerLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        self.meter = config.train_meter
+
+    def __call__(self, vae):
+        charbonnier_loss = self.meter.batch_metric_dict['CharbonnierLoss']
+        total_loss = charbonnier_loss
+        return total_loss
+
 class LossFN:
     def __init__(self, config):
         self.config = config

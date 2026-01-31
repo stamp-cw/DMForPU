@@ -11,3 +11,8 @@ python3 main.py --config config_diff_aux_unet_test.yaml --mode train_model --tra
 python3 main.py --config punet_synpu_128_mid.yaml --mode train_model --training_from_scratch
 
 python3 main.py --config sqd_lstm_synpu_128_mid.yaml --mode train_model --training_from_scratch
+
+
+python3 main.py --config restormer_synpu_128_mid.yaml --mode train_model --training_from_scratch
+
+python3 main.py --config uformer_synpu_128_mid.yaml --mode train_model --training_from_scratch

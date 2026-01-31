@@ -2,13 +2,13 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-  name: RestormerLoss
+  name: UformerLoss
 
 meter:
-  name: RestormerMeter
+  name: UformerMeter
 
 mmodel:
-  name: RestormerMModel
+  name: UformerMModel
 
 data:
 #  name: SyntheticPUMatCut32Mch
@@ -29,7 +29,7 @@ training:
   continue_training_epochs: 1000001
 #  batch_size: 128
 #  batch_size: 8
-  batch_size: 4
+  batch_size: 32
 #  batch_size: 128
 #  batch_size: 32
 #  batch_size: 16
@@ -42,7 +42,7 @@ training:
   snapshot_batch_size: 32
 
 model:
-  name: Restormer
+  name: Uformer
   sample_size: 128
 #  in_channels: 1
 #  out_channels: 1
