@@ -39,13 +39,13 @@ class WavDDPMDiffusion:
             down_block_types=(
                 "CrossAttnDownBlock2D",
                 "DownBlock2D",
-                "DownBlock2D",
+                # "DownBlock2D",
                 "DownBlock2D",
             ),
             up_block_types=(
                 "UpBlock2D",
                 "UpBlock2D",
-                "UpBlock2D",
+                # "UpBlock2D",
                 "CrossAttnUpBlock2D",
             )
         ).to(self.device)
