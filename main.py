@@ -183,6 +183,7 @@ if __name__ == '__main__':
     from run.losses import MchGradLossType
     from run.losses import SqdLstmLossType
     from run.losses import PUNetLossType
+    from run.losses import RestormerLossType
     # Import VAE Models
     from vae.latent_vae import LatentVAE
     # Import Models
@@ -216,6 +217,8 @@ if __name__ == '__main__':
     from meter.mch_grad_meter import MchGradMeter
     from meter.punet_meter import PUNetMeter
     from meter.sqd_lstm_meter import SqdLstmMeter
+    from meter.restormer_meter import RestormerMeter
     # Import MModel
     from model.sqd_lstm_mmodel import SqdLstmMModel
+    from model.restormer_mmodel import RestormerMModel
     main()
