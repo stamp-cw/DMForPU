@@ -75,7 +75,7 @@ class Valuator:
                 self.save_batch.update(pred_batch)
 
     def _save_val_batch_pt(self, c_batch, batch_idx):
-        pt_path = self.config.io.generated_val_batch_pt_file_path(batch_idx, batch_idx * self.config.val.batch_size, (batch_idx + 1) * self.config.val.batch_size)
+        pt_path = self.config.io.generated_val_batch_pt_file_path(self.config.val.batch_size, batch_idx, batch_idx * self.config.val.batch_size, (batch_idx + 1) * self.config.val.batch_size)
         torch.save(c_batch, pt_path)
         self.logger.info(f"Saved batch {batch_idx} to {pt_path}")
 
