@@ -39,9 +39,9 @@ class Valuator:
         # print(len(self.val_loader))
         for batch_dict in tqdm.tqdm(self.val_loader, desc=f"Epoch {self.epoch} Valuating"):
             self._valuate(batch_dict)
-            self.meter.compute_epoch_metric()
-            self._save_val_pt()
-            self._update_stat()
+        self.meter.compute_epoch_metric()
+        self._save_val_pt()
+        self._update_stat()
 
     def _valuate(self, batch_dict):
         with torch.no_grad():

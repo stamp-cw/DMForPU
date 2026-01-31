@@ -27,9 +27,14 @@ from dataset.SyntheticPUMatWav import SyntheticPUMatWav
 class BaseDataLoader:
     def __init__(self, config):
         self.config = config
-        if config.mode == 'sample':
+        if config.mode in ['sample', 'sample_model']:
             self.batch_size = self.config.sampling.batch_size
-        self.batch_size = self.config.training.batch_size
+        elif config.mode in ['val', 'val_model']:
+            self.batch_size = self.config.val.batch_size
+        elif config.mode in ['test', 'test_model']:
+            self.batch_size = self.config.test.batch_size
+        else:
+            self.batch_size = self.config.training.batch_size
         num_devices = torch.cuda.device_count() if torch.cuda.is_available() else 1
         if self.batch_size % num_devices != 0:
             raise ValueError(f'Batch size {self.batch_size} must be divisible by the number of devices {num_devices}')

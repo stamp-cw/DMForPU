@@ -83,7 +83,7 @@ class ModelSampler:
             }
             self._save_compare_png(c_batch)
             self._save_compare_pt(c_batch)
-            self.samples = self.mmodel.pred
+            self.samples = pred_batch["pred"].to(self.device)
         self._save_samples_png()
         self._update_stat()
 

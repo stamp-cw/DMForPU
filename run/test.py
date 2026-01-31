@@ -36,7 +36,7 @@ class Tester:
     def _sample(self):
         from run.sample import Sampler
         self.config.sampling.batch_size = self.config.test.batch_size
-        self.config.sampling.total_samples = self.config.test.batch_size
+        self.config.sampling.total_samples = self.config.test.total_samples
         sampler = Sampler(self.config)
         sampler.sampling_loader = self.sampling_loader
         sampler.diffusion = self.diffusion

@@ -149,7 +149,7 @@ def main():
             from run.val_model import ModelValidator
             model_validator = ModelValidator(config)
             model_validator.load_checkpoint()
-            model_validator.validate()
+            model_validator.valuate()
         elif args.mode  == 'sample_model':
             from run.sample_model import ModelSampler
             model_sampler = ModelSampler(config)
