@@ -27,6 +27,9 @@ class PUNetMeter:
 
     def compute_epoch_metric(self):
         self.epoch_metric_dict = self.epoch_meter.avg()
+        # print("ok===========================================================")
+        # print(self.epoch_meter.avg())
+        # print("ok===========================================================")
         self.epoch_meter.reset()
         self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch)
 

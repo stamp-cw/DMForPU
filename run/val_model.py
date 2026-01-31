@@ -35,6 +35,7 @@ class ModelValidator:
     def valuate(self):
         self.mmodel.setup_eval()
         # print(len(self.val_loader))
+        self.meter.acc_step = self.epoch * len(self.val_loader)
         for batch_dict in tqdm.tqdm(self.val_loader, desc=f"Epoch {self.epoch} Valuating"):
             self._valuate(batch_dict)
         self.meter.compute_epoch_metric()

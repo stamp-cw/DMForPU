@@ -214,6 +214,9 @@ class AverageMeter:
         for k, v in metrics.items():
             self.sums[k] += v
             self.counts[k] += 1
+        # print(self.counts)
+        # print(metrics)
+        # print(self.sums)
 
     def avg(self):
         return {k: self.sums[k] / self.counts[k] for k in self.sums}

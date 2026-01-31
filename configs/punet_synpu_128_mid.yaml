@@ -61,7 +61,7 @@ val:
 
 test:
   device: cuda
-  batch_size: 4
+  batch_size: 2
   total_samples: 30
 
 optim:

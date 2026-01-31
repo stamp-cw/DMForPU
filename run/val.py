@@ -29,14 +29,27 @@ class Valuator:
         self.data_loader = _DATA_LOADERS(self.config)
         self.diffusion = DiffusionSetup(self.config, self.logger).diffusion
 
+    # def load_checkpoint(self):
+    #     self.logger.info(f"Loading checkpoint from {self.config.io.val_ckpt_file_path}")
+    #     loaded_state = torch.load(self.config.io.val_ckpt_file_path, map_location=self.device, weights_only=True)
+    #     self.diffusion.model.load_state_dict(loaded_state['model'])
+
     def load_checkpoint(self):
         self.logger.info(f"Loading checkpoint from {self.config.io.val_ckpt_file_path}")
-        loaded_state = torch.load(self.config.io.val_ckpt_file_path, map_location=self.device, weights_only=True)
-        self.diffusion.model.load_state_dict(loaded_state['model'])
+        state_dict = torch.load(self.config.io.val_ckpt_file_path, map_location=self.device, weights_only=True)['model']
+        is_multi_card = any(k.startswith("module.") for k in state_dict.keys())
+        if is_multi_card:
+            self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
+            state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+        else:
+            self.logger.info("Detected single-card checkpoint.")
+        self.diffusion.model.load_state_dict(state_dict)
+
 
     def valuate(self):
         self.diffusion.setup_eval()
         # print(len(self.val_loader))
+        self.meter.acc_step = self.epoch * len(self.val_loader)
         for batch_dict in tqdm.tqdm(self.val_loader, desc=f"Epoch {self.epoch} Valuating"):
             self._valuate(batch_dict)
         self.meter.compute_epoch_metric()

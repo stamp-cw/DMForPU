@@ -35,7 +35,7 @@ class ModelTester:
 
 
     def test(self):
-        self._sample()
+        # self._sample()
         self._val(self.epoch)
 
     def sample(self):
