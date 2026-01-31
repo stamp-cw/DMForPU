@@ -27,7 +27,7 @@ class RestormerMeter:
     def compute_epoch_metric(self):
         self.epoch_metric_dict = self.epoch_meter.avg()
         self.epoch_meter.reset()
-        self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_batch", self.epoch)
+        self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch)
 
     def _record_metrics(self, metrics, prefix, step):
         if self.config.io.use_tensorboard:
