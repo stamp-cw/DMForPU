@@ -51,7 +51,7 @@ model:
 
 sampling:
   device: cuda
-  batch_size: 128
+  batch_size: 8
   total_samples: 16
   record_freq: 1
   eps: 1e-5
@@ -59,11 +59,11 @@ sampling:
 
 val:
   device: cuda
-  batch_size: 128
+  batch_size: 8
 
 test:
   device: cuda
-  batch_size: 128
+  batch_size: 8
 
 optim:
   optimizer: Adam

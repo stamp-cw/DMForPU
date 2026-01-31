@@ -1,3 +1,4 @@
+import shutil
 from functools import cached_property
 
 import torch
@@ -59,7 +60,10 @@ class ModelValidator:
         self.logger.info(f"Saved Epoch {self.epoch} val result to {pt_path}")
 
     def _update_stat(self):
+        # with open(f"{self.config.io.out_val_path}/val_epoch_metric.txt", 'w', encoding='utf-8') as f:
+        #     f.write(str(self.meter.epoch_metric_dict))
         self.logger.info(f"Epoch {self.epoch}, indicate: {self.meter.epoch_metric_dict}")
+        shutil.copy(self.config.logger.logger_file_path, self.config.io.out_val_path)
 
     @cached_property
     def val_loader(self):

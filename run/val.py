@@ -5,6 +5,7 @@
 @Time    : 2025/10/3 18:19
 @Description :
 """
+import shutil
 from functools import cached_property
 
 import torch
@@ -78,6 +79,7 @@ class Valuator:
         # print(self.meter.epoch_metric_dict)
         # self.logger.info(f"Epoch {self.epoch}, L1: {self.meter.epoch_metric_dict['L1']:.4f}, RMSE: {self.meter.epoch_metric_dict['RMSE']:.4f}")
         self.logger.info(f"Epoch {self.epoch}, indicate: {self.meter.epoch_metric_dict}")
+        shutil.copy(self.config.logger.logger_file_path, self.config.io.out_val_path)
 
     @cached_property
     def val_loader(self):

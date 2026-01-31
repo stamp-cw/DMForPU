@@ -14,6 +14,7 @@ class Logger(logging.Logger):
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         if not os.path.exists('log'):
             os.makedirs('log')
+        self.logger_file_path = f'log/{timestamp}.log'
         fh = logging.FileHandler(f'log/{timestamp}.log')
         ch = logging.StreamHandler()
 
