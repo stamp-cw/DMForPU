@@ -89,25 +89,26 @@ class WavDDPMDiffusion:
     def infer_sample(self):
         # cross_dim = getattr(self.model.config, "cross_attention_dim", None)
         # encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
-        encoder_hidden_states = torch.zeros(self.wrapped.shape[0], 1, self.config.model.cross_attention_dim, device=self.device)
-        scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
-        x = torch.randn_like(self.wrapped).to(self.device)
-        for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
-            model_input = torch.cat([x] * self.config.diffusion.repeat_channels + [self.wrapped_cond], dim=1)
-            self.noise_pred = self.model(
-                model_input,
-                t,
-                encoder_hidden_states=encoder_hidden_states,
-                # encoder_hidden_states=None,
-            ).sample
-            x = scheduler.step(self.noise_pred, t, x).prev_sample
-        self.pred_unwrapped_neg_norm = x
-        self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
-        self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
-        self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
-        self.pred_batch["pred"] = self.noise_pred
-        self.pred_batch["gt"] = self.noise_pred
+        with torch.no_grad():
+            encoder_hidden_states = torch.zeros(self.wrapped.shape[0], 1, self.config.model.cross_attention_dim, device=self.device)
+            scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
+            x = torch.randn_like(self.wrapped).to(self.device)
+            for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
+                model_input = torch.cat([x] * self.config.diffusion.repeat_channels + [self.wrapped_cond], dim=1)
+                self.noise_pred = self.model(
+                    model_input,
+                    t,
+                    encoder_hidden_states=encoder_hidden_states,
+                    # encoder_hidden_states=None,
+                ).sample
+                x = scheduler.step(self.noise_pred, t, x).prev_sample
+            self.pred_unwrapped_neg_norm = x
+            self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
+            self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+            self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
+            self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
+            self.pred_batch["pred"] = self.noise_pred
+            self.pred_batch["gt"] = self.noise_pred
 
     @property
     def optimize_parameters(self):
