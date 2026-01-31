@@ -226,6 +226,27 @@ class Sampler:
         # if self.config.diffusion.use_controlnet:
         #     self.diffusion.controlnet_model.load_state_dict(loaded_state['controlnet_model'])
 
+    # def load_checkpoint(self):
+    #     ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
+    #     model_ckpt = ckpt['model']
+    #     optimizer_ckpt = ckpt['optimizer']
+    #
+    #     r_key = 'module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.'
+    #     is_multi_card = any(k.startswith("module.") for k in model_ckpt.keys())
+    #     if is_multi_card:
+    #         self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
+    #         model_ckpt = {k.replace(r_key, "", 1): v for k, v in model_ckpt.items()}
+    #         optimizer_ckpt = {k.replace(r_key, "", 1): v for k, v in optimizer_ckpt.items()}
+    #     else:
+    #         self.logger.info("Detected single-card checkpoint.")
+    #
+    #
+    #     # self.diffusion.model.load_state_dict(ckpt['model'])
+    #     self.diffusion.model.load_state_dict(model_ckpt)
+    #     # self.optimizer.load_state_dict(ckpt['optimizer'])
+    #     # self.optimizer.load_state_dict(optimizer_ckpt)
+
+
     def _save_compare_png(self, c_batch):
         def _to_numpy_2d(x: torch.Tensor):
             return x.detach().cpu().squeeze().numpy()
