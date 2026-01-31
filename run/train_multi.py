@@ -60,9 +60,6 @@ class Trainer:
             self.optimizer.zero_grad(set_to_none=True)
             self.epoch = epoch
             self.diffusion.setup_train()
-            self.diffusion.model, self.optimizer, self.m_train_loader = self.config.accelerator.prepare(
-                self.diffusion.model, self.optimizer, self.train_loader
-            )
             pbar = tqdm.tqdm(self.m_train_loader,
                              total=len(self.m_train_loader),
                              disable=not self.accelerator.is_main_process,
