@@ -87,8 +87,7 @@ class ModelTrainer:
                 self.avg_loss= avg_metrics['loss']
                 # self.avg_loss = loss_all.mean().item()
                 self._record_and_evaluate()
-            del avg_metrics
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
 
     def gather_metrics(self, accelerator, metrics: dict):
         out = {}

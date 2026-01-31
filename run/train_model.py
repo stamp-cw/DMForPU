@@ -62,7 +62,7 @@ class ModelTrainer:
             self.meter.compute_epoch_metric()
             self.avg_loss= self.meter.epoch_metric_dict['loss']
             self._record_and_evaluate()
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
 
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')

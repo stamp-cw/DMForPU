@@ -81,7 +81,7 @@ class Trainer:
             if self.config.accelerator.is_main_process:
                 self.avg_loss= avg_metrics['loss']
                 self._record_and_evaluate()
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
 
     def gather_metrics(self, accelerator, metrics: dict):
         out = {}
