@@ -37,8 +37,10 @@ class ModelValidator:
         self.mmodel.setup_eval()
         # print(len(self.val_loader))
         self.meter.acc_step = self.epoch * len(self.val_loader)
-        for batch_dict in tqdm.tqdm(self.val_loader, desc=f"Epoch {self.epoch} Valuating"):
+        for step, batch_dict in enumerate(tqdm.tqdm(self.val_loader, desc=f"Epoch {self.epoch} Valuating")):
             self._valuate(batch_dict)
+            if getattr(self.config.val, "save_val_batch_pt", True):
+                self._save_val_batch_pt(self.save_batch, step)
         self.meter.compute_epoch_metric()
         self._save_val_pt()
         self._update_stat()
@@ -53,6 +55,15 @@ class ModelValidator:
             self.meter.acc_step += 1
             self.meter.compute_batch_metric()
             self.meter.epoch_meter.update(self.meter.batch_metric_dict)
+            self.save_batch = self.meter.batch_metric_dict
+            if getattr(self.config.val, "save_raw_batch_pt", False):
+                self.save_batch.update(pred_batch)
+            # print(self.save_batch.keys())
+
+    def _save_val_batch_pt(self, c_batch, batch_idx):
+        pt_path = self.config.io.generated_val_batch_pt_file_path(batch_idx, batch_idx * self.config.val.batch_size, (batch_idx + 1) * self.config.val.batch_size)
+        torch.save(c_batch, pt_path)
+        self.logger.info(f"Saved batch {batch_idx} to {pt_path}")
 
     def _save_val_pt(self):
         pt_path = self.config.io.generated_val_pt_file_path(self.epoch)

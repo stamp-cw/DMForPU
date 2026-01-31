@@ -239,6 +239,9 @@ class DynamicIOConfig(ml_collections.ConfigDict):
         return os.path.join(self.out_sample_path,
                             f"{self.out_sample_filename_prefix}s_{start_image_count}_{end_image_count}.pt")
 
+    def generated_val_batch_pt_file_path(self, batch_idx, start_image_count, end_image_count):
+        return os.path.join(self.out_val_path, f"val_batch_{batch_idx}_{start_image_count}_{end_image_count}.pt")
+
     def generated_val_pt_file_path(self, epoch):
         return os.path.join(self.out_val_path, f"val_epoch{epoch}.pt")
 
