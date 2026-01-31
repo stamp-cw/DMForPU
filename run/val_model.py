@@ -58,7 +58,7 @@ class ModelValidator:
             self.save_batch = self.meter.batch_metric_dict
             if getattr(self.config.val, "save_raw_batch_pt", False):
                 self.save_batch.update(pred_batch)
-            print(self.save_batch)
+            # print(self.save_batch)
 
     def _save_val_batch_pt(self, c_batch, batch_idx):
         pt_path = self.config.io.generated_val_batch_pt_file_path(self.config.val.batch_size, batch_idx, batch_idx * self.config.val.batch_size, (batch_idx + 1) * self.config.val.batch_size)
