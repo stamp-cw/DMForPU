@@ -5,26 +5,7 @@ from selector.diffusion_selector import register_diffusion
 import tqdm
 import torch.nn as nn
 
-class PhaseEncoder(nn.Module):
-    def __init__(self, embed_dim=768, patch_size=8):
-        super().__init__()
-        self.proj = nn.Conv2d(
-            1 + 1, embed_dim,
-            kernel_size=patch_size,
-            stride=patch_size
-        )
-
-    def forward(self, phase):
-        """
-        phase: [B, 1, H, W]
-        return: [B, N, D]
-        """
-        x = self.proj(phase)
-        x = x.flatten(2).transpose(1, 2)
-        return x
-
-
-@register_diffusion(name='WavDDPMDiffusion')
+@register_diffusion(name='FduDDPMDiffusion')
 class WavDDPMDiffusion:
     def __init__(self, config):
         self.config = config
@@ -37,17 +18,16 @@ class WavDDPMDiffusion:
             block_out_channels=tuple(config.model.block_out_channels),
             cross_attention_dim=config.model.cross_attention_dim,
             down_block_types=(
-                # "CrossAttnDownBlock2D",
-                "DownBlock2D",
-                "DownBlock2D",
-                "DownBlock2D",
                 "CrossAttnDownBlock2D",
+                # "DownBlock2D",
+                # "DownBlock2D",
+                "DownBlock2D",
             ),
             up_block_types=(
+                "UpBlock2D",
+                # "UpBlock2D",
+                # "UpBlock2D",
                 "CrossAttnUpBlock2D",
-                "UpBlock2D",
-                "UpBlock2D",
-                "UpBlock2D",
             )
         ).to(self.device)
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
