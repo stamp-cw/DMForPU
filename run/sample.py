@@ -219,12 +219,35 @@ class Sampler:
         self.logger.info(
             f"Saved {self.samples.shape[0]} samples as PNG images in folder: {self.config.io.out_raw_sample_path}")
 
+    # def load_checkpoint(self):
+    #     self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
+    #     loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
+    #     self.diffusion.model.load_state_dict(loaded_state['model'])
+    #     # if self.config.diffusion.use_controlnet:
+    #     #     self.diffusion.controlnet_model.load_state_dict(loaded_state['controlnet_model'])
+
     def load_checkpoint(self):
-        self.logger.info(f"Loading checkpoint from {self.config.io.sampling_ckpt_file_path}")
-        loaded_state = torch.load(self.config.io.sampling_ckpt_file_path, map_location=self.device, weights_only=True)
-        self.diffusion.model.load_state_dict(loaded_state['model'])
-        # if self.config.diffusion.use_controlnet:
-        #     self.diffusion.controlnet_model.load_state_dict(loaded_state['controlnet_model'])
+        ckpt_path = self.config.io.sampling_ckpt_file_path
+        self.logger.info(f"Loading checkpoint from {ckpt_path}")
+
+        # 加载 state_dict
+        checkpoint = torch.load(ckpt_path, map_location=self.device)
+        if 'model' not in checkpoint:
+            raise KeyError(f"'model' key not found in checkpoint {ckpt_path}")
+
+        state_dict = checkpoint['model']
+
+        # 判断是否是多卡权重
+        is_multi_card = any(k.startswith("module.") for k in state_dict.keys())
+        if is_multi_card:
+            self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
+            state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+        else:
+            self.logger.info("Detected single-card checkpoint.")
+
+        # 加载到模型
+        self.diffusion.model.load_state_dict(state_dict, strict=True)
+        self.logger.info("Checkpoint loaded successfully.")
 
     # def load_checkpoint(self):
     #     ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
