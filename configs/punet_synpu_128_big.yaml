@@ -2,18 +2,19 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-  name: UformerLoss
+  name: PUNetLoss
 
 meter:
-  name: UformerMeter
+  name: PUNetMeter
 
 mmodel:
-  name: UformerMModel
+  name: PUNetMModel
 
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
-  name: SyntheticPUMat128Wav
+#  name: SyntheticPUMat128Wav
+  name: SyntheticPUMat128Big
   image_size: 128
   color_channels: 1
   num_workers: 4
@@ -29,10 +30,8 @@ training:
   continue_training_epochs: 1000001
 #  batch_size: 128
 #  batch_size: 8
-  batch_size: 32
-#  batch_size: 128
+  batch_size: 128
 #  batch_size: 32
-#  batch_size: 16
   use_all_data: false
   amp: true
   log_freq: 1
@@ -42,7 +41,7 @@ training:
   snapshot_batch_size: 32
 
 model:
-  name: Uformer
+  name: PUNet
   sample_size: 128
 #  in_channels: 1
 #  out_channels: 1
@@ -52,18 +51,19 @@ model:
 sampling:
   device: cuda
   batch_size: 1
-  total_samples: 16
+  total_samples: 10
   record_freq: 1
   eps: 1e-5
   fix_seed: true
 
 val:
   device: cuda
-  batch_size: 128
+  batch_size: 32
 
 test:
   device: cuda
-  batch_size: 128
+  batch_size: 2
+  total_samples: 30
 
 optim:
   optimizer: Adam
