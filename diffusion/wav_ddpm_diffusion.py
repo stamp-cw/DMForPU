@@ -36,18 +36,18 @@ class WavDDPMDiffusion:
             layers_per_block=config.model.layers_per_block,
             block_out_channels=tuple(config.model.block_out_channels),
             cross_attention_dim=config.model.cross_attention_dim,
-            # down_block_types=(
-            #     "CrossAttnDownBlock2D",
-            #     "DownBlock2D",
-            #     # "DownBlock2D",
-            #     "DownBlock2D",
-            # ),
-            # up_block_types=(
-            #     "UpBlock2D",
-            #     "UpBlock2D",
-            #     # "UpBlock2D",
-            #     "CrossAttnUpBlock2D",
-            # )
+            down_block_types=(
+                "CrossAttnDownBlock2D",
+                # "DownBlock2D",
+                # "DownBlock2D",
+                "DownBlock2D",
+            ),
+            up_block_types=(
+                "UpBlock2D",
+                # "UpBlock2D",
+                # "UpBlock2D",
+                "CrossAttnUpBlock2D",
+            )
         ).to(self.device)
         self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
 
