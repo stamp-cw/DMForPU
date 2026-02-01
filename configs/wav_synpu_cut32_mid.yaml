@@ -17,7 +17,7 @@ data:
   k_min: 0
 #  k_max: 3
   k_max: 6
-  wavelet_level: 3
+  wavelet_level: 2
   wavelet_type: db4
 
 training:
@@ -41,6 +41,7 @@ model:
   out_channels: 1
   layers_per_block: 2
   block_out_channels: [64, 128, 256, 512]
+  cross_attention_dim: 1280
 
 diffusion:
   name: WavDDPMDiffusion
