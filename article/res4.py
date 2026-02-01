@@ -24,7 +24,7 @@ img_path = f"{img_path_dir}/sin.png"
 plt.figure(figsize=(fig_size_W, fig_size_H))
 plt.imshow(img, cmap="twilight")
 plt.axis("off")
-plt.savefig(img_path, bbox_inches="tight", pad_inches=0)
+plt.savefig(img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
 plt.close()
 
 img = np.cos(wrapped_mat)
@@ -32,7 +32,7 @@ img_path = f"{img_path_dir}/cos.png"
 plt.figure(figsize=(fig_size_W, fig_size_H))
 plt.imshow(img, cmap="twilight")
 plt.axis("off")
-plt.savefig(img_path, bbox_inches="tight", pad_inches=0)
+plt.savefig(img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
 plt.close()
 
 sin_wrapped = multi_scale_wavelet(torch.sin(wrapped_tensor), 'db4', level=level)
@@ -47,7 +47,7 @@ for i in range(c):
     plt.figure(figsize=(fig_size_W, fig_size_H))
     plt.imshow(img, cmap="twilight")
     plt.axis("off")
-    plt.savefig(img_path, bbox_inches="tight", pad_inches=0)
+    plt.savefig(img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
     plt.close()
 
 cos_wrapped = multi_scale_wavelet(torch.cos(wrapped_tensor), 'db4', level=level)
@@ -62,5 +62,5 @@ for i in range(c):
     plt.figure(figsize=(fig_size_W, fig_size_H))
     plt.imshow(img, cmap="twilight")
     plt.axis("off")
-    plt.savefig(img_path, bbox_inches="tight", pad_inches=0)
+    plt.savefig(img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
     plt.close()
