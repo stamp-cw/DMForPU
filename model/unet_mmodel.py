@@ -11,22 +11,25 @@ class UNetMModel:
         model_setup = ModelSetup(self.config, config.logger)
         self.model = model_setup.model
 
+    def setup_data(self,batch):
+        self.wrapped = batch['wrapped'].to(self.device)
+        self.gt = batch['unwrapped'].to(self.device)
+        self.pred_batch = batch
+
     def setup_train(self):
         self.model.train()
 
     def setup_eval(self):
         self.model.eval()
 
-    def train_predict(self, gt):
-        self.gt = gt.to(self.device)
-        self.pred, self.d_feats, self.u_feats = self.model(self.gt)
-        return self.pred
+    def train_predict(self, batch):
+        self.pred_batch['gt'] = self.gt
+        self.pred_batch['pred'] = self.model(self.wrapped)
 
-    def eval_predict(self, gt):
+    def eval_predict(self, batch):
+        self.pred_batch['gt'] = self.gt
         with torch.no_grad():
-            self.gt = gt.to(self.device)
-            self.pred, self.d_feats, self.u_feats = self.model(self.gt)
-        return self.pred
+            self.pred_batch['pred'] = self.model(self.wrapped)
 
     @property
     def optimize_parameters(self):

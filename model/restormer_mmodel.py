@@ -12,6 +12,7 @@ class RestormerMModel:
         self.model = model_setup.model
 
     def setup_data(self,batch):
+        self.wrapped = batch['wrapped'].to(self.device)
         self.gt = batch['unwrapped'].to(self.device)
         self.pred_batch = batch
 
@@ -23,12 +24,12 @@ class RestormerMModel:
 
     def train_predict(self, batch):
         self.pred_batch['gt'] = self.gt
-        self.pred_batch['pred'] = self.model(self.gt)
+        self.pred_batch['pred'] = self.model(self.wrapped)
 
     def eval_predict(self, batch):
         self.pred_batch['gt'] = self.gt
         with torch.no_grad():
-            self.pred_batch['pred'] = self.model(self.gt)
+            self.pred_batch['pred'] = self.model(self.wrapped)
 
     @property
     def optimize_parameters(self):
