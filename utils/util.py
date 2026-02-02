@@ -52,6 +52,63 @@ def wavelet_multiscale_decompose(
     )
     return coeffs
 
+
+import torch
+import torch.nn.functional as F
+import pywt
+
+class MultiScaleWavelet:
+    def __init__(self, wavelet='db4', level=3):
+        """
+        多尺度小波分解（Torch + PyWavelets）
+
+        Args:
+            wavelet (str): 小波类型，如 'db4', 'haar'
+            level (int): 分解层数
+        """
+        self.wavelet = wavelet
+        self.level = level
+
+    def decompose(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        对输入 x 做多尺度小波分解并 concat 为多通道张量
+
+        Args:
+            x (torch.Tensor): [B,C,H,W] 单通道或多通道
+
+        Returns:
+            torch.Tensor: [B, C*(1+3*level), H, W] concat 后的多尺度系数
+        """
+        B, C, H, W = x.shape
+        device = x.device
+        out_list = []
+
+        for b in range(B):
+            batch_coeffs = []
+            for c in range(C):
+                # 单通道分解
+                img = x[b, c]  # [H, W]
+                coeffs = pywt.wavedec2(img.cpu().numpy(), wavelet=self.wavelet, level=self.level)
+                # coeffs[0] -> 最低频
+                cA_n = torch.tensor(coeffs[0], device=device, dtype=x.dtype).unsqueeze(0)  # [1, h, w]
+                # 上采样到原图大小
+                cA_n = F.interpolate(cA_n.unsqueeze(0), size=(H, W), mode='bilinear', align_corners=False).squeeze(0)
+                batch_coeffs.append(cA_n)
+
+                # 每层细节系数
+                for l in range(1, self.level+1):
+                    cH, cV, cD = coeffs[l]
+                    for cD_comp in (cH, cV, cD):
+                        t = torch.tensor(cD_comp, device=device, dtype=x.dtype).unsqueeze(0)
+                        t = F.interpolate(t.unsqueeze(0), size=(H, W), mode='bilinear', align_corners=False).squeeze(0)
+                        batch_coeffs.append(t)
+
+            # concat channels
+            out_list.append(torch.cat(batch_coeffs, dim=0))  # [C*(1+3*level), H, W]
+
+        # Batch concat
+        out = torch.stack(out_list, dim=0)  # [B, C*(1+3*level), H, W]
+        return out
 # def poisson_reconstruct_phase_fft_torch(gx, gy):
 #     """
 #     Reconstruct phase from gradients using FFT-based Poisson solver

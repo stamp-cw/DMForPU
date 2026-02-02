@@ -185,6 +185,7 @@ if __name__ == '__main__':
     from run.losses import PUNetLossType
     from run.losses import RestormerLossType
     from run.losses import UformerLossType
+    from run.losses import WavLossType
     # Import VAE Models
     from vae.latent_vae import LatentVAE
     # Import Models
@@ -222,6 +223,7 @@ if __name__ == '__main__':
     from meter.sqd_lstm_meter import SqdLstmMeter
     from meter.restormer_meter import RestormerMeter
     from meter.uformer_meter import UformerMeter
+    from meter.wav_meter import WavMeter
     # Import MModel
     from model.sqd_lstm_mmodel import SqdLstmMModel
     from model.restormer_mmodel import RestormerMModel

@@ -110,6 +110,28 @@ class MchLossType:
         total_loss = noise_mse_loss + 0.5 * phys_loss
         return total_loss
 
+
+@register_loss_type(name='WavLoss')
+class WavLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        self.meter = config.train_meter
+
+    def __call__(self, diffusion):
+        noise_mse_loss = self.meter.batch_metric_dict['NoiseMSE']
+        # phys_loss = self.meter.batch_metric_dict['UnwrappedL1']
+        charbonnier_loss = self.meter.batch_metric_dict['CharbonnierLoss']
+        wav_loss = self.meter.batch_metric_dict['WavLoss']
+        lge_loss = self.meter.batch_metric_dict['LGELoss']
+        mae_loss = self.meter.batch_metric_dict['UnwrappedMAE']
+        # total_loss = noise_mse_loss + charbonnier_loss + wav_loss + lge_loss
+        total_loss = noise_mse_loss + 0.5 * charbonnier_loss + 0.1 * wav_loss + 0.001 * lge_loss
+        # total_loss = noise_mse_loss + 0.5 * mae_loss
+        # total_loss = noise_mse_loss + 0.5 * charbonnier_loss
+        # total_loss = noise_mse_loss + 10 * charbonnier_loss + 0.1 * wav_loss + 0.001 * lge_loss
+        return total_loss
+
 @register_loss_type(name='MchGradLoss')
 class MchGradLossType:
     def __init__(self, config):

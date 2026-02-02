@@ -2,15 +2,19 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-  name: MchLoss
+#  name: MchLoss
+  name: WavLoss
 
 meter:
-  name: MchMeter
+#  name: MchMeter
+  name: WavMeter
 
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
   name: SyntheticPUMat128Wav
+#  name: SyntheticPUMat128WavTest
+#  name: SyntheticPUMat128MidTest
   image_size: 128
   color_channels: 1
   num_workers: 1
