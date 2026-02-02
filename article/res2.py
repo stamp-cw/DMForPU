@@ -67,22 +67,29 @@ def _to_numpy_2d(x: torch.Tensor):
 titles = [
     "Wrapped", "GT", "PUNet",
     "SQD-LSTM", "Restormer",
+    "Uformer", "Ours",
     "Wrapped", "GT",
     "Diff PUNet", "Diff SQD-LSTM",
-    "Diff Restormer"
+    "Diff Restormer",
+    "Diff Uformer", "Diff Ours"
 ]
 imgs = [
     wrapped_mat, gt_mat, _to_numpy_2d(punet_pred), _to_numpy_2d(sqd_lstm_pred), _to_numpy_2d(restormer_pred),
+    _to_numpy_2d(uformer_pred), _to_numpy_2d(ours_pred),
     wrapped_mat, gt_mat,
     gt_mat - _to_numpy_2d(punet_pred),
     gt_mat - _to_numpy_2d(sqd_lstm_pred),
-    gt_mat - _to_numpy_2d(restormer_pred)
+    gt_mat - _to_numpy_2d(restormer_pred),
+    gt_mat - _to_numpy_2d(uformer_pred),
+    gt_mat - _to_numpy_2d(ours_pred)
 ]
 cmaps = [
     "twilight", "turbo", "turbo",
     "turbo", "turbo",
+    "turbo", "turbo",
     "twilight", "turbo",
-    "inferno", "inferno", "inferno"
+    "inferno", "inferno", "inferno",
+    "inferno", "inferno"
 ]
 
 fig_dpi = 600
@@ -90,13 +97,13 @@ fig_size_W = 3.5
 fig_size_H = 2.5
 img_path = r"res/res2/figure.pdf"
 raw = 2
-col = 5
+col = 7
 fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
 axes = axes.flatten()
 zip_list = list(zip(axes, imgs, titles, cmaps))
 # wrapped
 color_norm = colors.Normalize(vmin=-np.pi, vmax=np.pi)
-for ax, img, title, cmap in  zip_list[:1]+zip_list[5:6]:
+for ax, img, title, cmap in  zip_list[:1]+zip_list[col:col+1]:
     im = ax.imshow(img, cmap=cmap, norm=color_norm)
     ax.set_xlabel(title, fontsize=7, labelpad=6)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
@@ -105,7 +112,7 @@ for ax, img, title, cmap in  zip_list[:1]+zip_list[5:6]:
     cbar.update_ticks()
 color_norm = colors.Normalize(vmin=0)
 ims = []
-for ax, img, title, cmap in zip_list[1:5] + zip_list[6:7]:
+for ax, img, title, cmap in zip_list[1:col] + zip_list[col+1:col+2]:
     im = ax.imshow(img, cmap=cmap, norm=color_norm)
     ax.set_xlabel(title, fontsize=7, labelpad=6)
     ims.append(im)
@@ -113,7 +120,7 @@ for ax, img, title, cmap in zip_list[1:5] + zip_list[6:7]:
     cbar.locator = MultipleLocator(np.pi)
     cbar.formatter = FuncFormatter(pi_formatter)
     cbar.update_ticks()
-for ax, img, title, cmap in zip_list[7:]:
+for ax, img, title, cmap in zip_list[col+2:]:
     im = ax.imshow(img, cmap=cmap)
     ax.set_xlabel(title, fontsize=7, labelpad=6)
     ims.append(im)

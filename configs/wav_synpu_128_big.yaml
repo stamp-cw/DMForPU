@@ -10,7 +10,7 @@ meter:
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
-  name: SyntheticPUMat128Wav
+  name: SyntheticPUMat128Big
   image_size: 128
   color_channels: 1
   num_workers: 1
@@ -53,7 +53,7 @@ diffusion:
   timesteps: 1000
   num_train_timesteps: 1000
 #  num_infer_timesteps: 100
-  num_infer_timesteps: 1000
+  num_infer_timesteps: 100
   conditioning_channels: 2
   repeat_channels: 6
 
