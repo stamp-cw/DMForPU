@@ -242,20 +242,27 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
 
     @cached_property
     def train_dataset(self):
-        return InSARDLPUMat(root=self.config.io.in_dataset_path, split='train',
-                    transform=self.transform,
-                    target_transform=self.gt_transform,
-                    joint_transform=self.joint_transform,
-                    scale_k=self.config.data.scale_k,
+        return InSARDLPUMat(
+            root=self.config.io.in_dataset_path, split='train',
+            transform=self.transform,
+            target_transform=self.gt_transform,
+            joint_transform=self.joint_transform,
+            k_max=self.config.data.k_max,
+            k_min=self.config.data.k_min,
+            wavelet_level=self.config.data.wavelet_level,
+            wavelet_type=self.config.data.wavelet_type
                             )
 
     @cached_property
     def test_dataset(self):
         return InSARDLPUMat(root=self.config.io.in_dataset_path, split='test',
-                    transform=self.eval_transform,
-                    target_transform=self.eval_gt_transform,
-                    joint_transform=self.eval_joint_transform,
-                    scale_k=self.config.data.scale_k,
+                            transform=self.transform,
+                            target_transform=self.gt_transform,
+                            joint_transform=self.joint_transform,
+                            k_max=self.config.data.k_max,
+                            k_min=self.config.data.k_min,
+                            wavelet_level=self.config.data.wavelet_level,
+                            wavelet_type=self.config.data.wavelet_type
                             )
 
     @cached_property
