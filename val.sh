@@ -1,0 +1,1 @@
+python3 main.py --config wav_synpu_128_mid.yaml --mode val --sampling_from_epoch 100

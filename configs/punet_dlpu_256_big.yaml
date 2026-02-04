@@ -18,7 +18,7 @@ data:
   name: InSARDLPUMat256Big
   image_size: 128
   color_channels: 1
-  num_workers: 4
+  num_workers: 1
   k_min: 0
 #  k_max: 3
   k_max: 6
@@ -31,7 +31,7 @@ training:
   continue_training_epochs: 1000001
 #  batch_size: 128
 #  batch_size: 8
-  batch_size: 128
+  batch_size: 16
 #  batch_size: 32
   use_all_data: false
   amp: true

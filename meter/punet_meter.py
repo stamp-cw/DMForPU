@@ -20,9 +20,12 @@ class PUNetMeter:
 
     def compute_batch_metric(self):
         l1_loss = F.l1_loss(self.gt, self.pred)
+        mae_loss = F.l1_loss(self.gt, self.pred)
         rmse_loss = rmse_metric(self.pred, self.gt)
         nrmse_loss = rmse_loss / (self.gt.max() -self.gt.min() + 1e-8)
-        self.batch_metric_dict = {'L1': l1_loss, 'RMse': rmse_loss,'NRMse':nrmse_loss}
+        self.batch_metric_dict = {'L1': l1_loss,
+                                  'MAE': mae_loss,
+                                    'RMSE': rmse_loss,'NRMSE':nrmse_loss}
         self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.acc_step)
 
     def compute_epoch_metric(self):

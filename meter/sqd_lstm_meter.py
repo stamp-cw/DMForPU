@@ -1,6 +1,7 @@
 import torch
 
 from selector.meter_selector import register_metric
+from utils.metrics import rmse_metric
 from utils.util import AverageMeter, wrap_phase
 import torch.nn.functional as F
 
@@ -68,7 +69,11 @@ class SqdLstmMeter:
     def compute_batch_metric(self):
         l_tv_loss = self.tv_loss(y_true=self.gt, y_pred=self.pred)
         l_var_loss = self.var_loss(y_true=self.gt, y_pred=self.pred)
-        self.batch_metric_dict = {'TV': l_tv_loss, 'VAR': l_var_loss}
+        mae_loss = F.l1_loss(self.pred, self.gt)
+        rmse_loss = rmse_metric(self.pred, self.gt)
+        nrmse_loss = rmse_loss / (self.gt.max() - self.gt.min() + 1e-8)
+        self.batch_metric_dict = {'TV': l_tv_loss, 'VAR': l_var_loss,
+                                  'MAE': mae_loss, 'RMSE': rmse_loss, 'NRMSE': nrmse_loss}
         self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.acc_step)
 
     def compute_epoch_metric(self):

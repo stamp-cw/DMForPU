@@ -115,7 +115,7 @@ class ModelSampler:
         titles = ["Wrapped", "GT Unwrapped", "Pred unwrapped", "Diff Unwrapped"]
         # color_norm = colors.Normalize(vmin=-1, vmax=16)
         for i in range(wrapped.shape[0]):
-            compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
+            compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples, self.saved_samples + self.temp_batch_size, i)
             imgs = [
                 _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i])
             ]
