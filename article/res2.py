@@ -4,6 +4,7 @@ from matplotlib import colors
 import numpy as np
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 import torch
+from spectral.io import envi
 def pi_formatter(x, pos):
     k = x / np.pi
 
@@ -39,6 +40,9 @@ plt.rcParams.update({
     # "font.family": "serif"
 })
 
+snaphu_pred_path = "data/snaphu/000001.hdr"
+snaphu_mat = envi.open(snaphu_pred_path)
+snaphu_pred = snaphu_mat.load()[:,:,0].squeeze(-1)
 
 punet_pred_batch_path = "data/punet/samples_0_1.pt"
 punet_pred_batch_pt = torch.load(punet_pred_batch_path)
@@ -65,18 +69,22 @@ def _to_numpy_2d(x: torch.Tensor):
     return x.detach().cpu().squeeze().numpy()
 
 titles = [
-    "Wrapped", "GT", "PUNet",
+    "Wrapped", "GT",
+    "SNAPHU", "PUNet",
     "SQD-LSTM", "Restormer",
     "Uformer", "Ours",
     "Wrapped", "GT",
+    "Diff SNAPHU",
     "Diff PUNet", "Diff SQD-LSTM",
     "Diff Restormer",
     "Diff Uformer", "Diff Ours"
 ]
 imgs = [
-    wrapped_mat, gt_mat, _to_numpy_2d(punet_pred), _to_numpy_2d(sqd_lstm_pred), _to_numpy_2d(restormer_pred),
+    wrapped_mat, gt_mat, snaphu_pred,
+    _to_numpy_2d(punet_pred), _to_numpy_2d(sqd_lstm_pred), _to_numpy_2d(restormer_pred),
     _to_numpy_2d(uformer_pred), _to_numpy_2d(ours_pred),
     wrapped_mat, gt_mat,
+    gt_mat - snaphu_pred,
     gt_mat - _to_numpy_2d(punet_pred),
     gt_mat - _to_numpy_2d(sqd_lstm_pred),
     gt_mat - _to_numpy_2d(restormer_pred),
@@ -84,10 +92,12 @@ imgs = [
     gt_mat - _to_numpy_2d(ours_pred)
 ]
 cmaps = [
-    "twilight", "turbo", "turbo",
+    "twilight", "turbo",
+    "turbo", "turbo",
     "turbo", "turbo",
     "turbo", "turbo",
     "twilight", "turbo",
+    "inferno",
     "inferno", "inferno", "inferno",
     "inferno", "inferno"
 ]
@@ -97,7 +107,7 @@ fig_size_W = 3.5
 fig_size_H = 2.5
 img_path = r"res/res2/figure.pdf"
 raw = 2
-col = 7
+col = 8
 fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
 axes = axes.flatten()
 zip_list = list(zip(axes, imgs, titles, cmaps))
