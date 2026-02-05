@@ -19,6 +19,9 @@ data:
   k_max: 6
   wavelet_level: 3
   wavelet_type: db4
+  mean: 13.8934
+  std: 8.3059
+  scale_alpha: 2
 
 training:
   device: cuda

@@ -24,7 +24,10 @@ class InSARDLPUMat(Dataset):
         k_min = 0,
         k_max = 3,
         wavelet_level = 3,
-        wavelet_type = 'db4'
+        wavelet_type = 'db4',
+            mean = 10.01,
+            std = 5.74,
+            scale_alpha = 2,
     ):
         """
         Args:
