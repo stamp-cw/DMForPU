@@ -7,6 +7,7 @@ import torch
 from torch.utils.data import Dataset
 
 from utils.util import multi_scale_wavelet
+from torch.distributions import Normal
 
 
 class SyntheticPUMatWav(Dataset):
@@ -42,6 +43,10 @@ class SyntheticPUMatWav(Dataset):
 
         assert split in ['train', 'test'], "split 必须是 'train' 或 'test'"
 
+        self.mean = mean
+        self.std = std
+        self.normal = Normal(0.0, 1.0)
+        self.scale_alpha = scale_alpha
         self.scale_k = k_max - k_min
         self.k_min = k_min
         self.k_max = k_max
@@ -96,11 +101,16 @@ class SyntheticPUMatWav(Dataset):
         # unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
         # unwrapped_neg_norm = unwrapped_norm * 2 - 1
 
-        self.mean = 0
-        self.std = 1
-        self.scale_alpha = 2
+
         unwrapped_std_norm = (unwrapped - self.mean)/ self.std
-        unwrapped_neg_norm = torch.tanh(self.scale_alpha * unwrapped_std_norm)
+        unwrapped_neg_norm = self.normal.cdf(unwrapped_std_norm)
+        # print(unwrapped_std_norm.min(), unwrapped_std_norm.max())
+        # unwrapped_neg_norm = torch.tanh(self.scale_alpha * unwrapped_std_norm)
+        # print(unwrapped_neg_norm.min())
+        # print(unwrapped_neg_norm.max())
+        # print(unwrapped_neg_norm.std())
+        # print(unwrapped_neg_norm.mean())
+
 
         # wrapped_cond
         sin_wrapped = multi_scale_wavelet(torch.sin(wrapped), self.wavelet_type, level=self.wavelet_level)

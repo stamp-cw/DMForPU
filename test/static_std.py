@@ -3,6 +3,7 @@ import os
 import torch
 import tqdm
 
+from dataset.InSARDLPUMat import InSARDLPUMat
 from dataset.SyntheticPUMatCutMid import SyntheticPUMatCutMid
 from dataset.SyntheticPUMatMid import SyntheticPUMatMid
 
@@ -12,7 +13,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mid', split='test')
 # train_dataset = SyntheticPUMatMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128MidTest', split='test')
 # train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Wav', split='train')
-train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big', split='train')
+# train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big', split='train')
+train_dataset = InSARDLPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat256Big', split='train')
 # train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mid', split='train')
 # train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMatCut32MidTest', split='train')
 

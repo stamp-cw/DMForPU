@@ -25,7 +25,7 @@ data:
   wavelet_type: db4
   mean: 10.0180
   std: 5.7466
-  scale_alpha: 2
+  scale_alpha: 1
 
 training:
   device: cuda
