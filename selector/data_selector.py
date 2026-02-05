@@ -639,7 +639,10 @@ class SyntheticPUMatWavDataLoader(BaseDataLoader):
                                     k_max=self.config.data.k_max,
                                     k_min=self.config.data.k_min,
                                     wavelet_level=self.config.data.wavelet_level,
-                                    wavelet_type=self.config.data.wavelet_type
+                                    wavelet_type=self.config.data.wavelet_type,
+                                 std=self.config.data.std,
+                                 mean = self.config.data.mean,
+                                 scale_alpha= self.config.data.scale_alpha,
                                     )
 
     @cached_property
@@ -651,7 +654,10 @@ class SyntheticPUMatWavDataLoader(BaseDataLoader):
                                     k_max=self.config.data.k_max,
                                     k_min=self.config.data.k_min,
                                     wavelet_level=self.config.data.wavelet_level,
-                                    wavelet_type=self.config.data.wavelet_type
+                                    wavelet_type=self.config.data.wavelet_type,
+                                 std=self.config.data.std,
+                                 mean = self.config.data.mean,
+                                 scale_alpha= self.config.data.scale_alpha,
                                     )
 
     @cached_property

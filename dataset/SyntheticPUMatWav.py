@@ -24,7 +24,10 @@ class SyntheticPUMatWav(Dataset):
         k_min = 0,
         k_max = 3,
         wavelet_level = 3,
-        wavelet_type = 'db4'
+        wavelet_type = 'db4',
+        mean = 10.01,
+        std = 5.74,
+        scale_alpha = 2,
     ):
         """
         Args:
@@ -89,9 +92,15 @@ class SyntheticPUMatWav(Dataset):
         wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
 
         # neg_norm_diffusion
-        unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
-        unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
-        unwrapped_neg_norm = unwrapped_norm * 2 - 1
+        # unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
+        # unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
+        # unwrapped_neg_norm = unwrapped_norm * 2 - 1
+
+        self.mean = 0
+        self.std = 1
+        self.scale_alpha = 2
+        unwrapped_std_norm = (unwrapped - self.mean)/ self.std
+        unwrapped_neg_norm = torch.tanh(self.scale_alpha * unwrapped_std_norm)
 
         # wrapped_cond
         sin_wrapped = multi_scale_wavelet(torch.sin(wrapped), self.wavelet_type, level=self.wavelet_level)
