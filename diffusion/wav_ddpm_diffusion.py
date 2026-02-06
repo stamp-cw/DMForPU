@@ -83,11 +83,11 @@ class WavDDPMDiffusion:
         ).sample
         self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
         # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
         # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
 
-        self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
+        # self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
         self.pred_batch["pred"] = self.noise_pred
@@ -112,9 +112,10 @@ class WavDDPMDiffusion:
                 ).sample
                 x = scheduler.step(self.noise_pred, t, x).prev_sample
             self.pred_unwrapped_neg_norm = x
-            # self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-            # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
-            self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
+            self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
+            self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+            # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
+            # self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
             self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
             self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
             self.pred_batch["pred"] = self.noise_pred
