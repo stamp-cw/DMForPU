@@ -16,6 +16,7 @@ class WavMeter:
         self.writer = config.writer
         self.epoch = 0
         self.acc_step = 0
+        self.is_record = True
 
     def setup_data(self, batch_dict):
         self.gt = batch_dict["gt"].to(self.device)
@@ -100,9 +101,10 @@ class WavMeter:
         self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch)
 
     def _record_metrics(self, metrics, prefix, step):
-        if self.config.io.use_tensorboard:
-            for k, v in metrics.items():
-                self.writer.add_scalar(f"{prefix}/{k}", v, step)
+        if self.is_record:
+            if self.config.io.use_tensorboard:
+                for k, v in metrics.items():
+                    self.writer.add_scalar(f"{prefix}/{k}", v, step)
 
 
     def phase_gradient_torch(self, phase):

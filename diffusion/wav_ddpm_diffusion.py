@@ -51,7 +51,7 @@ class WavDDPMDiffusion:
                 "UpBlock2D",
             )
         ).to(self.device)
-        self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
+        self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="sample")
         self.normal = Normal(0.0, 1.0)
 
     def setup_train(self):
@@ -90,8 +90,10 @@ class WavDDPMDiffusion:
         # self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
-        self.pred_batch["pred"] = self.noise_pred
-        self.pred_batch["gt"] = self.noise
+        # self.pred_batch["pred"] = self.noise_pred
+        # self.pred_batch["gt"] = self.noise
+        self.pred_batch["pred"] = self.pred_unwrapped_neg_norm
+        self.pred_batch["gt"] = self.gt_unwrapped_neg_norm
         # print(self.noise.max(), self.noise.min())
         # print(self.noise_pred.max(), self.noise_pred.min())
 
@@ -100,7 +102,8 @@ class WavDDPMDiffusion:
         # encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
         with torch.no_grad():
             encoder_hidden_states = torch.zeros(self.wrapped.shape[0], 1, self.config.model.cross_attention_dim, device=self.device)
-            scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
+            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
+            scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="sample")
             x = torch.randn_like(self.wrapped).to(self.device)
             for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
                 model_input = torch.cat([x] * self.config.diffusion.repeat_channels + [self.wrapped_cond], dim=1)

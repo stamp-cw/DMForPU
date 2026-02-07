@@ -2,12 +2,12 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-#  name: MchLoss
-  name: WavLoss
+  name: MchLoss
+#  name: WavLoss
 
 meter:
-#  name: MchMeter
-  name: WavMeter
+  name: MchMeter
+#  name: WavMeter
 
 data:
 #  name: SyntheticPUMatCut32Mch
@@ -59,8 +59,10 @@ model:
 diffusion:
   name: WavDDPMDiffusion
   timesteps: 1000
+#  num_train_timesteps: 1000
   num_train_timesteps: 1000
 #  num_infer_timesteps: 100
+#  num_infer_timesteps: 1000
   num_infer_timesteps: 1000
   conditioning_channels: 2
   repeat_channels: 6

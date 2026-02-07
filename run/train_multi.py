@@ -223,11 +223,14 @@ class EpochFN:
                 batch_metric_dict[k] = v.detach()
         # m_acc_batch_metric_dict = accelerator.gather(meter.batch_metric_dict)
         m_acc_batch_metric_dict = accelerator.gather_for_metrics(batch_metric_dict)
+        # print(f"{batch_metric_dict},rank={accelerator.process_index},local_rank={accelerator.local_process_index}, device={accelerator.device}")
         if accelerator.is_main_process:
             m_reduce_batch_metric_dict = {
                 k: v.mean().item() if isinstance(v, torch.Tensor) else v
                 for k, v in  m_acc_batch_metric_dict.items()
             }
+            # print("m_reduce_batch_metric_dict:", m_reduce_batch_metric_dict)
+            main_meter._record_metrics(m_reduce_batch_metric_dict, f"{main_meter.mode}_per_batch", main_meter.acc_step)
             # for k, v in m_acc_batch_metric_dict.items():
             #     if isinstance(v, torch.Tensor):
             #         m_acc_batch_metric_dict[k] = v.mean().item()

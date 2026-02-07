@@ -151,16 +151,16 @@ class EpochFN:
         meter.compute_batch_metric()
         if self.config.training.amp:
             scaler = GradScaler()
-            optimizer.zero_grad()
             with autocast():
                 loss = self.loss_fn(diffusion)
             scaler.scale(loss).backward()
             self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch, scaler=scaler)
-        else:
             optimizer.zero_grad()
+        else:
             loss = self.loss_fn(diffusion)
             loss.backward()
             self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch)
+            optimizer.zero_grad()
         meter.batch_metric_dict["loss"] = loss.item()
         # print(meter.batch_metric_dict)
         return meter

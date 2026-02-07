@@ -35,14 +35,15 @@ class ModelTrainer:
             self.writer = SummaryWriter(self.config.io.tensorboard_path)
             config.writer = self.writer
         self.meter = MeterSetup(self.config, self.logger).meter
+        self.main_meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter
+        self.meter.is_record = False
+        self.main_meter.mode = 'train'
+        self.main_meter.is_record = True
         self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
 
 
     def train(self):
-        self.mmodel.model, self.optimizer, self.m_train_loader = self.config.accelerator.prepare(
-            self.mmodel.model, self.optimizer, self.train_loader
-        )
         # if self.config.accelerator.is_main_process:
         if self.config.io.training_from_scratch or self.config.io.latest_checkpoint_file_path is None:
             self.start_epoch = 0
@@ -58,7 +59,9 @@ class ModelTrainer:
         self._train()
 
     def _train(self):
-
+        self.mmodel.model, self.optimizer, self.m_train_loader = self.config.accelerator.prepare(
+            self.mmodel.model, self.optimizer, self.train_loader
+        )
         for epoch in range(self.start_epoch, self.end_epoch):
             self.optimizer.zero_grad(set_to_none=True)
             self.epoch = epoch
@@ -70,32 +73,38 @@ class ModelTrainer:
             for step, batch_data in enumerate(pbar):
                 self.acc_batch += 1
                 self.meter.acc_step = self.acc_batch
-                self.meter = self.epoch_fn(self.mmodel, self.optimizer, self.meter, epoch, batch_data)
+                if self.accelerator.is_main_process:
+                    self.main_meter.acc_step = self.acc_batch
+                self.meter = self.epoch_fn(self.accelerator, self.mmodel, self.optimizer, self.meter, self.main_meter, epoch, batch_data)
                 self.meter.epoch_meter.update(self.meter.batch_metric_dict)
-            self.meter.compute_epoch_metric()
-            # loss_tensor = torch.tensor(
-            #     self.meter.epoch_metric_dict["loss"],
-            #     device=self.accelerator.device
-            # )
-            # loss_all = self.accelerator.gather(loss_tensor)
-            avg_metrics = self.gather_metrics(
-                self.accelerator,
-                self.meter.epoch_metric_dict
-            )
-            if self.config.accelerator.is_main_process:
-                # self.avg_loss= self.meter.epoch_metric_dict['loss']
-                self.avg_loss= avg_metrics['loss']
-                # self.avg_loss = loss_all.mean().item()
-                self._record_and_evaluate()
-            # torch.cuda.empty_cache()
 
-    def gather_metrics(self, accelerator, metrics: dict):
-        out = {}
-        for k, v in metrics.items():
-            t = torch.tensor(v, device=accelerator.device)
-            # 官方推荐用 reduce
-            out[k] = accelerator.reduce(t, reduction="mean").item()
-        return out
+            if self.config.accelerator.is_main_process:
+                self.main_meter.compute_epoch_metric()
+                self._record_and_evaluate()
+            # self.meter.compute_epoch_metric()
+            # # loss_tensor = torch.tensor(
+            # #     self.meter.epoch_metric_dict["loss"],
+            # #     device=self.accelerator.device
+            # # )
+            # # loss_all = self.accelerator.gather(loss_tensor)
+            # avg_metrics = self.gather_metrics(
+            #     self.accelerator,
+            #     self.meter.epoch_metric_dict
+            # )
+            # if self.config.accelerator.is_main_process:
+            #     # self.avg_loss= self.meter.epoch_metric_dict['loss']
+            #     self.avg_loss= avg_metrics['loss']
+            #     # self.avg_loss = loss_all.mean().item()
+            #     self._record_and_evaluate()
+            # # torch.cuda.empty_cache()
+
+    # def gather_metrics(self, accelerator, metrics: dict):
+    #     out = {}
+    #     for k, v in metrics.items():
+    #         t = torch.tensor(v, device=accelerator.device)
+    #         # 官方推荐用 reduce
+    #         out[k] = accelerator.reduce(t, reduction="mean").item()
+    #     return out
 
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
@@ -123,7 +132,7 @@ class ModelTrainer:
     def _record_and_evaluate(self):
         if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
         if self.epoch % self.config.training.log_freq == 0:
-            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
+            # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
             self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict}")
         if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
             self._save_state(self.epoch)
@@ -158,14 +167,15 @@ class EpochFN:
         self.config = config
         self.loss_fn = LossFN(self.config)
 
-    def __call__(self, mmodel, optimizer, meter, epoch, batch):
-        return self.epoch_fn(mmodel, optimizer, meter, epoch, batch)
+    def __call__(self, accelerator, mmodel, optimizer, meter, main_meter, epoch, batch):
+        return self.epoch_fn(accelerator, mmodel, optimizer, meter, main_meter, epoch, batch)
 
-    def epoch_fn(self, mmodel, optimizer, meter, epoch, batch):
+    def epoch_fn(self, accelerator, mmodel, optimizer, meter, main_meter, epoch, batch):
         mmodel.setup_data(batch)
         mmodel.train_predict(batch)
         pred_batch = mmodel.pred_batch
-
+        if accelerator.is_main_process:
+            main_meter.epoch = epoch
         meter.epoch = epoch
         meter.setup_data(pred_batch)
         meter.compute_batch_metric()
@@ -182,6 +192,17 @@ class EpochFN:
         # loss_mean = loss_all.mean()
         # meter.batch_metric_dict["loss"] = loss_mean.item()
         meter.batch_metric_dict["loss"] = loss.item()
-        return meter
+        batch_metric_dict = meter.batch_metric_dict
+        for k, v in batch_metric_dict.items():
+            if isinstance(v, torch.Tensor):
+                batch_metric_dict[k] = v.detach()
+        m_acc_batch_metric_dict = accelerator.gather_for_metrics(batch_metric_dict)
+        if accelerator.is_main_process:
+            m_reduce_batch_metric_dict = {
+                k: v.mean().item() if isinstance(v, torch.Tensor) else v
+                for k, v in  m_acc_batch_metric_dict.items()
+            }
+            main_meter.epoch_meter.update(m_reduce_batch_metric_dict)
+        # return meter
 
 
