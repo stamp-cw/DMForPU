@@ -20,7 +20,7 @@ from accelerate import Accelerator
 class Trainer:
     def __init__(self, config):
         self.config = config
-        self.accelerator = Accelerator()
+        self.accelerator = Accelerator(split_batches=True)
         config.accelerator = self.accelerator
         self.logger = config.logger
         self.device = self.config.training.device
@@ -33,15 +33,16 @@ class Trainer:
             self.writer = SummaryWriter(self.config.io.tensorboard_path)
             config.writer = self.writer
         self.meter = MeterSetup(self.config, self.logger).meter
+        self.main_meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter
         self.meter.mode = 'train'
+        self.meter.is_record = False
+        self.main_meter.mode = 'train'
+        self.main_meter.is_record = True
         self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
 
 
     def train(self):
-        self.diffusion.model, self.optimizer, self.m_train_loader = self.config.accelerator.prepare(
-            self.diffusion.model, self.optimizer, self.train_loader
-        )
         if self.config.io.training_from_scratch or self.config.io.latest_checkpoint_file_path is None:
             self.start_epoch = 0
             self.acc_batch = 0
@@ -50,14 +51,17 @@ class Trainer:
             self.start_epoch = self.config.io.latest_checkpoint_epoch + 1
             self.acc_batch = self.start_epoch * len(self.train_loader)
             self.end_epoch = self.start_epoch + self.config.training.continue_training_epochs
-            self.logger.info(f"Continuing training from epoch {self.start_epoch}")
+            if self.accelerator.is_main_process:
+                self.logger.info(f"Continuing training from epoch {self.start_epoch}")
             self._load_state()
         self._train()
 
     def _train(self):
-
+        self.diffusion.model, self.optimizer, self.m_train_loader = self.accelerator.prepare(
+            self.diffusion.model, self.optimizer, self.train_loader
+        )
         for epoch in range(self.start_epoch, self.end_epoch):
-            self.optimizer.zero_grad(set_to_none=True)
+            # self.optimizer.zero_grad(set_to_none=True)
             self.epoch = epoch
             self.diffusion.setup_train()
             pbar = tqdm.tqdm(self.m_train_loader,
@@ -65,28 +69,36 @@ class Trainer:
                              disable=not self.accelerator.is_main_process,
                              desc=f"Epoch {epoch}/{self.end_epoch}")
             for batch_data in pbar:
+                # self.accelerator.print("="*20)
+                # print(type(batch_data))
+                # self.accelerator.print(type(batch_data))
+                # self.accelerator.print(batch_data.keys())
+                # self.accelerator.print(batch_data['wrapped'].shape)
+                # print(batch_data['wrapped'].shape)
+                # self.accelerator.print("="*20)
+
+                # if self.accelerator.is_main_process:
                 self.acc_batch += 1
                 self.meter.acc_step = self.acc_batch
-                self.meter = self.epoch_fn(self.diffusion, self.optimizer, self.meter, epoch, batch_data)
-                self.meter.epoch_meter.update(self.meter.batch_metric_dict)
+                if self.accelerator.is_main_process:
+                    self.main_meter.acc_step = self.acc_batch
+                # self.meter = self.epoch_fn(self.accelerator, self.diffusion, self.optimizer, self.meter, self.main_meter, epoch, batch_data)
+                self.epoch_fn(self.accelerator, self.diffusion, self.optimizer, self.meter, self.main_meter, epoch, batch_data)
+                # 聚合每个进程的 batch_metric_dict 到 epoch_metric_dict
+                # self.meter.epoch_meter.update(self.meter.batch_metric_dict)
 
-            self.meter.compute_epoch_metric()
-            avg_metrics = self.gather_metrics(
-                self.accelerator,
-                self.meter.epoch_metric_dict
-            )
             if self.config.accelerator.is_main_process:
-                self.avg_loss= avg_metrics['loss']
+                self.main_meter.compute_epoch_metric()
                 self._record_and_evaluate()
             # torch.cuda.empty_cache()
 
-    def gather_metrics(self, accelerator, metrics: dict):
-        out = {}
-        for k, v in metrics.items():
-            t = torch.tensor(v, device=accelerator.device)
-            # 官方推荐用 reduce
-            out[k] = accelerator.reduce(t, reduction="mean").item()
-        return out
+    # def gather_metrics(self, accelerator, metrics: dict):
+    #     out = {}
+    #     for k, v in metrics.items():
+    #         t = torch.tensor(v, device=accelerator.device)
+    #         # 官方推荐用 reduce
+    #         out[k] = accelerator.reduce(t, reduction="mean").item()
+    #     return out
 
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
@@ -109,7 +121,6 @@ class Trainer:
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
         self.diffusion.model.load_state_dict(ckpt['model'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
-
 
     # def _load_state(self):
     #     ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
@@ -135,8 +146,8 @@ class Trainer:
 
     def _record_and_evaluate(self):
         if self.epoch % self.config.training.log_freq == 0:
-            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
-            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict}")
+            # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
+            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.main_meter.epoch_metric_dict}")
             # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict['loss']:.4f}")
         if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
             self._save_state(self.epoch)
@@ -182,25 +193,45 @@ class EpochFN:
         self.loss_fn = LossFN(self.config)
         # self.meter = config.meter
 
-    def __call__(self, diffusion, optimizer, meter, epoch, batch):
-        return self.epoch_fn(diffusion, optimizer, meter, epoch, batch)
+    def __call__(self, accelerator, diffusion, optimizer, meter, main_meter, epoch, batch):
+        return self.epoch_fn(accelerator, diffusion, optimizer, meter, main_meter, epoch, batch)
 
-    def epoch_fn(self, diffusion, optimizer, meter, epoch, batch):
+    def epoch_fn(self, accelerator, diffusion, optimizer, meter, main_meter, epoch, batch):
         diffusion.setup_data(batch)
         t_batch = torch.randint(0, self.config.diffusion.num_train_timesteps, (1,), device=self.config.training.device).long().expand(self.config.training.batch_size)
         diffusion.train_sample(t_batch)
         pred_batch = diffusion.pred_batch
-
+        # m_acc_pred_batch = accelerator.gather(pred_batch)
+        if accelerator.is_main_process:
+            main_meter.epoch = epoch
         meter.epoch = epoch
         meter.setup_data(pred_batch)
+        # meter.setup_data(m_acc_pred_batch)
         meter.compute_batch_metric()
-        with self.config.accelerator.accumulate(diffusion.model):
+        with accelerator.accumulate(diffusion.model):
             # optimizer.zero_grad()
             loss = self.loss_fn(diffusion)
             # loss.backward()
-            self.config.accelerator.backward(loss)
-            if self.config.accelerator.sync_gradients:
+            accelerator.backward(loss)
+            if accelerator.sync_gradients:
                 self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch)
                 optimizer.zero_grad(set_to_none=True)
-        meter.batch_metric_dict["loss"] = loss.item()
-        return meter
+        meter.batch_metric_dict["loss"] = loss
+        batch_metric_dict = meter.batch_metric_dict
+        for k, v in batch_metric_dict.items():
+            if isinstance(v, torch.Tensor):
+                batch_metric_dict[k] = v.detach()
+        # m_acc_batch_metric_dict = accelerator.gather(meter.batch_metric_dict)
+        m_acc_batch_metric_dict = accelerator.gather_for_metrics(batch_metric_dict)
+        if accelerator.is_main_process:
+            m_reduce_batch_metric_dict = {
+                k: v.mean().item() if isinstance(v, torch.Tensor) else v
+                for k, v in  m_acc_batch_metric_dict.items()
+            }
+            # for k, v in m_acc_batch_metric_dict.items():
+            #     if isinstance(v, torch.Tensor):
+            #         m_acc_batch_metric_dict[k] = v.mean().item()
+            #     else:
+            #         m_acc_batch_metric_dict[k] = v
+            main_meter.epoch_meter.update(m_reduce_batch_metric_dict)
+        # return meter

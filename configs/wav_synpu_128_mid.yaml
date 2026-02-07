@@ -31,9 +31,10 @@ training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
-#  batch_size: 128
-#  batch_size: 32
-  batch_size: 16
+  batch_size: 128
+#  batch_size: 256
+#  batch_size: 64
+#  batch_size: 16
 #  batch_size: 4
   use_all_data: false
   amp: true
