@@ -105,7 +105,8 @@ cmaps = [
 fig_dpi = 600
 fig_size_W = 3.5
 fig_size_H = 2.5
-img_path = r"res/res2/figure.pdf"
+pdf_img_path = r"res/res2/figure.pdf"
+png_img_path = r"res/res2/figure.png"
 raw = 2
 col = 8
 fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
@@ -136,5 +137,6 @@ for ax, img, title, cmap in zip_list[col+2:]:
     ims.append(im)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 fig.tight_layout()
-fig.savefig(img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
+fig.savefig(png_img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
+fig.savefig(pdf_img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
 plt.show()

@@ -31,7 +31,8 @@ wrapped_mat_path = r"data/wrapped/wrapped.mat"
 gt_mat_path = r"data/gt/gt.mat"
 wrapped_mat = sio.loadmat(wrapped_mat_path)['input']
 gt_mat = sio.loadmat(gt_mat_path)['gt']
-ours_pred_batch_path = "data/ours/samples_0_1.pt"
+# ours_pred_batch_path = "data/ours/samples_0_1.pt"
+ours_pred_batch_path = "data/ours_epoch500/samples_0_1.pt"
 ours_pred_batch_pt = torch.load(ours_pred_batch_path)
 ours_pred = ours_pred_batch_pt['pred_unwrapped']
 ours_mat = _to_numpy_2d(ours_pred)
@@ -50,7 +51,8 @@ plt.rcParams.update({
 fig_dpi = 600
 fig_size_W = 3.5
 fig_size_H = 2.5
-img_path = r"res/res1/figure.pdf"
+png_img_path = r"res/res1/figure.png"
+pdf_img_path = r"res/res1/figure.pdf"
 raw = 1
 col = 3
 fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
@@ -83,10 +85,10 @@ cbar.formatter = FuncFormatter(pi_formatter)
 cbar.update_ticks()
 
 # raw 1, col 3
-# color_norm = colors.Normalize(vmin=0)
+color_norm = colors.Normalize(vmin=0)
 ax_2 = axes[2]
-# im_2 = ax_2.imshow(ours_mat, cmap="turbo", norm=color_norm)
-im_2 = ax_2.imshow(ours_mat, cmap="turbo")
+im_2 = ax_2.imshow(ours_mat, cmap="turbo", norm=color_norm)
+# im_2 = ax_2.imshow(ours_mat, cmap="turbo")
 # ax_2.set_title("Gt Unwrapped")
 ax_2.set_xlabel("(c) Ours", fontsize=7, labelpad=6)
 # ax_2.axis("off")
@@ -97,6 +99,7 @@ cbar.formatter = FuncFormatter(pi_formatter)
 cbar.update_ticks()
 
 fig.tight_layout()
-fig.savefig(img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
+fig.savefig(png_img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
+fig.savefig(pdf_img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
 plt.show()
 # plt.close(fig)

@@ -51,7 +51,7 @@ class WavDDPMDiffusion:
                 "UpBlock2D",
             )
         ).to(self.device)
-        self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="sample")
+        self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="sample", clip_sample=False)
         self.normal = Normal(0.0, 1.0)
 
     def setup_train(self):
@@ -103,7 +103,7 @@ class WavDDPMDiffusion:
         with torch.no_grad():
             encoder_hidden_states = torch.zeros(self.wrapped.shape[0], 1, self.config.model.cross_attention_dim, device=self.device)
             # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
-            scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="sample")
+            scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="sample", clip_sample=False)
             x = torch.randn_like(self.wrapped).to(self.device)
             for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
                 model_input = torch.cat([x] * self.config.diffusion.repeat_channels + [self.wrapped_cond], dim=1)
