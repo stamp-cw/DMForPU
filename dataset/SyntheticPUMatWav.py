@@ -97,7 +97,8 @@ class SyntheticPUMatWav(Dataset):
         wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
 
         # neg_norm_diffusion
-        unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
+        # unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
+        unwrapped_norm = (unwrapped + torch.pi) / (2 * torch.pi * self.scale_k)
         unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
         unwrapped_neg_norm = unwrapped_norm * 2 - 1
 
