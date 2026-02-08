@@ -15,6 +15,7 @@ class SqdLstmMeter:
         self.writer = config.writer
         self.epoch = 0
         self.acc_step = 0
+        self.is_record = True
 
     def setup_data(self, batch_dict):
         self.gt = batch_dict["gt"].to(self.device)
@@ -69,10 +70,11 @@ class SqdLstmMeter:
     def compute_batch_metric(self):
         l_tv_loss = self.tv_loss(y_true=self.gt, y_pred=self.pred)
         l_var_loss = self.var_loss(y_true=self.gt, y_pred=self.pred)
-        mae_loss = F.l1_loss(self.pred, self.gt)
+        mae_loss = F.l1_loss(self.gt, self.pred)
         rmse_loss = rmse_metric(self.pred, self.gt)
         nrmse_loss = rmse_loss / (self.gt.max() - self.gt.min() + 1e-8)
-        self.batch_metric_dict = {'TV': l_tv_loss, 'VAR': l_var_loss,
+        self.batch_metric_dict = {'L1': mae_loss,
+                                  'TV': l_tv_loss, 'VAR': l_var_loss,
                                   'MAE': mae_loss, 'RMSE': rmse_loss, 'NRMSE': nrmse_loss}
         self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.acc_step)
 
@@ -82,6 +84,7 @@ class SqdLstmMeter:
         self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch)
 
     def _record_metrics(self, metrics, prefix, step):
-        if self.config.io.use_tensorboard:
-            for k, v in metrics.items():
-                self.writer.add_scalar(f"{prefix}/{k}", v, step)
+        if self.is_record:
+            if self.config.io.use_tensorboard:
+                for k, v in metrics.items():
+                    self.writer.add_scalar(f"{prefix}/{k}", v, step)

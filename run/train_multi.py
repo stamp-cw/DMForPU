@@ -35,9 +35,9 @@ class Trainer:
         self.meter = MeterSetup(self.config, self.logger).meter
         self.main_meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter
-        self.meter.mode = 'train'
+        self.meter.mode = 'multi_train'
         self.meter.is_record = False
-        self.main_meter.mode = 'train'
+        self.main_meter.mode = 'multi_train'
         self.main_meter.is_record = True
         self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
 
@@ -87,7 +87,7 @@ class Trainer:
                 # 聚合每个进程的 batch_metric_dict 到 epoch_metric_dict
                 # self.meter.epoch_meter.update(self.meter.batch_metric_dict)
 
-            if self.config.accelerator.is_main_process:
+            if self.accelerator.is_main_process:
                 self.main_meter.compute_epoch_metric()
                 self._record_and_evaluate()
             # torch.cuda.empty_cache()

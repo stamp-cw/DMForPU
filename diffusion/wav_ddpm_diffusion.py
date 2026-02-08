@@ -92,10 +92,10 @@ class WavDDPMDiffusion:
         # self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
-        # self.pred_batch["pred"] = self.noise_pred
-        # self.pred_batch["gt"] = self.noise
-        self.pred_batch["pred"] = self.pred_unwrapped_neg_norm
-        self.pred_batch["gt"] = self.gt_unwrapped_neg_norm
+        self.pred_batch["pred"] = self.noise_pred
+        self.pred_batch["gt"] = self.noise
+        # self.pred_batch["pred"] = self.pred_unwrapped_neg_norm
+        # self.pred_batch["gt"] = self.gt_unwrapped_neg_norm
         # print(self.noise.max(), self.noise.min())
         # print(self.noise_pred.max(), self.noise_pred.min())
 

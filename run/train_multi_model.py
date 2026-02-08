@@ -37,8 +37,9 @@ class ModelTrainer:
         self.meter = MeterSetup(self.config, self.logger).meter
         self.main_meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter
+        self.meter.mode = 'multi_train_model'
         self.meter.is_record = False
-        self.main_meter.mode = 'train'
+        self.main_meter.mode = 'multi_train_model'
         self.main_meter.is_record = True
         self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
 
@@ -53,17 +54,17 @@ class ModelTrainer:
             self.start_epoch = self.config.io.latest_checkpoint_epoch + 1
             self.acc_batch = self.start_epoch * len(self.train_loader)
             self.end_epoch = self.start_epoch + self.config.training.continue_training_epochs
-            if self.config.accelerator.is_main_process:
+            if self.accelerator.is_main_process:
                 self.logger.info(f"Continuing training from epoch {self.start_epoch}")
             self._load_state()
         self._train()
 
     def _train(self):
-        self.mmodel.model, self.optimizer, self.m_train_loader = self.config.accelerator.prepare(
+        self.mmodel.model, self.optimizer, self.m_train_loader = self.accelerator.prepare(
             self.mmodel.model, self.optimizer, self.train_loader
         )
         for epoch in range(self.start_epoch, self.end_epoch):
-            self.optimizer.zero_grad(set_to_none=True)
+            # self.optimizer.zero_grad(set_to_none=True)
             self.epoch = epoch
             self.mmodel.setup_train()
             pbar = tqdm.tqdm(self.m_train_loader,
@@ -75,10 +76,10 @@ class ModelTrainer:
                 self.meter.acc_step = self.acc_batch
                 if self.accelerator.is_main_process:
                     self.main_meter.acc_step = self.acc_batch
-                self.meter = self.epoch_fn(self.accelerator, self.mmodel, self.optimizer, self.meter, self.main_meter, epoch, batch_data)
+                self.epoch_fn(self.accelerator, self.mmodel, self.optimizer, self.meter, self.main_meter, epoch, batch_data)
                 self.meter.epoch_meter.update(self.meter.batch_metric_dict)
 
-            if self.config.accelerator.is_main_process:
+            if self.accelerator.is_main_process:
                 self.main_meter.compute_epoch_metric()
                 self._record_and_evaluate()
             # self.meter.compute_epoch_metric()
@@ -130,10 +131,10 @@ class ModelTrainer:
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
     def _record_and_evaluate(self):
-        if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
+        # if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
         if self.epoch % self.config.training.log_freq == 0:
             # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
-            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict}")
+            self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.main_meter.epoch_metric_dict}")
         if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
             self._save_state(self.epoch)
 
@@ -179,29 +180,34 @@ class EpochFN:
         meter.epoch = epoch
         meter.setup_data(pred_batch)
         meter.compute_batch_metric()
-        with self.config.accelerator.accumulate(mmodel.model):
+        with accelerator.accumulate(mmodel.model):
             # optimizer.zero_grad()
             loss = self.loss_fn(mmodel)
             # loss.backward()
-            self.config.accelerator.backward(loss)
+            accelerator.backward(loss)
             # self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch)
-            if self.config.accelerator.sync_gradients:
+            if accelerator.sync_gradients:
                 self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch)
                 optimizer.zero_grad(set_to_none=True)
         # loss_all = self.config.accelerator.gather(loss.detach())
         # loss_mean = loss_all.mean()
         # meter.batch_metric_dict["loss"] = loss_mean.item()
-        meter.batch_metric_dict["loss"] = loss.item()
+        meter.batch_metric_dict["loss"] = loss
         batch_metric_dict = meter.batch_metric_dict
         for k, v in batch_metric_dict.items():
             if isinstance(v, torch.Tensor):
                 batch_metric_dict[k] = v.detach()
         m_acc_batch_metric_dict = accelerator.gather_for_metrics(batch_metric_dict)
+        # print(f"b:{batch_metric_dict},rank={accelerator.process_index},local_rank={accelerator.local_process_index}, device={accelerator.device}")
+        # print(f"m_acc:{m_acc_batch_metric_dict},rank={accelerator.process_index},local_rank={accelerator.local_process_index}, device={accelerator.device}")
         if accelerator.is_main_process:
+            # print("m_acc_batch_metric_dict:", m_acc_batch_metric_dict)
             m_reduce_batch_metric_dict = {
                 k: v.mean().item() if isinstance(v, torch.Tensor) else v
                 for k, v in  m_acc_batch_metric_dict.items()
             }
+            # print("m_reduce_batch_metric_dict:", m_reduce_batch_metric_dict)
+            main_meter._record_metrics(m_reduce_batch_metric_dict, f"{main_meter.mode}_per_batch", main_meter.acc_step)
             main_meter.epoch_meter.update(m_reduce_batch_metric_dict)
         # return meter
 

@@ -186,6 +186,7 @@ if __name__ == '__main__':
     from run.losses import RestormerLossType
     from run.losses import UformerLossType
     from run.losses import WavLossType
+    from run.losses import DLPULossType
     # Import VAE Models
     from vae.latent_vae import LatentVAE
     # Import Models
@@ -199,6 +200,7 @@ if __name__ == '__main__':
     from model.lstm.sqd_lstm import JointConvSQDLSTMNet
     from model.transformer.restormer import Restormer
     from model.transformer.uformer import Uformer
+    from model.unet.dlpu import DLPUNet
     # Import Diffusions
     # from diffusion.ddpm_diffusion import DDPMDiffusion
     # from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
@@ -224,8 +226,10 @@ if __name__ == '__main__':
     from meter.restormer_meter import RestormerMeter
     from meter.uformer_meter import UformerMeter
     from meter.wav_meter import WavMeter
+    from meter.dlpu_meter import DLPUMeter
     # Import MModel
     from model.sqd_lstm_mmodel import SqdLstmMModel
     from model.restormer_mmodel import RestormerMModel
     from model.uformer_mmodel import UformerMModel
+    from model.dlpu_mmodel import DLPUMModel
     main()
