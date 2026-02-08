@@ -6,6 +6,9 @@ import scipy.io as sio
 import torch
 from torch.utils.data import Dataset
 
+from utils.util import multi_scale_wavelet
+from torch.distributions import Normal
+
 
 class SyntheticPUMat(Dataset):
     """
@@ -13,14 +16,19 @@ class SyntheticPUMat(Dataset):
     """
 
     def __init__(
-        self,
-        root,
-        split='train',
-        transform=None,
-        target_transform=None,
-        joint_transform=None,
-        k_min = 0,
-        k_max = 3,
+            self,
+            root,
+            split='train',
+            transform=None,
+            target_transform=None,
+            joint_transform=None,
+            k_min = 0,
+            k_max = 3,
+            wavelet_level = 3,
+            wavelet_type = 'db4',
+            mean = 10.01,
+            std = 5.74,
+            scale_alpha = 2,
     ):
         """
         Args:
@@ -30,15 +38,19 @@ class SyntheticPUMat(Dataset):
             target_transform (callable, optional):
             joint_transform (callable, optional):
         """
-        # super().__init__(root, transform=transform, target_transform=target_transform)
         super().__init__()
 
         assert split in ['train', 'test'], "split 必须是 'train' 或 'test'"
 
+        self.mean = mean
+        self.std = std
+        self.normal = Normal(0.0, 1.0)
+        self.scale_alpha = scale_alpha
         self.scale_k = k_max - k_min
         self.k_min = k_min
         self.k_max = k_max
-
+        self.wavelet_level = wavelet_level
+        self.wavelet_type = wavelet_type
 
         self.transform = transform
         self.target_transform = target_transform
@@ -77,67 +89,25 @@ class SyntheticPUMat(Dataset):
         if self.target_transform:
             unwrapped = self.target_transform(unwrapped)
 
-        # unwrapped = unwrapped - (torch.min(unwrapped) // (torch.pi * 2)) * (torch.pi * 2)
-        # unwrapped = torch.clamp(unwrapped, min=0.0) # [0, inf]
-        # k_mat_cont = (unwrapped - wrapped) / (2 * torch.pi) # [-0.5, inf]
-        # k_mat_cont_plus_one = k_mat_cont + 1.0 # [0.5, inf]
-        # k_mat_cont_neg_norm = ((k_mat_cont_plus_one - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
-        # k_mat_cont_neg_norm = ((k_mat_cont - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-2, 1], problematic
-        # k_mat_cont_neg_norm = torch.clamp(k_mat_cont_neg_norm, min= -1, max= 1) # [-1, 1]
-        # k_mat_disc = torch.round(k_mat_cont) # [0, inf]
-        # k_mat_disc_plus_one = torch.round(k_mat_cont_plus_one)
-        # k_mat_disc_neg_norm = ((k_mat_disc - self.k_min) / (self.k_max - self.k_min)) * 2 - 1 # [-1, 1]
-
         wrapped_neg_norm = wrapped / torch.pi
         wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
 
-        # wrapped = wrapped + torch.pi
-        # wrapped_norm = wrapped / torch.pi
-
-        # wrapped_cond = torch.stack([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
-        # wrapped_cond = wrapped / (2 * torch.pi)
-        # wrapped_cond = wrapped / torch.pi
-
         # neg_norm_diffusion
         unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
+        # unwrapped_norm = (unwrapped + torch.pi) / (2 * torch.pi * self.scale_k)
         unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
         unwrapped_neg_norm = unwrapped_norm * 2 - 1
 
         # wrapped_cond
-        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped], dim=0)
-        # wrapped_cond = unwrapped
-        # wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped), wrapped_neg_norm], dim=0)
-        wrapped_cond = torch.cat([torch.sin(wrapped), torch.cos(wrapped)], dim=0)
-        # wrapped_cond = torch.cat([torch.sin(unwrapped), torch.cos(unwrapped)], dim=0)
-        # wrapped_cond = torch.cat([unwrapped_neg_norm, -unwrapped_neg_norm], dim=0)
-        # wrapped_cond = wrapped_neg_norm
-
-        # dfn_diffusion
-        # unwrapped_sub_wrapped = unwrapped - wrapped
-        # unwrapped_sub_wrapped_norm = unwrapped_sub_wrapped / (2 * torch.pi * self.scale_k)
-        # unwrapped_sub_wrapped_norm = torch.clamp(unwrapped_sub_wrapped_norm, 0, 1)
-        # unwrapped_sub_wrapped_neg_norm = unwrapped_sub_wrapped_norm * 2 - 1
+        sin_wrapped = multi_scale_wavelet(torch.sin(wrapped), self.wavelet_type, level=self.wavelet_level)
+        cos_wrapped = multi_scale_wavelet(torch.cos(wrapped), self.wavelet_type, level=self.wavelet_level)
+        wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
         sample = {
             "wrapped": wrapped,
-            # "wrapped_fp16": wrapped.to(torch.float16),
             "unwrapped": unwrapped,
-            # "k_mat_cont": k_mat_cont,
-            # "k_mat_cont_neg_norm": k_mat_cont_neg_norm,
-            # "k_mat_disc": k_mat_disc,
-            # "k_mat_disc_neg_norm": k_mat_disc_neg_norm,
-            "wrapped_neg_norm": wrapped_neg_norm,
-            # "unwrapped_fp16": unwrapped.to(torch.float16),
-            # "wrapped_norm": wrapped_norm,
-            # "wrapped_norm_fp16": wrapped_norm.to(torch.float16),
-            # "unwrapped_norm": unwrapped_norm,
             "unwrapped_neg_norm": unwrapped_neg_norm,
+            "wrapped_neg_norm": wrapped_neg_norm,
             "wrapped_cond": wrapped_cond,
-            # "wrapped_cond_fp16": wrapped_cond.to(torch.float16),
-            # "unwrapped_sub_wrapped": unwrapped_sub_wrapped,
-            # "unwrapped_sub_wrapped_fp16": unwrapped_sub_wrapped.to(torch.float16),
-            # "unwrapped_sub_wrapped_norm": unwrapped_sub_wrapped_norm,
-            # "unwrapped_sub_wrapped_neg_norm": unwrapped_sub_wrapped_neg_norm,
-            # "unwrapped_sub_wrapped_norm_fp16": unwrapped_sub_wrapped_norm.to(torch.float16)
         }
         return sample

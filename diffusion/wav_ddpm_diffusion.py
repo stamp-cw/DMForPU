@@ -52,8 +52,8 @@ class WavDDPMDiffusion:
             )
         ).to(self.device)
         # self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="sample", clip_sample=False)
-        self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="sample")
-        # self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
+        # self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="sample")
+        self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
         self.normal = Normal(0.0, 1.0)
 
     def setup_train(self):
@@ -85,7 +85,8 @@ class WavDDPMDiffusion:
         ).sample
         self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))  - torch.pi
         # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
         # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
 
@@ -104,8 +105,8 @@ class WavDDPMDiffusion:
         # encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
         with torch.no_grad():
             encoder_hidden_states = torch.zeros(self.wrapped.shape[0], 1, self.config.model.cross_attention_dim, device=self.device)
-            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
-            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="sample", clip_sample=True)
+            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="sample", clip_sample=False)
+            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="sample")
             scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
             x = torch.randn_like(self.wrapped).to(self.device)
             for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):

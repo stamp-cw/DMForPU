@@ -89,6 +89,7 @@ class WavMeter:
             'WavLoss': wav_loss,
             'LGELoss': lge_loss,
             # Eval Metric
+            'UnwrappedL1': unwrapped_l1_loss,
             'UnwrappedMAE': unwrapped_l1_loss, 'UnwrappedPGE': unwrapped_pge_loss,
             'UnwrappedRMSE': unwrapped_rmse_loss,'UnwrappedNRMSE': unwrapped_nrmse_loss,
             'WrappedL1': wrapped_l1_loss, 'WrappedRMSE': wrapped_rmse_loss,

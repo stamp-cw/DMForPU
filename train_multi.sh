@@ -15,3 +15,7 @@ CUDA_VISIBLE_DEVICES=1,3 accelerate launch main.py --config wav_synpu_cut32_mid.
 
 
 CUDA_VISIBLE_DEVICES=1,3 accelerate launch main.py --config wav_synpu_128_mid.yaml --mode train_multi --training_from_scratch
+
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config mch_synpu_128_mid.yaml --mode train_multi --training_from_scratch
+
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config wav_synpu_128_mid.yaml --mode train_multi --training_from_scratch
