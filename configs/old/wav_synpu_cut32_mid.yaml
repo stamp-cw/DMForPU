@@ -2,40 +2,29 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-  name: SqdLstmLoss
+  name: MchLoss
 
 meter:
-  name: SqdLstmMeter
-
-mmodel:
-  name: SqdLstmMModel
+  name: MchMeter
 
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
-#  name: SyntheticPUMat128Wav
-  name: SyntheticPUMat128Big
-  image_size: 128
+  name: SyntheticPUMatCut32Wav
+  image_size: 32
   color_channels: 1
-  num_workers: 4
+  num_workers: 1
   k_min: 0
 #  k_max: 3
   k_max: 6
-  wavelet_level: 3
+  wavelet_level: 2
   wavelet_type: db4
-  mean: 13.8934
-  std: 8.3059
-  scale_alpha: 2
 
 training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
-#  batch_size: 128
-#  batch_size: 8
-#  batch_size: 1024
-#  batch_size: 256
-  batch_size: 32
+  batch_size: 128
   use_all_data: false
   amp: true
   log_freq: 1
@@ -45,17 +34,28 @@ training:
   snapshot_batch_size: 32
 
 model:
-  name: SqdLstmNet
-  sample_size: 128
-#  in_channels: 1
-#  out_channels: 1
-#  layers_per_block: 2
+  name: UNet2DConditionModel
+  sample_size: 32
+  in_channels: 1
+  out_channels: 1
+  layers_per_block: 2
 #  block_out_channels: [64, 128, 256, 512]
+  block_out_channels: [32, 64]
+#  cross_attention_dim: 1280
+  cross_attention_dim: 640
+
+diffusion:
+  name: WavDDPMDiffusion
+  timesteps: 1000
+  num_train_timesteps: 1000
+  num_infer_timesteps: 100
+  conditioning_channels: 2
+  repeat_channels: 6
 
 sampling:
   device: cuda
-  batch_size: 1
-  total_samples: 10
+  batch_size: 8
+  total_samples: 16
   record_freq: 1
   eps: 1e-5
   fix_seed: true

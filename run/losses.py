@@ -9,19 +9,19 @@ import torch
 from selector.loss_type_selector import register_loss_type, _LOSSTYPE
 from utils.util import wrap_phase
 
-@register_loss_type(name='PURE')
-class PureLossType:
-    def __init__(self, config):
-        self.config = config
-        self.name = config.loss_type.name
-
-    def __call__(self, diffusion):
-        # unet pred noise diff
-        noise_pred = diffusion.noise_pred
-        noise = diffusion.noise
-        diff_loss = F.mse_loss(noise_pred, noise)
-        total_loss = diff_loss
-        return total_loss
+# @register_loss_type(name='PURE')
+# class PureLossType:
+#     def __init__(self, config):
+#         self.config = config
+#         self.name = config.loss_type.name
+#
+#     def __call__(self, diffusion):
+#         # unet pred noise diff
+#         noise_pred = diffusion.noise_pred
+#         noise = diffusion.noise
+#         diff_loss = F.mse_loss(noise_pred, noise)
+#         total_loss = diff_loss
+#         return total_loss
 
 @register_loss_type(name='PURE2')
 class Pure2LossType:
@@ -35,6 +35,19 @@ class Pure2LossType:
         diff_loss = self.meter.batch_metric_dict['MSE']
         total_loss = diff_loss
         return total_loss
+
+@register_loss_type(name='Pure')
+class PureLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        self.meter = config.train_meter
+
+    def __call__(self, diffusion):
+        diff_loss = self.meter.batch_metric_dict['NoiseMSE']
+        total_loss = diff_loss
+        return total_loss
+
 
 @register_loss_type(name='PHY1')
 class PHY1LossType:

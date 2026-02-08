@@ -8,28 +8,26 @@ meter:
   name: MchMeter
 
 data:
-#  name: SyntheticPUMatCut32Mch
+#  name: SyntheticPUMatCut32Mch # tr_cut_32_mid_3200
 #  name: SyntheticPUMatCut32MchTest
-  name: SyntheticPUMatCut32Wav
-  image_size: 32
+  name: SyntheticPUMat128Mid # tr_128_mid_3000
+  image_size: 128
   color_channels: 1
   num_workers: 1
   k_min: 0
 #  k_max: 3
   k_max: 6
-  wavelet_level: 2
-  wavelet_type: db4
 
 training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
-  batch_size: 128
-#  batch_size: 32
+#  batch_size: 128
+  batch_size: 8
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 100
+  snapshot_freq: 10
   snapshot_sampling: false
   snapshot_val: false
   snapshot_batch_size: 32
@@ -40,13 +38,10 @@ model:
   in_channels: 1
   out_channels: 1
   layers_per_block: 2
-#  block_out_channels: [64, 128, 256, 512]
-  block_out_channels: [32, 64]
-#  cross_attention_dim: 1280
-  cross_attention_dim: 640
+  block_out_channels: [64, 128, 256, 512]
 
 diffusion:
-  name: WavDDPMDiffusion
+  name: MchDDPMDiffusion
   timesteps: 1000
   num_train_timesteps: 1000
   num_infer_timesteps: 100
@@ -55,7 +50,7 @@ diffusion:
 
 sampling:
   device: cuda
-  batch_size: 8
+  batch_size: 128
   total_samples: 16
   record_freq: 1
   eps: 1e-5

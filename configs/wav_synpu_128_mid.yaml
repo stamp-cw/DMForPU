@@ -2,12 +2,12 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-  name: MchLoss
-#  name: WavLoss
+#  name: MchLoss
+  name: WavLoss
 
 meter:
-  name: MchMeter
-#  name: WavMeter
+#  name: MchMeter
+  name: WavMeter
 
 data:
 #  name: SyntheticPUMatCut32Mch
@@ -31,7 +31,8 @@ training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
-  batch_size: 128
+#  batch_size: 128
+  batch_size: 32
 #  batch_size: 256
 #  batch_size: 64
 #  batch_size: 16
@@ -65,7 +66,7 @@ diffusion:
 #  num_infer_timesteps: 1000
   num_infer_timesteps: 1000
   conditioning_channels: 2
-  repeat_channels: 6
+  repeat_channels: 1
 
 sampling:
   device: cuda
