@@ -20,8 +20,9 @@ from accelerate import Accelerator
 class Trainer:
     def __init__(self, config):
         self.config = config
-        self.accelerator = Accelerator(split_batches=True)
-        config.accelerator = self.accelerator
+        # self.accelerator = Accelerator(split_batches=True)
+        # config.accelerator = self.accelerator
+        self.accelerator = config.accelerator
         self.logger = config.logger
         self.device = self.config.training.device
         self.diffusion = DiffusionSetup(self.config, self.logger).diffusion

@@ -1,0 +1,73 @@
+# This is a sample configuration file for training a model using a hyperparameter sweep with Weights & Biases (wandb).
+#controller:
+#  type: local
+
+program: main.py
+name: hyperparameter_sweep
+method: bayes
+#metric:
+#  goal: minimize
+#  name: training_loss
+metric:
+  goal: minimize
+  name: UnwrappedMAE
+parameters:
+#  learning_rate:
+#    min: 0.0001
+#    max: 0.1
+#  batch_size:
+#    values: [16, 32, 64]
+#  training.brand_new_epochs:
+#    values: [10, 30]
+#  optim.optimizer:
+#    values: ["Adam", "SGD"]
+#  optim.lr:
+#    values: [0.0001, 0.0002]
+  loss_type.bleta_1:
+    min: 0
+    max: 1
+  loss_type.bleta_2:
+    min: 0
+    max: 0.2
+  loss_type.bleta_3:
+    min: 0
+    max: 0.1
+
+#command:
+#  - ${env}
+#  - ${interpreter}
+#  - ${program}
+#  - "--config=config.yaml"
+#  - "--mode=train"
+#  - "--training_from_scratch"
+#  - "--hyper"
+
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - "--config=config.yaml"
+  - "--mode=train_multi"
+  - "--training_from_scratch"
+  - "--hyper"
+
+#early_terminate:
+#  type: hyperband
+#  min_iter: 10
+#  eta: 5
+
+#command:
+#  - ${env}
+#  - ${interpreter}
+
+#early_terminate:
+#  type: hyperband
+#  s: 0
+#  eta: 0
+#  max_iter: 0
+
+#command:
+#- ${Command macro}
+#- ${Command macro}
+#- ${Command macro}
+#- ${Command macro}

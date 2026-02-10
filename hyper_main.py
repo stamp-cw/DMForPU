@@ -11,6 +11,8 @@ from datetime import datetime
 import argparse
 import os
 
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+
 parser = argparse.ArgumentParser(description=globals()['__doc__'])
 parser.add_argument('--config', type=str, required=True, help='Path to the configs file')
 args = parser.parse_args()

@@ -14,7 +14,7 @@ import wandb
 from datetime import datetime
 from configs.dynamic_io import IOConfig
 from utils.util import dict2namespace, unflatten_dict, update_dict
-
+from accelerate import Accelerator
 
 def main():
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
@@ -50,6 +50,8 @@ def main():
     else:
         tmp_config.iio.out_asset_suffix = os.path.join(tmp_config.data.name, tmp_config.diffusion.name)
 
+    if args.mode == 'train_multi':
+        accelerator = Accelerator(split_batches=True)
 
     ioo = IOConfig(tmp_config)
     ioo.user_logging_level = args.user_logging_level
@@ -64,6 +66,7 @@ def main():
         if args.hyper:
             with open(os.path.join('configs', 'hyper_config.yaml'), 'r') as f:
                 hyper_config = yaml.safe_load(f)
+            wandb.tensorboard.patch()
             wandb.init(
                 project=tmp_config.model.name,
                 name=f"exp-{tmp_config.data.name}-{run_time}",
@@ -86,6 +89,12 @@ def main():
             config = wandb.config
 
     config = dict2namespace(config)
+    if args.hyper:
+        config.loss_type.bleta1 = wandb.config.loss_bleta1
+        config.loss_type.bleta2 = wandb.config.loss_bleta2
+        config.loss_type.bleta3 = wandb.config.loss_bleta3
+        if not accelerator.is_main_process:
+            ioo.use_wandb = False
     config.mode = args.mode
     config.sampling_from_epoch = args.sampling_from_epoch
     config.io = ioo
@@ -106,6 +115,7 @@ def main():
             trainer.train()
         elif args.mode == 'train_multi':
             from run.train_multi import Trainer as MultiTrainer
+            config.accelerator = accelerator
             multi_trainer = MultiTrainer(config)
             multi_trainer.train()
         elif args.mode == 'sample':

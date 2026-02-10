@@ -24,13 +24,14 @@ class U3NetMeter:
     def compute_batch_metric(self):
         l1_loss = F.l1_loss(self.gt, self.pred)
         mae_loss = F.l1_loss(self.gt, self.pred)
+        mse_loss = F.mse_loss(self.gt, self.pred)
         rmse_loss = rmse_metric(self.pred, self.gt)
         nrmse_loss = rmse_loss / (self.gt.max() -self.gt.min() + 1e-8)
         gt_gx, gt_gy = phase_gradient_torch(self.gt)
         pred_gx, pred_gy = phase_gradient_torch(self.pred)
         # pge_loss = F.mse_loss(torch.concat([gt_gx,gt_gy],dim=1), torch.concat([pred_gx,pred_gy],dim=1))
         pge_loss = F.l1_loss(torch.concat([gt_gx, gt_gy],dim=1), torch.concat([pred_gx, pred_gy],dim=1))
-        self.batch_metric_dict = {'L1': l1_loss,
+        self.batch_metric_dict = {'L1': l1_loss, 'MSE': mse_loss,
                                   'MAE': mae_loss,'RMSE': rmse_loss,'NRMSE':nrmse_loss,
                                   'PGE': pge_loss
                                   }

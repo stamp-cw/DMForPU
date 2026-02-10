@@ -139,7 +139,11 @@ class WavLossType:
         lge_loss = self.meter.batch_metric_dict['LGELoss']
         mae_loss = self.meter.batch_metric_dict['UnwrappedMAE']
         # total_loss = noise_mse_loss + charbonnier_loss + wav_loss + lge_loss
-        total_loss = noise_mse_loss + 0.5 * charbonnier_loss + 0.1 * wav_loss + 0.001 * lge_loss
+        # total_loss = noise_mse_loss + 0.5 * charbonnier_loss + 0.1 * wav_loss + 0.001 * lge_loss
+        bleta1 = self.config.loss_type.bleta1
+        bleta2 = self.config.loss_type.bleta2
+        bleta3 = self.config.loss_type.bleta3
+        total_loss = noise_mse_loss + bleta1 * charbonnier_loss + bleta2 * wav_loss + bleta3 * lge_loss
         # total_loss = noise_mse_loss + 0.5 * mae_loss
         # total_loss = noise_mse_loss + 0.5 * charbonnier_loss
         # total_loss = noise_mse_loss + 10 * charbonnier_loss + 0.1 * wav_loss + 0.001 * lge_loss
@@ -536,7 +540,8 @@ class PUNetLossType:
         self.meter = config.train_meter
 
     def __call__(self, vae):
-        recon_loss = self.meter.batch_metric_dict['L1']
+        # recon_loss = self.meter.batch_metric_dict['L1']
+        recon_loss = self.meter.batch_metric_dict['MSE']
         total_loss = recon_loss
         return total_loss
 

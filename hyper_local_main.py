@@ -14,6 +14,8 @@ import os
 os.environ["WANDB_BASE_URL"] = "http://localhost:8080"
 os.environ["WANDB_API_KEY"] = "local-0646baa3f9cd57d6313ce814c184e907ae775f8c"
 
+
+
 parser = argparse.ArgumentParser(description=globals()['__doc__'])
 parser.add_argument('--config', type=str, required=True, help='Path to the configs file')
 args = parser.parse_args()

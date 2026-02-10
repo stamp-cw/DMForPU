@@ -183,7 +183,7 @@ class U3NetMModel:
             # x_init = torch.ones_like(self.WGy)
             x_init = torch.ones(self.WGy.shape[:-1], device=self.device)
             a_init = torch.zeros(*x_init.shape, 2, device=self.device)
-            pred = self.model(self.WGy, cond, x_init, a_init)
+            pred, _ = self.model(self.WGy, cond, x_init, a_init)
             self.pred_batch['pred'] = pred
 
     @property

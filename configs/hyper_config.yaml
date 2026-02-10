@@ -1,0 +1,57 @@
+program: main.py
+name: hyperparameter_sweep
+method: bayes
+
+metric:
+  goal: minimize
+  name: multi_train_per_epoch/UnwrappedMAE
+
+parameters:
+  loss_bleta1:
+    distribution: log_uniform
+    min: 0.000001
+    max: 1.0
+
+  loss_bleta2:
+    distribution: log_uniform
+    min: 0.000001
+    max: 0.2
+
+  loss_bleta3:
+    distribution: log_uniform
+    min: 0.000001
+    max: 0.1
+
+#parameters:
+#  loss_type:
+#    parameters:
+#      bleta1:
+#        distribution: log_uniform
+#        min: 0.0
+#        max: 1.0
+#
+#      bleta2:
+#        distribution: log_uniform
+#        min: 0.0
+#        max: 0.2
+#
+#      bleta3:
+#        distribution: log_uniform
+#        min: 0.0
+#        max: 0.1
+
+early_terminate:
+  type: hyperband
+  min_iter: 5
+  eta: 3
+
+command:
+#  - CUDA_VISIBLE_DEVICES=0,1,2,3
+  - ${env}
+  - accelerate
+  - launch
+  - ${program}
+  - "--config=wav_synpu_128_mid.yaml"
+  - "--mode=train_multi"
+  - "--training_from_scratch"
+  - "--hyper"
