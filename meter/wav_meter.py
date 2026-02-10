@@ -1,10 +1,12 @@
 import torch
+import wandb
 from tornado.locale import load_gettext_translations
 
 from selector.meter_selector import register_metric
 from utils.metrics import l1_metric, rmse_metric
 from utils.util import AverageMeter, wrap_phase, multi_scale_wavelet, MultiScaleWavelet
 import torch.nn.functional as F
+import wandb
 
 @register_metric(name='WavMeter')
 class WavMeter:
@@ -99,14 +101,18 @@ class WavMeter:
     def compute_epoch_metric(self):
         self.epoch_metric_dict = self.epoch_meter.avg()
         self.epoch_meter.reset()
-        self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch)
+        self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch, is_epoch=True)
 
-    def _record_metrics(self, metrics, prefix, step):
+    def _record_metrics(self, metrics, prefix, step , is_epoch=False):
         if self.is_record:
             if self.config.io.use_tensorboard:
                 for k, v in metrics.items():
                     self.writer.add_scalar(f"{prefix}/{k}", v, step)
-
+            if self.config.io.use_wandb and is_epoch:
+                # for k, v in metrics.items():
+                #     wandb.log({f"{prefix}/{k}": v}, step=step+1, commit=True)
+                # wandb.log({f"{prefix}": metrics}, step=step+1, commit=True)
+                wandb.log(metrics, step=step+1, commit=True)
 
     def phase_gradient_torch(self, phase):
         """

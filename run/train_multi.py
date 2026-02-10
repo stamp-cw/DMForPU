@@ -29,10 +29,10 @@ class Trainer:
         self.optimizer = _OPTIMIZERS(self.config)(self.diffusion.optimize_parameters)
         self.data_loader = _DATA_LOADERS(self.config)
         self.optimize_fn = OptimizerFN(self.config)
-        if self.config.io.use_tensorboard:
-            from torch.utils.tensorboard import SummaryWriter
-            self.writer = SummaryWriter(self.config.io.tensorboard_path)
-            config.writer = self.writer
+        # if self.config.io.use_tensorboard:
+        #     from torch.utils.tensorboard import SummaryWriter
+        #     self.writer = SummaryWriter(self.config.io.tensorboard_path)
+        #     config.writer = self.writer
         self.meter = MeterSetup(self.config, self.logger).meter
         self.main_meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter

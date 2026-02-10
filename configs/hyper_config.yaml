@@ -4,7 +4,8 @@ method: bayes
 
 metric:
   goal: minimize
-  name: multi_train_per_epoch/UnwrappedMAE
+#  name: multi_train_per_epoch/UnwrappedMAE
+  name: UnwrappedMAE
 
 parameters:
   loss_bleta1:

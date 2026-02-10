@@ -66,12 +66,13 @@ def main():
         if args.hyper:
             with open(os.path.join('configs', 'hyper_config.yaml'), 'r') as f:
                 hyper_config = yaml.safe_load(f)
-            wandb.tensorboard.patch()
+            # wandb.tensorboard.patch()
             wandb.init(
                 project=tmp_config.model.name,
                 name=f"exp-{tmp_config.data.name}-{run_time}",
                 config=hyper_config,
-                sync_tensorboard=True,
+                # sync_tensorboard=True if accelerator.is_main_process else False,
+                sync_tensorboard=False,
                 dir=ioo.wandb_local_path,
                 resume=not ioo.training_from_scratch
             )
@@ -115,6 +116,9 @@ def main():
             trainer.train()
         elif args.mode == 'train_multi':
             from run.train_multi import Trainer as MultiTrainer
+            if config.io.use_tensorboard:
+                from torch.utils.tensorboard import SummaryWriter
+                config.writer = SummaryWriter(config.io.tensorboard_path)
             config.accelerator = accelerator
             multi_trainer = MultiTrainer(config)
             multi_trainer.train()
