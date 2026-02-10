@@ -33,7 +33,8 @@ data:
 
 training:
   device: cuda
-  brand_new_epochs: 100001
+#  brand_new_epochs: 100001
+  brand_new_epochs: 101
   continue_training_epochs: 1000001
 #  batch_size: 128
   batch_size: 32

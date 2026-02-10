@@ -112,7 +112,8 @@ class WavMeter:
                 # for k, v in metrics.items():
                 #     wandb.log({f"{prefix}/{k}": v}, step=step+1, commit=True)
                 # wandb.log({f"{prefix}": metrics}, step=step+1, commit=True)
-                wandb.log(metrics, step=step+1, commit=True)
+                new_metric = {f"{prefix}/{k}": v for k, v in metrics.items()}
+                wandb.log(new_metric, step=step+1, commit=True)
 
     def phase_gradient_torch(self, phase):
         """
