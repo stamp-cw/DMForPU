@@ -56,20 +56,20 @@ class Sampler:
                     "diff_k_mat_disc": batch_dict["k_mat_disc"].to(self.device) - self.diffusion.pred_k_mat_disc ,
                 }
                 self._save_compare_png(c_batch)
-            elif self.config.diffusion.name == 'DFNDDPMDiffusion':
-                c_batch = {
-                    "wrapped": self.diffusion.wrapped,
-                    "gt_unwrapped": self.diffusion.gt_unwrapped,
-                    "pred_unwrapped": self.diffusion.pred_unwrapped,
-                    "diff_unwrapped": self.diffusion.diff_unwrapped,
-                    "gt_unwrapped_sub_wrapped_neg_norm": batch_dict["unwrapped_sub_wrapped_neg_norm"].to(self.device),
-                    "pred_unwrapped_sub_wrapped_neg_norm": self.diffusion.pred_unwrapped_sub_wrapped_neg_norm,
-                    "diff_unwrapped_sub_wrapped_neg_norm": batch_dict["unwrapped_sub_wrapped_neg_norm"].to(self.device) - self.diffusion.pred_unwrapped_sub_wrapped_neg_norm ,
-                }
-                self._save_compare_png_dfn(c_batch)
+            # elif self.config.diffusion.name == 'DFNDDPMDiffusion':
+            #     c_batch = {
+            #         "wrapped": self.diffusion.wrapped,
+            #         "gt_unwrapped": self.diffusion.gt_unwrapped,
+            #         "pred_unwrapped": self.diffusion.pred_unwrapped,
+            #         "diff_unwrapped": self.diffusion.diff_unwrapped,
+            #         "gt_unwrapped_sub_wrapped_neg_norm": batch_dict["unwrapped_sub_wrapped_neg_norm"].to(self.device),
+            #         "pred_unwrapped_sub_wrapped_neg_norm": self.diffusion.pred_unwrapped_sub_wrapped_neg_norm,
+            #         "diff_unwrapped_sub_wrapped_neg_norm": batch_dict["unwrapped_sub_wrapped_neg_norm"].to(self.device) - self.diffusion.pred_unwrapped_sub_wrapped_neg_norm ,
+            #     }
+            #     self._save_compare_png_dfn(c_batch)
             elif self.config.diffusion.name == 'NegNormDDPMDiffusion' or self.config.diffusion.name == 'DDPMDiffusion' or self.config.diffusion.name == 'MchNegNormDDPMDiffusion' \
                     or self.config.diffusion.name == 'DphDDPMDiffusion' or self.config.diffusion.name == 'ElucidatedDiffusion' or self.config.diffusion.name == 'MchDDPMDiffusion'\
-                    or self.config.diffusion.name == 'WavDDPMDiffusion' or self.config.diffusion.name == 'CfgDDPMDiffusion':
+                    or self.config.diffusion.name == 'WavDDPMDiffusion' or self.config.diffusion.name == 'CfgDDPMDiffusion' or self.config.diffusion.name == 'DfnDDPMDiffusion':
                 c_batch = {
                     "wrapped": self.diffusion.wrapped,
                     "wrapped_neg_norm": batch_dict["wrapped_neg_norm"].to(self.device),
@@ -381,8 +381,8 @@ class Sampler:
         # wrapped, gt_k_mat_cont, pred_k_mat_cont, diff_k_mat_cont = c_batch['wrapped'], c_batch['gt_k_mat_cont'], c_batch['pred_k_mat_cont'], c_batch['diff_k_mat_cont']
         # wrapped, gt_k_mat_disc, pred_k_mat_disc, diff_k_mat_disc = c_batch['wrapped'], c_batch['gt_k_mat_disc'], c_batch['pred_k_mat_disc'], c_batch['diff_k_mat_disc']
 
-        titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Diff Unwrapped",
-                  "Wrapped neg_norm", "GT unwrapped_neg_norm", "Pred unwrapped_neg_norm", "Diff unwrapped_neg_norm",
+        titles = ["Wrapped", "GT Unwrapped", "Pred Unwrapped", "Pred Unwrapped", "Diff Unwrapped",
+                  "Wrapped neg_norm", "GT unwrapped_neg_norm", "Pred unwrapped_neg_norm", "Pred unwrapped_neg_norm", "Diff unwrapped_neg_norm",
                   # "Wrapped", "GT k-mat Cont", "Pred k-mat Cont", "Diff k-mat Cont",
                   # "Wrapped", "GT k-mat Disc", "Pred k-mat Disc", "Diff k-mat Disc"
                   ]
@@ -390,27 +390,36 @@ class Sampler:
         for i in range(wrapped.shape[0]):
             compare_png_path = self.config.io.generated_compare_png_file_path(self.saved_samples,self.saved_samples + self.temp_batch_size, i)
             imgs = [
-                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i]),
-                _to_numpy_2d(wrapped_neg_norm[i]), _to_numpy_2d(gt_unwrapped_neg_norm[i]), _to_numpy_2d(pred_unwrapped_neg_norm[i]), _to_numpy_2d(diff_unwrapped_neg_norm[i]),
+                _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(pred_unwrapped[i]), _to_numpy_2d(diff_unwrapped[i]),
+                _to_numpy_2d(wrapped_neg_norm[i]), _to_numpy_2d(gt_unwrapped_neg_norm[i]), _to_numpy_2d(pred_unwrapped_neg_norm[i]), _to_numpy_2d(pred_unwrapped_neg_norm[i]), _to_numpy_2d(diff_unwrapped_neg_norm[i]),
                 # _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_cont[i]), _to_numpy_2d(pred_k_mat_cont[i]), _to_numpy_2d(diff_k_mat_cont[i]),
                 # _to_numpy_2d(wrapped[i]), _to_numpy_2d(gt_k_mat_disc[i]), _to_numpy_2d(pred_k_mat_disc[i]), _to_numpy_2d(diff_k_mat_disc[i])
             ]
-            fig, axes = plt.subplots(2, 4, figsize=(16, 8))
+            fig, axes = plt.subplots(2, 5, figsize=(20, 8))
             axes = axes.flatten()
-            cmaps = ["twilight", "turbo", "turbo", "inferno",
-                     "twilight", "turbo", "turbo", "inferno",
+            cmaps = ["twilight", "turbo", "turbo", "turbo", "inferno",
+                     "twilight", "turbo", "turbo", "turbo", "inferno",
                      # "twilight", "viridis", "viridis", "inferno",
                      # "twilight", "viridis", "viridis", "inferno"
                      ]
-            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[:4]:
+            zip_list = list(zip(axes, imgs, titles, cmaps))
+            for ax, img, title, cmap in zip_list[:2] + zip_list[3:5] + zip_list[8:9]:
                 # im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)
                 ax.axis("off")
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
+            color_norm = colors.Normalize(vmin=0)
+            for ax, img, title, cmap in zip_list[2:3]:
+                im = ax.imshow(img, cmap=cmap, norm=color_norm)
+                # im = ax.imshow(img, cmap=cmap)
+                ax.set_title(title)
+                ax.axis("off")
+                fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
             color_norm = colors.Normalize(vmin=-1, vmax=1)
-            for ax, img, title, cmap in list(zip(axes, imgs, titles, cmaps))[4:]:
+            for ax, img, title, cmap in zip_list[5:8]+zip_list[9:]:
                 im = ax.imshow(img, cmap=cmap, norm=color_norm)
                 # im = ax.imshow(img, cmap=cmap)
                 ax.set_title(title)

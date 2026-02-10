@@ -591,6 +591,53 @@ class UformerLossType:
         total_loss = charbonnier_loss
         return total_loss
 
+# @register_loss_type(name='U3NetLoss')
+# class U3NetLossType:
+#     def __init__(self, config):
+#         self.config = config
+#         self.name = config.loss_type.name
+#         self.meter = config.train_meter
+#
+#     def __call__(self, vae):
+#         charbonnier_loss = self.meter.batch_metric_dict['CharbonnierLoss']
+#         total_loss = charbonnier_loss
+#         return total_loss
+
+
+@register_loss_type(name='U3NetLoss')
+class U3NetLossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        self.meter = config.train_meter
+
+    def Loss_SR(self,  target_grad, pred):
+        pred_grad = self.gradient(pred)
+        error = self.torch_Wrap(target_grad - pred_grad)
+        loss = torch.mean(torch.square(error))
+        return loss
+
+    def gradient(self, x):
+        res = torch.zeros(*x.shape, 2).type_as(x)
+        res[:, :, :, 1:, 0] = x[..., 1:] - x[..., :-1]
+        res[:, :, 1:, :, 1] = x[:, :, 1:, :] - x[:, :, :-1, :]
+        return res
+
+    def torch_Wrap(self, x):
+        return torch.remainder(x+torch.pi, torch.ones_like(x) * (2*torch.pi))-torch.pi
+
+    def __call__(self, mmodel):
+        # charbonnier_loss = self.meter.batch_metric_dict['CharbonnierLoss']
+        WGy_minus  = mmodel.WGy_minus
+        L_sr = 0
+        for j, each_x in enumerate(mmodel.pred_list):
+            # L_sr += self.Loss_SR(WGy_minus, each_x) / (len(mmodel.pred_list) - j)
+            # L_sr += self.Loss_SR(WGy_minus, each_x) / (3 - j) + 0.0 * each_x.mean()
+            L_sr += self.Loss_SR(WGy_minus, each_x) / (3 - j)
+
+        total_loss = L_sr
+        return total_loss
+
 class LossFN:
     def __init__(self, config):
         self.config = config

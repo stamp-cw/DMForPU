@@ -1,18 +1,19 @@
 seed: 42
 
 loss_type:
-#  name: MchLoss
-  name: Pure
+  name: MchLoss
+#  name: Pure
 #  name: WavLoss
 
 meter:
-  name: MchMeter
-#  name: WavMeter
+#  name: MchMeter
+  name: WavMeter
 
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
-  name: SyntheticPUMat128Wav
+#  name: SyntheticPUMat128Wav
+  name: SyntheticPUMat128Mch
 #  name: SyntheticPUMat128WavTest
 #  name: SyntheticPUMat128MidTest
   image_size: 128
@@ -21,6 +22,7 @@ data:
   k_min: 0
 #  k_max: 3
   k_max: 7
+#  k_max: 8
   wavelet_level: 3
   wavelet_type: db4
   mean: 10.0180
@@ -53,9 +55,9 @@ model:
   layers_per_block: 2
 #  block_out_channels: [64, 128, 256, 512]
 #  block_out_channels: [32, 128, 128]
-  block_out_channels: [32, 32, 32, 32]
-#  cross_attention_dim: 1280
-  cross_attention_dim: 320
+  block_out_channels: [64, 128, 256, 256]
+  cross_attention_dim: 1280
+#  cross_attention_dim: 320
 
 diffusion:
   name: MchDDPMDiffusion

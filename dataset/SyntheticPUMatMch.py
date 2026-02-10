@@ -10,7 +10,7 @@ from utils.util import multi_scale_wavelet
 from torch.distributions import Normal
 
 
-class SyntheticPUMatWav(Dataset):
+class SyntheticPUMatMch(Dataset):
     """
     InSARDLPU 数据集，Mat文件格式
     """
@@ -94,10 +94,11 @@ class SyntheticPUMatWav(Dataset):
         # unwrapped = torch.clamp(unwrapped, min=0.0) # [0, inf]
 
         wrapped_neg_norm = wrapped / torch.pi
-        # wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
+        wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
 
         # neg_norm_diffusion
         unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
+        # unwrapped_norm = (unwrapped + 2*torch.pi) / (2 * torch.pi * self.scale_k)
         # unwrapped_norm = (unwrapped + torch.pi) / (2 * torch.pi * self.scale_k)
         # unwrapped_norm = torch.clamp(unwrapped_norm, 0, 1)
         unwrapped_neg_norm = unwrapped_norm * 2 - 1
@@ -114,8 +115,10 @@ class SyntheticPUMatWav(Dataset):
 
 
         # wrapped_cond
-        sin_wrapped = multi_scale_wavelet(torch.sin(wrapped), self.wavelet_type, level=self.wavelet_level)
-        cos_wrapped = multi_scale_wavelet(torch.cos(wrapped), self.wavelet_type, level=self.wavelet_level)
+        # sin_wrapped = multi_scale_wavelet(torch.sin(wrapped), self.wavelet_type, level=self.wavelet_level)
+        # cos_wrapped = multi_scale_wavelet(torch.cos(wrapped), self.wavelet_type, level=self.wavelet_level)
+        sin_wrapped = torch.sin(wrapped)
+        cos_wrapped = torch.cos(wrapped)
         wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
         sample = {

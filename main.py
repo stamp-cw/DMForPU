@@ -187,11 +187,12 @@ if __name__ == '__main__':
     from run.losses import UformerLossType
     from run.losses import WavLossType
     from run.losses import DLPULossType
+    from run.losses import U3NetLossType
     # Import VAE Models
     from vae.latent_vae import LatentVAE
     # Import Models
     from model.unet.aux_unet import AuxUNet
-    from model.unet_mmodel import UNetMModel
+    from model.u3net.u3net import U3Net
     from model.aux_unet_mmodel import AuxUNetMModel
     from model.diff_aux_unet_mmodel import DiffAuxUNetMModel
     from model.unet.diff_aux_unet import DiffAuxUNet
@@ -217,6 +218,7 @@ if __name__ == '__main__':
     # from diffusion.grad_ddpm_diffusion import GradDDPMDiffusion
     from diffusion.wav_ddpm_diffusion import WavDDPMDiffusion
     from diffusion.cfg_ddpm_diffusion import CfgDDPMDiffusion
+    from diffusion.dfn_ddpm_diffusion import DfnDDPMDiffusion
     # Import Meter
     from meter.pure_meter import PureMeter
     from meter.mch_meter import MchMeter
@@ -227,9 +229,12 @@ if __name__ == '__main__':
     from meter.uformer_meter import UformerMeter
     from meter.wav_meter import WavMeter
     from meter.dlpu_meter import DLPUMeter
+    from meter.u3net_meter import U3NetMeter
     # Import MModel
     from model.sqd_lstm_mmodel import SqdLstmMModel
     from model.restormer_mmodel import RestormerMModel
     from model.uformer_mmodel import UformerMModel
     from model.dlpu_mmodel import DLPUMModel
+    from model.punet_mmodel import PUNetMModel
+    from model.u3net_mmodel import U3NetMModel
     main()

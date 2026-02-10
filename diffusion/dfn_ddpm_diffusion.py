@@ -5,8 +5,8 @@ from selector.diffusion_selector import register_diffusion
 import tqdm
 from torch.distributions import Normal
 
-@register_diffusion(name='MchDDPMDiffusion')
-class MchDDPMDiffusion:
+@register_diffusion(name='DfnDDPMDiffusion')
+class DfnDDPMDiffusion:
     def __init__(self, config):
         self.config = config
         self.device = config.training.device
@@ -51,7 +51,11 @@ class MchDDPMDiffusion:
         self.wrapped = batch_dict["wrapped"].to(self.device)
         self.wrapped_cond = batch_dict["wrapped_cond"].to(self.device)
         self.gt_unwrapped = batch_dict["unwrapped"].to(self.device)
-        self.gt_unwrapped_neg_norm = batch_dict["unwrapped_neg_norm"].to(self.device)
+        # self.gt_unwrapped_neg_norm = batch_dict["unwrapped_neg_norm"].to(self.device)
+        self.gt_unwrapped_neg_norm = batch_dict["dfn_unwrapped_neg_norm"].to(self.device)
+        # self.gt_dfn_unwrapped  = batch_dict["dfn_unwrapped"].to(self.device)
+        # self.gt_dfn_unwrapped_neg_norm = batch_dict["dfn_unwrapped_neg_norm"].to(self.device)
+
 
     def train_sample(self, t):
         # cross_dim = getattr(self.model.config, "cross_attention_dim", None)
@@ -77,9 +81,9 @@ class MchDDPMDiffusion:
         # )
         self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
-        self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
-        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - torch.pi
-        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - 2*torch.pi
+        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+        self.pred_unwrapped = self.wrapped + self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+
         # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
         # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
 
@@ -118,8 +122,8 @@ class MchDDPMDiffusion:
             self.pred_unwrapped_neg_norm = x
             self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
             # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - torch.pi
-            # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - 2*torch.pi
-            self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+            self.pred_unwrapped = self.wrapped + self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+            # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
             # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
             # self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
             self.pred_batch["pred_unwrapped"] = self.pred_unwrapped

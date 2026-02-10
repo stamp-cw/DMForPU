@@ -10,6 +10,64 @@ from scipy.fft import dctn, idctn
 import numpy as np
 import pywt
 
+
+def phase_gradient_torch(phase: torch.Tensor):
+    """
+    Args:
+        phase: torch.Tensor, shape (B, C, H, W)
+
+    Returns:
+        gx, gy: torch.Tensor, shape (B, C, H, W)
+    """
+    assert phase.dim() == 4, "phase must be (B, C, H, W)"
+
+    B, C, H, W = phase.shape
+
+    # -------- x-direction gradient kernel --------
+    kx = torch.tensor(
+        [[0, 0, 0],
+         [-1, 1, 0],
+         [0, 0, 0]],
+        device=phase.device,
+        dtype=phase.dtype
+    ).view(1, 1, 3, 3)
+
+    # depthwise: (C, 1, 3, 3)
+    kx = kx.repeat(C, 1, 1, 1)
+
+    gx = F.conv2d(
+        phase,
+        kx,
+        padding=1,
+        groups=C
+    )
+
+    # boundary correction (W direction)
+    gx[:, :, :, 0] = gx[:, :, :, 1] - (gx[:, :, :, 2] - gx[:, :, :, 1])
+
+    # -------- y-direction gradient kernel --------
+    ky = torch.tensor(
+        [[0, -1, 0],
+         [0,  1, 0],
+         [0,  0, 0]],
+        device=phase.device,
+        dtype=phase.dtype
+    ).view(1, 1, 3, 3)
+
+    ky = ky.repeat(C, 1, 1, 1)
+
+    gy = F.conv2d(
+        phase,
+        ky,
+        padding=1,
+        groups=C
+    )
+
+    # boundary correction (H direction)
+    gy[:, :, 0, :] = gy[:, :, 1, :] - (gy[:, :, 2, :] - gy[:, :, 1, :])
+
+    return gx, gy
+
 def multi_scale_wavelet(phase, wavelet, level):
     # phase: [1, H, W]
     p = phase.squeeze(0).detach().cpu().numpy()

@@ -2,8 +2,9 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-  name: MchLoss
-#  name: WavLoss
+#  name: MchLoss
+#  name: Pure
+  name: WavLoss
 
 meter:
 #  name: MchMeter
@@ -40,7 +41,8 @@ training:
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 100
+#  snapshot_freq: 100
+  snapshot_freq: 50
   snapshot_sampling: false
   snapshot_val: false
   snapshot_batch_size: 32
@@ -53,9 +55,9 @@ model:
   layers_per_block: 2
 #  block_out_channels: [64, 128, 256, 512]
 #  block_out_channels: [32, 128, 128]
-  block_out_channels: [32, 32, 32, 32]
-#  cross_attention_dim: 1280
-  cross_attention_dim: 320
+  block_out_channels: [64, 64, 64, 64]
+  cross_attention_dim: 1280
+#  cross_attention_dim: 320
 
 diffusion:
   name: WavDDPMDiffusion
@@ -64,7 +66,7 @@ diffusion:
   num_train_timesteps: 1000
 #  num_infer_timesteps: 100
 #  num_infer_timesteps: 1000
-  num_infer_timesteps: 1000
+  num_infer_timesteps: 10
   conditioning_channels: 2
   repeat_channels: 1
 

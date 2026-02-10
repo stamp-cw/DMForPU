@@ -1,12 +1,12 @@
 import torch
 
 from selector.meter_selector import register_metric
-from utils.metrics import l1_metric, rmse_metric
-from utils.util import AverageMeter, phase_gradient_torch
+from utils.metrics import rmse_metric
+from utils.util import AverageMeter, wrap_phase, phase_gradient_torch
 import torch.nn.functional as F
 
-@register_metric(name='PUREMeter')
-class PureMeter:
+@register_metric(name='U3NetMeter')
+class U3NetMeter:
     def __init__(self, config):
         self.config = config
         self.device = config.training.device
@@ -38,6 +38,9 @@ class PureMeter:
 
     def compute_epoch_metric(self):
         self.epoch_metric_dict = self.epoch_meter.avg()
+        # print("ok===========================================================")
+        # print(self.epoch_meter.avg())
+        # print("ok===========================================================")
         self.epoch_meter.reset()
         self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch)
 

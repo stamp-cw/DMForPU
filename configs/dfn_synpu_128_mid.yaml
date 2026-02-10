@@ -1,25 +1,28 @@
 seed: 42
 
 loss_type:
-#  name: PHY11
-  name: PUNetLoss
+  name: MchLoss
+#  name: Pure
+#  name: WavLoss
 
 meter:
-  name: PUNetMeter
-
-mmodel:
-  name: PUNetMModel
+#  name: MchMeter
+  name: WavMeter
 
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
-  name: SyntheticPUMat128Wav
+#  name: SyntheticPUMat128Wav
+  name: SyntheticPUMat128Dfn
+#  name: SyntheticPUMat128WavTest
+#  name: SyntheticPUMat128MidTest
   image_size: 128
   color_channels: 1
-  num_workers: 4
+  num_workers: 1
   k_min: 0
 #  k_max: 3
   k_max: 7
+#  k_max: 8
   wavelet_level: 3
   wavelet_type: db4
   mean: 10.0180
@@ -31,10 +34,11 @@ training:
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
 #  batch_size: 128
-#  batch_size: 8
-#  batch_size: 128
   batch_size: 32
-#  batch_size: 8
+#  batch_size: 256
+#  batch_size: 64
+#  batch_size: 16
+#  batch_size: 4
   use_all_data: false
   amp: true
   log_freq: 1
@@ -44,29 +48,43 @@ training:
   snapshot_batch_size: 32
 
 model:
-  name: PUNet
+  name: UNet2DConditionModel
   sample_size: 128
-#  in_channels: 1
-#  out_channels: 1
-#  layers_per_block: 2
+  in_channels: 1
+  out_channels: 1
+  layers_per_block: 2
 #  block_out_channels: [64, 128, 256, 512]
+#  block_out_channels: [32, 128, 128]
+  block_out_channels: [32, 32, 32, 32]
+#  cross_attention_dim: 1280
+  cross_attention_dim: 320
+
+diffusion:
+  name: DfnDDPMDiffusion
+  timesteps: 1000
+#  num_train_timesteps: 1000
+  num_train_timesteps: 1000
+#  num_infer_timesteps: 100
+#  num_infer_timesteps: 1000
+  num_infer_timesteps: 100
+  conditioning_channels: 2
+  repeat_channels: 1
 
 sampling:
   device: cuda
   batch_size: 1
-  total_samples: 10
+  total_samples: 8
   record_freq: 1
   eps: 1e-5
   fix_seed: true
 
 val:
   device: cuda
-  batch_size: 32
+  batch_size: 128
 
 test:
   device: cuda
-  batch_size: 2
-  total_samples: 30
+  batch_size: 128
 
 optim:
   optimizer: Adam

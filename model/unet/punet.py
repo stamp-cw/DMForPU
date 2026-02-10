@@ -1,177 +1,312 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
 from selector.model_selector import register_model
 
-import torch.nn as nn
-from torch import cat as cat
 
-' Branch0 block '
-class Branch0(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(Branch0, self).__init__()
-        self.conv0 = nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
-        self.bt0 = nn.BatchNorm2d(out_ch)
+def crop_and_concat(net1, net2):
+    """
+    net1: skip connection feature map (smaller or equal)
+    net2: upsampled feature map (larger)
+    shape: [N, C, H, W]
+    """
+    _, _, h1, w1 = net1.shape
+    _, _, h2, w2 = net2.shape
+
+    dh = (h2 - h1) // 2
+    dw = (w2 - w1) // 2
+
+    net2_crop = net2[:, :, dh:dh + h1, dw:dw + w1]
+    return torch.cat([net1, net2_crop], dim=1)
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_ch, out_ch, kernel_size, dilation, drop_rate):
+        super().__init__()
+        padding = (
+            (kernel_size[0] // 2) * dilation[0],
+            (kernel_size[1] // 2) * dilation[1]
+        )
+        self.block = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, kernel_size,
+                      padding=padding,
+                      dilation=dilation,
+                      bias=False),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=drop_rate)
+        )
+
     def forward(self, x):
-        x0 = self.conv0(x)
-        x0 = self.bt0(x0)
-        return x0
+        return self.block(x)
 
-' Branch1 block '
-class Branch1(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(Branch1, self).__init__()
-        self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1)
-        self.bt1 = nn.BatchNorm2d(out_ch)
+class DownsampleBlock(nn.Module):
+    def __init__(self, ch, kernel_size, pool_size, dilation, drop_rate):
+        super().__init__()
+        padding = (
+            (kernel_size[0] // 2) * dilation[0],
+            (kernel_size[1] // 2) * dilation[1]
+        )
+        self.block = nn.Sequential(
+            nn.Conv2d(ch, ch, kernel_size,
+                      stride=pool_size,
+                      padding=padding,
+                      dilation=dilation,
+                      bias=False),
+            nn.BatchNorm2d(ch),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=drop_rate)
+        )
+
     def forward(self, x):
-        x1 = self.conv1(x)
-        x1 = self.bt1(x1)
-        return x1
+        return self.block(x)
 
-' Branch2 block '
-class Branch2(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(Branch2, self).__init__()
-        self.conv2_1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1)
-        self.bt2_1 = nn.BatchNorm2d(out_ch)
-        self.rl2_1 = nn.LeakyReLU(inplace=True)
-        self.conv2_2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        self.bt2_2 = nn.BatchNorm2d(out_ch)
+class UpsampleBlock(nn.Module):
+    def __init__(self, in_ch, out_ch, kernel_size, pool_size, drop_rate):
+        super().__init__()
+        self.block = nn.Sequential(
+            nn.ConvTranspose2d(
+                in_ch, out_ch,
+                kernel_size=kernel_size,
+                stride=pool_size,
+                padding=(
+                    kernel_size[0] // 2,
+                    kernel_size[1] // 2
+                ),
+                output_padding=(
+                    pool_size[0] - 1,
+                    pool_size[1] - 1
+                ),
+                bias=False
+            ),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=drop_rate)
+        )
+
     def forward(self, x):
-        x2 = self.conv2_1(x)
-        x2 = self.bt2_1(x2)
-        x2 = self.rl2_1(x2)
-        x2 = self.conv2_2(x2)
-        x2 = self.bt2_2(x2)
-        return x2
+        return self.block(x)
 
-' Branch3 block '
-class Branch3(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(Branch3, self).__init__()
-        self.conv3_1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1)
-        self.bt3_1 = nn.BatchNorm2d(out_ch)
-        self.rl3_1 = nn.LeakyReLU(inplace=True)
-        self.conv3_2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        self.bt3_2 = nn.BatchNorm2d(out_ch)
-        self.rl3_2 = nn.LeakyReLU(inplace=True)
-        self.conv3_3 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        self.bt3_3 = nn.BatchNorm2d(out_ch)
-    def forward(self, x):
-        x3 = self.conv3_1(x)
-        x3 = self.bt3_1(x3)
-        x3 = self.rl3_1(x3)
-        x3 = self.conv3_2(x3)
-        x3 = self.bt3_2(x3)
-        x3 = self.rl3_2(x3)
-        x3 = self.conv3_3(x3)
-        x3 = self.bt3_3(x3)
-        return x3
-
-' Branch4 block '
-class Branch4(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(Branch4, self).__init__()
-        self.conv4_1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1)
-        self.bt4_1 = nn.BatchNorm2d(out_ch)
-        self.rl4_1 = nn.LeakyReLU(inplace=True)
-        self.conv4_2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        self.bt4_2 = nn.BatchNorm2d(out_ch)
-        self.rl4_2 = nn.LeakyReLU(inplace=True)
-        self.conv4_3 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        self.bt4_3 = nn.BatchNorm2d(out_ch)
-        self.rl4_3 = nn.LeakyReLU(inplace=True)
-        self.conv4_4 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        self.bt4_4 = nn.BatchNorm2d(out_ch)
-    def forward(self, x):
-        x4 = self.conv4_1(x)
-        x4 = self.bt4_1(x4)
-        x4 = self.rl4_1(x4)
-        x4 = self.conv4_2(x4)
-        x4 = self.bt4_2(x4)
-        x4 = self.rl4_2(x4)
-        x4 = self.conv4_3(x4)
-        x4 = self.bt4_3(x4)
-        x4 = self.rl4_3(x4)
-        x4 = self.conv4_4(x4)
-        x4 = self.bt4_4(x4)
-        return x4
-
-' Residual block with Inception module '
-class ResB(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(ResB, self).__init__()
-        self.branch0 = Branch0(in_ch, out_ch)
-        self.branch1 = Branch1(in_ch, out_ch // 4)
-        self.branch2 = Branch2(in_ch, out_ch // 4)
-        self.branch3 = Branch3(in_ch, out_ch // 4)
-        self.branch4 = Branch4(in_ch, out_ch // 4)
-        self.rl = nn.LeakyReLU(inplace=True)
-    def forward(self, x):
-        x0 = self.branch0(x)
-        x1 = self.branch1(x)
-        x2 = self.branch2(x)
-        x3 = self.branch3(x)
-        x4 = self.branch4(x)
-        x5 = cat((x1, x2, x3, x4), dim=1)
-        x6 =  x0 + x5
-        x7= self.rl(x6)
-        return  x7
-
-' Downsampling block '
-class DownB(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(DownB, self).__init__()
-        self.res = ResB(in_ch, out_ch)
-        self.pool = nn.MaxPool2d(kernel_size=2)
-    def forward(self, x):
-        x1 = self.res(x)
-        x2 = self.pool(x1)
-        return x2, x1
-
-' Upsampling block '
-class UpB(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(UpB, self).__init__()
-        self.up = nn.ConvTranspose2d(
-            in_ch, out_ch, kernel_size=3, stride=2, padding = 1, output_padding = 1 )
-        self.res = ResB(out_ch*2, out_ch)
-    def forward(self, x, x_):
-        x1 = self.up(x)
-        x2 = cat((x1 , x_), dim=1)
-        x3 = self.res(x2)
-        return x3
-
-' Output layer '
-class Outconv(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(Outconv, self).__init__()
-        self.conv = nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
-    def forward(self, x):
-        x1 = self.conv(x)
-        return x1
-
-' Architecture of Res-UNet '
+# @register_model(name=['PUNet'])
+# class PUNet(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#
+#         # self.depths = config.depths
+#         # self.filters_root = config.filters_root
+#         # self.kernel_size = config.kernel_size
+#         # self.pool_size = config.pool_size
+#         # self.dilation_rate = config.dilation_rate
+#         # self.drop_rate = config.drop_rate
+#         # self.n_class = config.n_class
+#
+#         self.depths        = 5
+#         self.filters_root  = 8
+#         self.kernel_size   = (7, 1)
+#         self.pool_size     = (4, 1)
+#         self.dilation_rate = (1, 1)
+#         self.drop_rate     = 0.0
+#         self.n_class       = 3
+#
+#         # ===== Input =====
+#         self.input_conv = ConvBlock(
+#             # config.n_channel,
+#             1,
+#             self.filters_root,
+#             self.kernel_size,
+#             self.dilation_rate,
+#             self.drop_rate
+#         )
+#
+#         # ===== Encoder =====
+#         self.down_convs = nn.ModuleList()
+#         self.down_samples = nn.ModuleList()
+#
+#         for d in range(self.depths):
+#             filters = 2 ** d * self.filters_root
+#             self.down_convs.append(
+#                 ConvBlock(filters if d > 0 else self.filters_root,
+#                           filters,
+#                           self.kernel_size,
+#                           self.dilation_rate,
+#                           self.drop_rate)
+#             )
+#             if d < self.depths - 1:
+#                 self.down_samples.append(
+#                     DownsampleBlock(filters,
+#                                     self.kernel_size,
+#                                     self.pool_size,
+#                                     self.dilation_rate,
+#                                     self.drop_rate)
+#                 )
+#
+#         # ===== Decoder =====
+#         self.up_samples = nn.ModuleList()
+#         self.up_convs = nn.ModuleList()
+#
+#         for d in reversed(range(self.depths - 1)):
+#             filters = 2 ** d * self.filters_root
+#             self.up_samples.append(
+#                 UpsampleBlock(
+#                     filters * 2,
+#                     filters,
+#                     self.kernel_size,
+#                     self.pool_size,
+#                     self.drop_rate
+#                 )
+#             )
+#             self.up_convs.append(
+#                 ConvBlock(filters * 2,
+#                           filters,
+#                           self.kernel_size,
+#                           self.dilation_rate,
+#                           self.drop_rate)
+#             )
+#
+#         # ===== Output =====
+#         self.output_conv = nn.Conv2d(
+#             self.filters_root,
+#             self.n_class,
+#             kernel_size=1
+#         )
+#
+#     def forward(self, x):
+#         """
+#         x: [N, C, H, W]
+#         """
+#         skips = []
+#
+#         x = self.input_conv(x)
+#
+#         # Encoder
+#         for d in range(self.depths):
+#             x = self.down_convs[d](x)
+#             skips.append(x)
+#             if d < self.depths - 1:
+#                 x = self.down_samples[d](x)
+#
+#         self.representation = skips[-1]
+#
+#         # Decoder
+#         for i, d in enumerate(reversed(range(self.depths - 1))):
+#             x = self.up_samples[i](x)
+#             x = crop_and_concat(skips[d], x)
+#             x = self.up_convs[i](x)
+#
+#         logits = self.output_conv(x)
+#         return logits
 @register_model(name=['PUNet'])
 class PUNet(nn.Module):
-    def __init__(self,config):
-        super(PUNet, self).__init__()
-        self.down1 = DownB(1, 64)
-        self.down2 = DownB(64, 128)
-        self.down3 = DownB(128, 256)
-        self.down4 = DownB(256, 512)
-        self.res = ResB(512, 1024)
-        self.up1 = UpB(1024, 512)
-        self.up2 = UpB(512, 256)
-        self.up3 = UpB(256, 128)
-        self.up4 = UpB(128, 64)
-        self.outc = Outconv(64, 1)
+    def __init__(self, config=None):
+        super().__init__()
+
+        # ===== Fixed config (as you set) =====
+        self.depths        = 5
+        self.filters_root  = 8
+        self.kernel_size   = (7, 1)
+        self.pool_size     = (4, 1)
+        self.dilation_rate = (1, 1)
+        self.drop_rate     = 0.0
+        # self.n_class       = 3
+        self.n_class       = 1
+
+        # ===== Input =====
+        self.input_conv = ConvBlock(
+            1,
+            self.filters_root,
+            self.kernel_size,
+            self.dilation_rate,
+            self.drop_rate
+        )
+
+        # ===== Encoder =====
+        self.down_convs = nn.ModuleList()
+        self.down_samples = nn.ModuleList()
+
+        in_ch = self.filters_root
+        for d in range(self.depths):
+            out_ch = self.filters_root * (2 ** d)
+
+            self.down_convs.append(
+                ConvBlock(
+                    in_ch,
+                    out_ch,
+                    self.kernel_size,
+                    self.dilation_rate,
+                    self.drop_rate
+                )
+            )
+
+            if d < self.depths - 1:
+                self.down_samples.append(
+                    DownsampleBlock(
+                        out_ch,
+                        self.kernel_size,
+                        self.pool_size,
+                        self.dilation_rate,
+                        self.drop_rate
+                    )
+                )
+
+            in_ch = out_ch
+
+        # ===== Decoder =====
+        self.up_samples = nn.ModuleList()
+        self.up_convs = nn.ModuleList()
+
+        for d in reversed(range(self.depths - 1)):
+            filters = self.filters_root * (2 ** d)
+
+            self.up_samples.append(
+                UpsampleBlock(
+                    filters * 2,
+                    filters,
+                    self.kernel_size,
+                    self.pool_size,
+                    self.drop_rate
+                )
+            )
+
+            self.up_convs.append(
+                ConvBlock(
+                    filters * 2,
+                    filters,
+                    self.kernel_size,
+                    self.dilation_rate,
+                    self.drop_rate
+                )
+            )
+
+        # ===== Output =====
+        self.output_conv = nn.Conv2d(
+            self.filters_root,
+            self.n_class,
+            kernel_size=1
+        )
+
     def forward(self, x):
-        x1, x1_ = self.down1(x)
-        x2, x2_ = self.down2(x1)
-        x3, x3_ = self.down3(x2)
-        x4, x4_ = self.down4(x3)
-        x5  = self.res(x4)
-        x6  = self.up1(x5, x4_)
-        x7  = self.up2(x6, x3_)
-        x8  = self.up3(x7, x2_)
-        x9  = self.up4(x8, x1_)
-        x10 = self.outc(x9)
-        return x10
+        """
+        x: [B, C, H, W]
+        """
+        skips = []
+
+        x = self.input_conv(x)
+
+        # ===== Encoder =====
+        for d in range(self.depths):
+            x = self.down_convs[d](x)
+            skips.append(x)
+            if d < self.depths - 1:
+                x = self.down_samples[d](x)
+
+        # bottleneck representation
+        self.representation = skips[-1]
+
+        # ===== Decoder =====
+        for i, d in enumerate(reversed(range(self.depths - 1))):
+            x = self.up_samples[i](x)
+            x = crop_and_concat(skips[d], x)
+            x = self.up_convs[i](x)
+
+        logits = self.output_conv(x)
+        return logits

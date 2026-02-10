@@ -16,6 +16,8 @@ from torchvision.transforms import v2 as T
 # from dataset.InSARDLPUMatCut import InSARDLPUMatCut
 # from dataset.SyntheticData import SyntheticData
 from dataset.SyntheticPUMat import SyntheticPUMat
+from dataset.SyntheticPUMatDfn import SyntheticPUMatDfn
+from dataset.SyntheticPUMatMch import SyntheticPUMatMch
 # from dataset.SyntheticPUMatCut import SyntheticPUMatCut
 # from dataset.SyntheticPUMatCutGrad import SyntheticPUMatCutGrad
 # from dataset.SyntheticPUMatCutMid import SyntheticPUMatCutMid
@@ -595,7 +597,7 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMat128Test','SyntheticPUMat128Mch'])
+@register_data_loader(name=['SyntheticPUMat128Test'])
 class SyntheticPUMatDataLoader(BaseDataLoader):
 
     @cached_property
@@ -616,6 +618,58 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
     @cached_property
     def test_dataset(self):
         return SyntheticPUMat(root=self.config.io.in_dataset_path, split='test',
+                              transform=self.transform,
+                              target_transform=self.gt_transform,
+                              joint_transform=self.joint_transform,
+                              k_max=self.config.data.k_max,
+                              k_min=self.config.data.k_min,
+                              wavelet_level=self.config.data.wavelet_level,
+                              wavelet_type=self.config.data.wavelet_type,
+                              std=self.config.data.std,
+                              mean = self.config.data.mean,
+                              scale_alpha= self.config.data.scale_alpha,
+                              )
+
+    @cached_property
+    def all_dataset(self):
+        return torch.utils.data.ConcatDataset([self.train_dataset, self.test_dataset])
+
+    @cached_property
+    def train_loader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
+                          num_workers=self.config.data.num_workers, pin_memory=True, drop_last=True)
+
+    @cached_property
+    def test_loader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+    @cached_property
+    def all_loader(self):
+        return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+@register_data_loader(name=['SyntheticPUMat128Mch'])
+class SyntheticPUMatMchDataLoader(BaseDataLoader):
+
+    @cached_property
+    def train_dataset(self):
+        return SyntheticPUMatMch(root=self.config.io.in_dataset_path, split='train',
+                              transform=self.transform,
+                              target_transform=self.gt_transform,
+                              joint_transform=self.joint_transform,
+                              k_max=self.config.data.k_max,
+                              k_min=self.config.data.k_min,
+                              wavelet_level=self.config.data.wavelet_level,
+                              wavelet_type=self.config.data.wavelet_type,
+                              std=self.config.data.std,
+                              mean = self.config.data.mean,
+                              scale_alpha= self.config.data.scale_alpha,
+                              )
+
+    @cached_property
+    def test_dataset(self):
+        return SyntheticPUMatMch(root=self.config.io.in_dataset_path, split='test',
                               transform=self.transform,
                               target_transform=self.gt_transform,
                               joint_transform=self.joint_transform,
@@ -671,6 +725,59 @@ class SyntheticPUMatWavDataLoader(BaseDataLoader):
                                  transform=self.eval_transform,
                                  target_transform=self.eval_gt_transform,
                                  joint_transform=self.eval_joint_transform,
+                                 k_max=self.config.data.k_max,
+                                 k_min=self.config.data.k_min,
+                                 wavelet_level=self.config.data.wavelet_level,
+                                 wavelet_type=self.config.data.wavelet_type,
+                                 std=self.config.data.std,
+                                 mean = self.config.data.mean,
+                                 scale_alpha= self.config.data.scale_alpha,
+                                 )
+
+    @cached_property
+    def all_dataset(self):
+        return torch.utils.data.ConcatDataset([self.train_dataset, self.test_dataset])
+
+    @cached_property
+    def train_loader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
+                          num_workers=self.config.data.num_workers, pin_memory=True, drop_last=True)
+
+    @cached_property
+    def test_loader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+    @cached_property
+    def all_loader(self):
+        return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+
+@register_data_loader(name=['SyntheticPUMat128Dfn'])
+class SyntheticPUMatDfnDataLoader(BaseDataLoader):
+
+    @cached_property
+    def train_dataset(self):
+        return SyntheticPUMatDfn(root=self.config.io.in_dataset_path, split='train',
+                                 transform=self.transform,
+                                 target_transform=self.gt_transform,
+                                 joint_transform=self.joint_transform,
+                                 k_max=self.config.data.k_max,
+                                 k_min=self.config.data.k_min,
+                                 wavelet_level=self.config.data.wavelet_level,
+                                 wavelet_type=self.config.data.wavelet_type,
+                                 std=self.config.data.std,
+                                 mean = self.config.data.mean,
+                                 scale_alpha= self.config.data.scale_alpha,
+                                 )
+
+    @cached_property
+    def test_dataset(self):
+        return SyntheticPUMatDfn(root=self.config.io.in_dataset_path, split='test',
+                                 transform=self.transform,
+                                 target_transform=self.gt_transform,
+                                 joint_transform=self.joint_transform,
                                  k_max=self.config.data.k_max,
                                  k_min=self.config.data.k_min,
                                  wavelet_level=self.config.data.wavelet_level,
