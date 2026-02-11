@@ -96,6 +96,7 @@ class WavMeter:
             'UnwrappedRMSE': unwrapped_rmse_loss,'UnwrappedNRMSE': unwrapped_nrmse_loss,
             'WrappedL1': wrapped_l1_loss, 'WrappedRMSE': wrapped_rmse_loss,
         }
+        # if self.mode == 'val': print("ok_val")
         self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.acc_step)
 
     def compute_epoch_metric(self):
@@ -107,13 +108,14 @@ class WavMeter:
         if self.is_record:
             if self.config.io.use_tensorboard:
                 for k, v in metrics.items():
-                    self.writer.add_scalar(f"{prefix}/{k}", v, step)
+                    self.writer.add_scalar(f"{prefix}/{k}", v, step+1)
             if self.config.io.use_wandb and is_epoch:
                 # for k, v in metrics.items():
                 #     wandb.log({f"{prefix}/{k}": v}, step=step+1, commit=True)
                 # wandb.log({f"{prefix}": metrics}, step=step+1, commit=True)
-                new_metric = {f"{prefix}/{k}": v for k, v in metrics.items()}
-                wandb.log(new_metric, step=step+1, commit=True)
+                new_metrics = {f"{prefix}/{k}": v for k, v in metrics.items()}
+                wandb.log(new_metrics, step=step+1, commit=True)
+                # wandb.log(metrics, step=step+1, commit=True)
 
     def phase_gradient_torch(self, phase):
         """

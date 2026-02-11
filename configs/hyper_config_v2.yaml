@@ -5,27 +5,23 @@ method: bayes
 metric:
   goal: minimize
 #  name: multi_train_per_epoch/UnwrappedMAE
-#  name: UnwrappedMAE
-  name: val_per_epoch/UnwrappedNRMSE
+  name: UnwrappedMAE
 #  name: val_per_epoch/UnwrappedNRMSE
 
 parameters:
   loss_bleta1:
-    distribution: uniform
-#    min: 0.000001
-    min: 0.0
+    distribution: log_uniform
+    min: 0.000001
     max: 1.0
 
   loss_bleta2:
-    distribution: uniform
-#    min: 0.000001
-    min: 0.0
+    distribution: log_uniform
+    min: 0.000001
     max: 1.0
 
   loss_bleta3:
-    distribution: uniform
-#    min: 0.000001
-    min: 0.0
+    distribution: log_uniform
+    min: 0.000001
     max: 1.0
 
 #parameters:

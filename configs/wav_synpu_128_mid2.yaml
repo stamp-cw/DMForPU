@@ -37,8 +37,8 @@ data:
 
 training:
   device: cuda
-#  brand_new_epochs: 100001
-  brand_new_epochs: 101
+  brand_new_epochs: 100001
+#  brand_new_epochs: 101
   continue_training_epochs: 1000001
 #  batch_size: 128
   batch_size: 32
@@ -53,10 +53,9 @@ training:
 #  snapshot_freq: 50
   snapshot_sampling: false
   snapshot_sampling_freq: 100
-#  snapshot_val: false
   snapshot_val: true
   snapshot_val_freq: 1
-  snapshot_batch_size: 128
+  snapshot_batch_size: 32
 
 model:
   name: UNet2DConditionModel
@@ -109,6 +108,6 @@ optim:
 
 iio:
   use_tensorboard: true
-#  use_wandb: false
-  use_wandb: true
+  use_wandb: false
+#  use_wandb: true
   save_pth_to_wandb: false

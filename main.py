@@ -58,6 +58,9 @@ def main():
     ioo.training_from_scratch = args.training_from_scratch
     ioo.sampling_from_epoch = args.sampling_from_epoch
 
+    # if args.mode == 'train_multi':
+    #     ioo.use_wandb = False
+
     if ioo.use_wandb and ioo.use_tensorboard:
         # Initialize wandb
         if not wandb.api.api_key:
@@ -79,6 +82,7 @@ def main():
             wandb_cfg_unflat = unflatten_dict(dict(wandb.config))
             config = update_dict(config, wandb_cfg_unflat)
         else:
+            # ioo.use_wandb = False
             wandb.init(
                 project=tmp_config.model.name,
                 name=f"exp-{tmp_config.data.name}-{run_time}",

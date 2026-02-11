@@ -33,6 +33,7 @@ class Trainer:
         #     from torch.utils.tensorboard import SummaryWriter
         #     self.writer = SummaryWriter(self.config.io.tensorboard_path)
         #     config.writer = self.writer
+        self.writer = config.writer
         self.meter = MeterSetup(self.config, self.logger).meter
         self.main_meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter
@@ -115,8 +116,8 @@ class Trainer:
             artifact.add_file(ckpt_file_path)
             wandb.log_artifact(artifact)
 
-        if self.config.training.snapshot_sampling: self._snapshot_sampling()
-        if self.config.training.snapshot_val: self._snapshot_val(epoch)
+        # if self.config.training.snapshot_sampling: self._snapshot_sampling()
+        # if self.config.training.snapshot_val: self._snapshot_val(epoch)
 
     def _load_state(self):
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
@@ -152,6 +153,11 @@ class Trainer:
             # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict['loss']:.4f}")
         if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
             self._save_state(self.epoch)
+        if self.config.training.snapshot_val and self.epoch % self.config.training.snapshot_val_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+            self._snapshot_val(self.epoch)
+        if self.config.training.snapshot_sampling and self.epoch % self.config.training.snapshot_sampling_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+            self._snapshot_sampling(self.epoch)
+
 
     @property
     def train_loader(self):
@@ -165,10 +171,11 @@ class Trainer:
     def sampling_loader(self):
         return self.data_loader.test_loader
 
-    def _snapshot_sampling(self):
+    def _snapshot_sampling(self, epoch):
         from run.sample import Sampler
         self.config.sampling.batch_size = self.config.training.snapshot_batch_size
         self.config.sampling.total_samples = self.config.training.snapshot_batch_size
+        self.config.sampling_from_epoch = epoch
         sampler = Sampler(self.config)
         sampler.sampling_loader = self.sampling_loader
         sampler.diffusion = self.diffusion
@@ -177,9 +184,11 @@ class Trainer:
     def _snapshot_val(self, epoch):
         from run.val import Valuator
         self.config.val.batch_size = self.config.training.snapshot_batch_size
+        # self.config.iio.use_wandb = False
         valuator = Valuator(self.config)
+        valuator.save_pt = False
         valuator.epoch = epoch
-        valuator.meter = self.meter
+        valuator.meter = self.main_meter
         valuator.meter.writer = self.writer if self.config.io.use_tensorboard else None
         valuator.meter.mode = 'val'
         valuator.diffusion = self.diffusion
