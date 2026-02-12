@@ -34,6 +34,7 @@ data:
   mean: 10.0180
   std: 5.7466
   scale_alpha: 1
+  noise_snr: 10 # 5db, 10db, 20db, 30db
 
 training:
   device: cuda

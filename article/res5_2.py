@@ -74,19 +74,19 @@ fig_size_W = 3.5
 fig_size_H = 2.5
 fig_dpi = 600
 
-img_path = r"res/res5/3d_punet_diff.png"
+img_path = r"res/res9/3d_punet_diff.png"
 plot_3d_surface(punet_diff, title="PUnet Diff", figsize=(fig_size_W, fig_size_H), fig_dpi=fig_dpi, img_path=img_path)
 
-img_path = r"res/res5/3d_sqd_diff.png"
+img_path = r"res/res9/3d_sqd_diff.png"
 plot_3d_surface(sqd_lstm_diff, title="SQD-LSTM Diff", figsize=(fig_size_W, fig_size_H), fig_dpi=fig_dpi, img_path=img_path)
 
-img_path = r"res/res5/3d_restormer_diff.png"
+img_path = r"res/res9/3d_restormer_diff.png"
 plot_3d_surface(restormer_diff, title="Restormer Diff",figsize=(fig_size_W, fig_size_H), fig_dpi=fig_dpi, img_path=img_path)
 
-img_path = r"res/res5/3d_uformer_diff.png"
+img_path = r"res/res9/3d_uformer_diff.png"
 plot_3d_surface(uformer_diff, title="Uformer Diff",figsize=(fig_size_W, fig_size_H), fig_dpi=fig_dpi, img_path=img_path)
 
-img_path = r"res/res5/3d_ours_diff.png"
+img_path = r"res/res9/3d_ours_diff.png"
 plot_3d_surface(ours_diff, title="Ours Diff",figsize=(fig_size_W, fig_size_H), fig_dpi=fig_dpi, img_path=img_path)
 
 

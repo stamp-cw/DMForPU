@@ -151,11 +151,14 @@ class Trainer:
             # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
             self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.main_meter.epoch_metric_dict}")
             # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.meter.epoch_metric_dict['loss']:.4f}")
-        if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+        # if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+        if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and self.epoch != 0:
             self._save_state(self.epoch)
-        if self.config.training.snapshot_val and self.epoch % self.config.training.snapshot_val_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+        # if self.config.training.snapshot_val and self.epoch % self.config.training.snapshot_val_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+        if self.config.training.snapshot_val and self.epoch % self.config.training.snapshot_val_freq == 0 or self.epoch == self.end_epoch - 1 and self.epoch != 0:
             self._snapshot_val(self.epoch)
-        if self.config.training.snapshot_sampling and self.epoch % self.config.training.snapshot_sampling_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+        # if self.config.training.snapshot_sampling and self.epoch % self.config.training.snapshot_sampling_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+        if self.config.training.snapshot_sampling and self.epoch % self.config.training.snapshot_sampling_freq == 0 or self.epoch == self.end_epoch - 1 and self.epoch != 0:
             self._snapshot_sampling(self.epoch)
 
 

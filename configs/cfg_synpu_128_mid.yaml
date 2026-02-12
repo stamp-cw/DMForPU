@@ -2,9 +2,9 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-#  name: MchLoss
+  name: MchLoss
 #  name: Pure
-  name: WavLoss
+#  name: WavLoss
 #  bleta1: 0.5
 #  bleta2: 0.1
 #  bleta3: 0.001
@@ -71,15 +71,17 @@ model:
 #  cross_attention_dim: 320
 
 diffusion:
-  name: WavDDPMDiffusion
+  name: CfgDDPMDiffusion
   timesteps: 1000
 #  num_train_timesteps: 1000
   num_train_timesteps: 1000
 #  num_infer_timesteps: 100
 #  num_infer_timesteps: 1000
-  num_infer_timesteps: 10
+  num_infer_timesteps: 1000
   conditioning_channels: 2
   repeat_channels: 1
+#  cfg_scale: 1.5
+  cfg_scale: 0.4
 
 sampling:
   device: cuda
