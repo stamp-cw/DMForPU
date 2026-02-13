@@ -114,7 +114,7 @@ class WavMeter:
                 #     wandb.log({f"{prefix}/{k}": v}, step=step+1, commit=True)
                 # wandb.log({f"{prefix}": metrics}, step=step+1, commit=True)
                 new_metrics = {f"{prefix}/{k}": v for k, v in metrics.items()}
-                if self.mode == 'multi_train' and self.config.snapshot_val:
+                if self.mode == 'multi_train' and self.config.training.snapshot_val:
                     wandb.log(new_metrics, step=step+1, commit=False)
                 else:
                     wandb.log(new_metrics, step=step+1, commit=True)
