@@ -1,4 +1,4 @@
-# 不同方法局部解缠放大图
+# 不同噪声下各个方法的局部解缠放大图
 import scipy.io as sio
 import matplotlib.pyplot as plt
 from matplotlib import colors
@@ -80,59 +80,59 @@ def _to_numpy_2d(x: torch.Tensor):
     return x.detach().cpu().squeeze().numpy()
 
 titles = [
-    # 第一行
-    "(a) Wrapped",
-    "(b) GT",
-    "(c) SNAPHU",
-    "(d) PUNet",
-    "(e) U3Net",
-    "(f) DLPU",
-    "(g) SQD-LSTM",
-    "(h) Restormer",
-    "(i) Uformer",
-    "(j) Ours",
-] * 6
+             # 第一行
+             "(a) Wrapped",
+             "(b) GT",
+             "(c) SNAPHU",
+             "(d) PUNet",
+             "(e) U3Net",
+             "(f) DLPU",
+             "(g) SQD-LSTM",
+             "(h) Restormer",
+             "(i) Uformer",
+             "(j) Ours",
+         ] * 5
 imgs = [
-    # 第一行
-    wrapped_mat,
-    gt_mat,
-    snaphu_pred,
-    _to_numpy_2d(punet_pred),
-    _to_numpy_2d(u3net_pred),
-    _to_numpy_2d(dlpu_pred),
-    _to_numpy_2d(sqd_lstm_pred),
-    _to_numpy_2d(restormer_pred),
-    _to_numpy_2d(uformer_pred),
-    _to_numpy_2d(ours_pred),
-] * 6
+           # 第一行
+           wrapped_mat,
+           gt_mat,
+           snaphu_pred,
+           _to_numpy_2d(punet_pred),
+           _to_numpy_2d(u3net_pred),
+           _to_numpy_2d(dlpu_pred),
+           _to_numpy_2d(sqd_lstm_pred),
+           _to_numpy_2d(restormer_pred),
+           _to_numpy_2d(uformer_pred),
+           _to_numpy_2d(ours_pred),
+       ] * 5
 cmaps = [
-    # 第一行
-    "twilight","turbo",
-    "turbo","turbo","turbo","turbo",
-    "turbo","turbo","turbo","turbo",
-] * 6
+            # 第一行
+            "twilight","turbo",
+            "turbo","turbo","turbo","turbo",
+            "turbo","turbo","turbo","turbo",
+        ] * 5
 
 fig_dpi = 600
 fig_size_W = 3.5
 fig_size_H = 2.5
-pdf_img_path = r"res/res8/figure.pdf"
-png_img_path = r"res/res8/figure.png"
-raw = 6
+pdf_img_path = r"res/res10_2/figure.pdf"
+png_img_path = r"res/res10_2/figure.png"
+raw = 5
 col = 10
 fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
 axes = axes.flatten()
 zip_list = list(zip(axes, imgs, titles, cmaps))
 # Synthetic [0:18] InSar-DLPU [18:]
 
-# 第一行 与 第四行
+# 第一行
 color_norm = colors.Normalize(vmin=-np.pi, vmax=np.pi)
-for ax, img, title, cmap in  zip_list[0:1] + zip_list[3*col:3*col+1]:
+for ax, img, title, cmap in  zip_list[0:1]:
     im = ax.imshow(img, cmap=cmap, norm=color_norm)
     ax.set_title(title)
     ax.set_axis_off()
 
 color_norm = colors.Normalize(vmin=0)
-for ax, img, title, cmap in zip_list[1:col] + zip_list[3*col+1:4*col]:
+for ax, img, title, cmap in zip_list[1:col]:
     im = ax.imshow(img, cmap=cmap, norm=color_norm)
     rect = patches.Rectangle(
         (0, 0), 32, 32,
@@ -146,13 +146,14 @@ for ax, img, title, cmap in zip_list[1:col] + zip_list[3*col+1:4*col]:
 
 # wrapped
 color_norm = colors.Normalize(vmin=-np.pi, vmax=np.pi)
-for ax, img, title, cmap in  zip_list[col:col+1] + zip_list[2*col:2*col+1] + zip_list[4*col:4*col+1] + zip_list[5*col:5*col+1]:
+for ax, img, title, cmap in  zip_list[col:col+1] + zip_list[2*col:2*col+1] + zip_list[3*col:3*col+1] + zip_list[4*col:4*col+1]:
     im = ax.imshow(img, cmap=cmap, norm=color_norm)
     ax.set_axis_off()
+    # ax.set_ylabel(title, fontsize=7, labelpad=6)
 
 # Phase
 color_norm = colors.Normalize(vmin=0)
-for ax, img, title, cmap in zip_list[col+1:2*col] + zip_list[2*col+1:3*col] + zip_list[4*col+1:5*col] + zip_list[5*col+1:6*col]:
+for ax, img, title, cmap in zip_list[col+1:2*col] + zip_list[2*col+1:3*col] + zip_list[3*col+1:4*col] + zip_list[4*col+1:5*col]:
     im = ax.imshow(img, cmap=cmap, norm=color_norm)
     rect = patches.Rectangle(
         (0, 0), 32, 32,
