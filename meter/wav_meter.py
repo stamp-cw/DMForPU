@@ -108,16 +108,18 @@ class WavMeter:
         if self.is_record:
             if self.config.io.use_tensorboard:
                 for k, v in metrics.items():
-                    self.writer.add_scalar(f"{prefix}/{k}", v, step+1)
+                    self.writer.add_scalar(f"{prefix}/{k}", v, step )
             if self.config.io.use_wandb and is_epoch:
                 # for k, v in metrics.items():
                 #     wandb.log({f"{prefix}/{k}": v}, step=step+1, commit=True)
                 # wandb.log({f"{prefix}": metrics}, step=step+1, commit=True)
                 new_metrics = {f"{prefix}/{k}": v for k, v in metrics.items()}
-                if self.mode == 'multi_train' and self.config.training.snapshot_val:
-                    wandb.log(new_metrics, step=step+1, commit=False)
-                else:
-                    wandb.log(new_metrics, step=step+1, commit=True)
+                # if self.mode == 'multi_train' and self.config.training.snapshot_val:
+                #     wandb.log(new_metrics, step=step+1, commit=False)
+                # else:
+                #     wandb.log(new_metrics, step=step+1, commit=True)
+                new_metrics['custom_step'] = step
+                wandb.log(new_metrics, commit=True)
                 # wandb.log(metrics, step=step+1, commit=True)
 
     def phase_gradient_torch(self, phase):

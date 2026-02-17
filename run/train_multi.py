@@ -29,6 +29,7 @@ class Trainer:
         self.optimizer = _OPTIMIZERS(self.config)(self.diffusion.optimize_parameters)
         self.data_loader = _DATA_LOADERS(self.config)
         self.optimize_fn = OptimizerFN(self.config)
+        self.best_evaluate_loss = self.config.training.best_evaluate_loss
         # if self.config.io.use_tensorboard:
         #     from torch.utils.tensorboard import SummaryWriter
         #     self.writer = SummaryWriter(self.config.io.tensorboard_path)
@@ -90,6 +91,8 @@ class Trainer:
                 # self.meter.epoch_meter.update(self.meter.batch_metric_dict)
 
             if self.accelerator.is_main_process:
+                wandb.define_metric("*", step_metric="custom_step")
+                self.main_meter.mode = 'train_multi'
                 self.main_meter.compute_epoch_metric()
                 self._record_and_evaluate()
             # torch.cuda.empty_cache()
@@ -197,7 +200,16 @@ class Trainer:
         valuator.diffusion = self.diffusion
         valuator.val_loader = self.val_loader
         valuator.valuate()
-        self.meter.mode = 'train'
+        # save 最好的val_metric
+        if self.config.training.snapshot_best_loss:
+            self.evaluate_loss = self.main_meter.epoch_metric_dict['UnwrappedNRMSE']
+            self._update_best_evaluate()
+
+    def _update_best_evaluate(self):
+        if self.evaluate_loss < self.best_evaluate_loss:
+            self._save_state(self.epoch)
+        self.best_evaluate_loss = min(self.best_evaluate_loss, self.evaluate_loss)
+        self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Eval Loss: {self.evaluate_loss:.4f}, Best Eval Loss: {self.best_evaluate_loss:.4f}")
 
 class EpochFN:
     def __init__(self, optimize_fn, config):

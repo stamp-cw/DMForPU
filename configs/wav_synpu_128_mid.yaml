@@ -8,9 +8,12 @@ loss_type:
 #  bleta1: 0.5
 #  bleta2: 0.1
 #  bleta3: 0.001
-  bleta1: 2.47997
-  bleta2: 1.73178
-  bleta3: 2.07192
+#  bleta1: 2.47997
+  bleta1: 1.56051
+#  bleta2: 1.73178
+  bleta2: 1.77728
+  #  bleta3: 2.07192
+  bleta3: 2.05259
 
 
 meter:
@@ -57,6 +60,9 @@ training:
   snapshot_val: true
   snapshot_val_freq: 1
   snapshot_batch_size: 128
+#  best_evaluate_loss: 0.02
+  snapshot_best_loss: false
+  best_evaluate_loss: 0.1
 
 model:
   name: UNet2DConditionModel
