@@ -40,15 +40,6 @@ col_line_pos = 64
 # col_line_piex_num = 256
 line_piex_num = 128
 
-
-# print(gt.shape)
-# print(gt[col_line_pos, :].shape)
-
-print(dlpu_pred.shape)
-print(dlpu_pred[col_line_pos, :].shape)
-print(pd.Series(dlpu_pred[col_line_pos, :]).T)
-
-
 df = pd.DataFrame()
 df['method'] = pd.Series(method).repeat(line_piex_num)
 # np.concatenate([a, b, d])
@@ -78,20 +69,7 @@ df['raw_line'] = np.concatenate([
 
 df ['col_line_diff'] = df['col_line'] - np.tile(gt[col_line_pos, :], len(method))
 df ['raw_line_diff'] = df['raw_line'] - np.tile(gt[:, raw_line_pos], len(method))
-
 df['line_piex_idx'] = list(range(line_piex_num)) * len(method)
-
-# df = pd.DataFrame({
-#     "EncoderRMSE": [0.005, 0.01, 0.02,
-#                     0.005, 0.01, 0.02,
-#                     0.005, 0.01, 0.02],
-#     "ExtendedRMSE": [0.85, 0.95, 1.15,      # RWA
-#                      0.08, 0.10, 0.12,      # PCA
-#                      0.09, 0.11, 0.13],     # RWA+PCA
-#     # "Method": ["RWA"] * 3 + ["PCA"] * 3 + ["RWA+PCA"] * 3,
-#     "Method": ["unwrapped_gt"] * 3 + ["unwrapped_pred"] * 3,
-#     "CompactBands": ["3", "20", "20"] * 3
-# })
 
 palette = {
     "GT": "black",
@@ -114,7 +92,8 @@ sns.lineplot(
     # style="method",
     markers=True,
     dashes=True,
-    palette=palette
+    palette=palette,
+    # ax=None
 )
 
 plt.legend(
@@ -124,9 +103,33 @@ plt.legend(
     frameon=False
 )
 
+
+# fig_dpi = 600
+# fig_size_W = 3.5
+# fig_size_H = 2.5
+# pdf_img_path = r"res/res2/figure.pdf"
+# png_img_path = r"res/res2/figure.png"
+# raw = 1
+# col = 1
+
+# fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
+#
+# fig.tight_layout()
+# fig.savefig(png_img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
+# fig.savefig(pdf_img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
+
 plt.grid(True, linestyle="--", alpha=0.6)
 plt.xlabel("Line Pixel Index")
 plt.ylabel("Col Phase Error Value")
-# plt.title("Extended RMSE Trend Lines ↓")
+plt.title("Extended RMSE Trend Lines ↓")
 plt.tight_layout()
+# plt.savefig(png_img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
 plt.show()
+
+
+# plt.grid(True, linestyle="--", alpha=0.6)
+# plt.xlabel("Line Pixel Index")
+# plt.ylabel("Col Phase Error Value")
+# plt.title("Extended RMSE Trend Lines ↓")
+# plt.tight_layout()
+# plt.show()
