@@ -38,9 +38,9 @@ class Trainer:
         self.meter = MeterSetup(self.config, self.logger).meter
         self.main_meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter
-        self.meter.mode = 'multi_train'
+        self.meter.mode = 'train_multi'
         self.meter.is_record = False
-        self.main_meter.mode = 'multi_train'
+        self.main_meter.mode = 'train_multi'
         self.main_meter.is_record = True
         self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
 
@@ -91,7 +91,8 @@ class Trainer:
                 # self.meter.epoch_meter.update(self.meter.batch_metric_dict)
 
             if self.accelerator.is_main_process:
-                wandb.define_metric("*", step_metric="custom_step")
+                if self.config.io.use_wandb:
+                    wandb.define_metric("*", step_metric="custom_step")
                 self.main_meter.mode = 'train_multi'
                 self.main_meter.compute_epoch_metric()
                 self._record_and_evaluate()

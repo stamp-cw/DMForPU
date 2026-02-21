@@ -1,36 +1,44 @@
 import torch
-from diffusers import UNet2DConditionModel, DDPMScheduler
+from diffusers import DDPMScheduler
 
+from model.model_setup import ModelSetup
 from selector.diffusion_selector import register_diffusion
 import tqdm
 import torch.nn as nn
 
 @register_diffusion(name='FduDDPMDiffusion')
-class WavDDPMDiffusion:
+class FduDDPMDiffusion:
     def __init__(self, config):
         self.config = config
         self.device = config.training.device
-        self.model = UNet2DConditionModel(
-            sample_size=config.model.sample_size,
-            in_channels=config.model.in_channels * config.diffusion.repeat_channels + config.diffusion.conditioning_channels * (1 + 3 * self.config.data.wavelet_level),
-            out_channels=config.model.out_channels,
-            layers_per_block=config.model.layers_per_block,
-            block_out_channels=tuple(config.model.block_out_channels),
-            cross_attention_dim=config.model.cross_attention_dim,
-            down_block_types=(
-                "CrossAttnDownBlock2D",
-                # "DownBlock2D",
-                # "DownBlock2D",
-                "DownBlock2D",
-            ),
-            up_block_types=(
-                "UpBlock2D",
-                # "UpBlock2D",
-                # "UpBlock2D",
-                "CrossAttnUpBlock2D",
-            )
-        ).to(self.device)
-        self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
+        # self.model = UNet2DConditionModel(
+        #     sample_size=config.model.sample_size,
+        #     in_channels=config.model.in_channels * config.diffusion.repeat_channels + config.diffusion.conditioning_channels * (1 + 3 * self.config.data.wavelet_level),
+        #     out_channels=config.model.out_channels,
+        #     layers_per_block=config.model.layers_per_block,
+        #     block_out_channels=tuple(config.model.block_out_channels),
+        #     cross_attention_dim=config.model.cross_attention_dim,
+        #     down_block_types=(
+        #         "CrossAttnDownBlock2D",
+        #         # "DownBlock2D",
+        #         # "DownBlock2D",
+        #         "DownBlock2D",
+        #     ),
+        #     up_block_types=(
+        #         "UpBlock2D",
+        #         # "UpBlock2D",
+        #         # "UpBlock2D",
+        #         "CrossAttnUpBlock2D",
+        #     )
+        # ).to(self.device)
+        self.model = ModelSetup(self.config, config.logger).model
+
+        # self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="sample", clip_sample=False)
+        self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="sample")
+        # self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps, prediction_type="v_prediction")
+        # self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
+        # self.scheduler = DDPMScheduler(num_train_timesteps=config.diffusion.num_train_timesteps)
+
 
     def setup_train(self):
         self.model.train()
@@ -59,20 +67,44 @@ class WavDDPMDiffusion:
             # encoder_hidden_states=None,
 
         ).sample
+        # self.v_pred = self.noise_pred
+        # alphas_cumprod = self.scheduler.alphas_cumprod.to(self.device)
+        # alpha_bar = alphas_cumprod[t[0].cpu()].view(-1, 1, 1, 1)
+        #
+        # self.v_target = (
+        #         torch.sqrt(alpha_bar) * self.noise
+        #         - torch.sqrt(1 - alpha_bar) * self.gt_unwrapped_neg_norm
+        # )
         self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - torch.pi
+        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - 2*torch.pi
+        # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
+        # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
+
+        # self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
-        self.pred_batch["pred"] = self.noise_pred
-        self.pred_batch["gt"] = self.noise
+        # self.pred_batch["pred"] = self.noise_pred
+        # self.pred_batch["gt"] = self.noise
+        self.pred_batch["pred"] = self.pred_unwrapped_neg_norm
+        self.pred_batch["gt"] = self.gt_unwrapped_neg_norm
+        # self.pred_batch["pred"] = self.v_pred
+        # self.pred_batch["gt"] = self.v_target
+        # print(self.noise.max(), self.noise.min())
+        # print(self.noise_pred.max(), self.noise_pred.min())
 
     def infer_sample(self):
         # cross_dim = getattr(self.model.config, "cross_attention_dim", None)
         # encoder_hidden_states = None if cross_dim is None else torch.zeros(self.wrapped.shape[0], 1, cross_dim, device=self.device)
         with torch.no_grad():
             encoder_hidden_states = torch.zeros(self.wrapped.shape[0], 1, self.config.model.cross_attention_dim, device=self.device)
-            scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
+            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
+            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="sample", clip_sample=True)
+            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps)
+            scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="sample")
+            # scheduler = DDPMScheduler(num_train_timesteps=self.config.diffusion.num_infer_timesteps, prediction_type="v_prediction")
             x = torch.randn_like(self.wrapped).to(self.device)
             for t in tqdm.tqdm(scheduler.timesteps, desc="Sampling"):
                 model_input = torch.cat([x] * self.config.diffusion.repeat_channels + [self.wrapped_cond], dim=1)
@@ -85,7 +117,11 @@ class WavDDPMDiffusion:
                 x = scheduler.step(self.noise_pred, t, x).prev_sample
             self.pred_unwrapped_neg_norm = x
             self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
+            # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - torch.pi
+            # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - 2*torch.pi
             self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
+            # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
+            # self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
             self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
             self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
             self.pred_batch["pred"] = self.noise_pred

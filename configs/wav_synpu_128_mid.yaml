@@ -9,11 +9,11 @@ loss_type:
 #  bleta2: 0.1
 #  bleta3: 0.001
 #  bleta1: 2.47997
-  bleta1: 1.56051
+  bleta1: 2.09933
 #  bleta2: 1.73178
-  bleta2: 1.77728
+  bleta2: 2.34282
   #  bleta3: 2.07192
-  bleta3: 2.05259
+  bleta3: 2.06204
 
 
 meter:
@@ -23,7 +23,9 @@ meter:
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
+#  name: SyntheticPUMat128Wav
   name: SyntheticPUMat128Wav
+#  name: SyntheticPUMat128Noise
 #  name: SyntheticPUMat128WavTest
 #  name: SyntheticPUMat128MidTest
   image_size: 128
@@ -37,11 +39,12 @@ data:
   mean: 10.0180
   std: 5.7466
   scale_alpha: 1
+  noise_snr: 10
 
 training:
   device: cuda
-#  brand_new_epochs: 100001
-  brand_new_epochs: 201
+  brand_new_epochs: 100001
+#  brand_new_epochs: 201
   continue_training_epochs: 1000001
 #  batch_size: 128
   batch_size: 32
@@ -61,8 +64,9 @@ training:
   snapshot_val_freq: 1
   snapshot_batch_size: 128
 #  best_evaluate_loss: 0.02
-  snapshot_best_loss: false
-  best_evaluate_loss: 0.1
+#  snapshot_best_loss: false
+  snapshot_best_loss: true
+  best_evaluate_loss: 0.05
 
 model:
   name: UNet2DConditionModel
@@ -83,7 +87,7 @@ diffusion:
   num_train_timesteps: 1000
 #  num_infer_timesteps: 100
 #  num_infer_timesteps: 1000
-  num_infer_timesteps: 1
+  num_infer_timesteps: 1000
   conditioning_channels: 2
   repeat_channels: 1
 
@@ -115,6 +119,6 @@ optim:
 
 iio:
   use_tensorboard: true
-#  use_wandb: false
-  use_wandb: true
+  use_wandb: false
+#  use_wandb: true
   save_pth_to_wandb: false

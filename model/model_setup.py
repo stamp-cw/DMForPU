@@ -24,9 +24,9 @@ class ModelSetup:
     def _set_mode(self):
         if self.config.mode == 'train':
             self.model.train()
-            if self.config.diffusion.use_controlnet:
-                self.controlnet_model.train()
+            # if self.config.diffusion.use_controlnet:
+            #     self.controlnet_model.train()
         elif self.config.mode == 'sample':
             self.model.eval()
-            if self.config.diffusion.use_controlnet:
-                self.controlnet_model.eval()
+            # if self.config.diffusion.use_controlnet:
+            #     self.controlnet_model.eval()

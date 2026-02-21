@@ -220,6 +220,7 @@ if __name__ == '__main__':
     from model.transformer.restormer import Restormer
     from model.transformer.uformer import Uformer
     from model.unet.dlpu import DLPUNet
+    from model.fdunet.fdunet import FDUNet
     # Import Diffusions
     # from diffusion.ddpm_diffusion import DDPMDiffusion
     # from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
@@ -237,6 +238,7 @@ if __name__ == '__main__':
     from diffusion.wav_ddpm_diffusion import WavDDPMDiffusion
     from diffusion.cfg_ddpm_diffusion import CfgDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import DfnDDPMDiffusion
+    from diffusion.fdu_ddpm_diffusion import FduDDPMDiffusion
     # Import Meter
     from meter.pure_meter import PureMeter
     from meter.mch_meter import MchMeter
