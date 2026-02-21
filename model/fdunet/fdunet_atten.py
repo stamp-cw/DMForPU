@@ -1,3 +1,4 @@
+from math import sqrt
 from typing import Any, Dict, List, Optional, Tuple, Union
 import torch.nn as nn
 from diffusers import Transformer2DModel
@@ -339,14 +340,16 @@ class FDBasicTransformerBlock(BasicTransformerBlock):
             x = norm_hidden_states
 
             B, N, D = x.shape  # (32,256,64)
+            H, W = int(sqrt(N)), int(sqrt(N))
 
             # 1. BND → BCHW
             x = x.transpose(1,2).contiguous()
-            x = x.view(B, D, 16, 16) # (32,64,16,16)
+            x = x.view(B, D, H, W) # (32,64,8,8)
 
             # 2. window partition
-            windows = x.unfold(2,8,8).unfold(3,8,8) # (32,64,2,2,8,8)
-            windows = windows.contiguous().view(B*4, D, 8, 8) # (32*4,64,8,8)
+            window_size, window_stride = int(sqrt(N))//2, int(sqrt(N))//2
+            windows = x.unfold(2, window_size, window_stride).unfold(3, window_size, window_stride) # (32,64,2,2,8,8)
+            windows = windows.contiguous().view(B*4, D, H//2, W//2) # (32*4,64,8,8)
 
             # 3. Haar DWT
             LL = (windows[:,:,0::2,0::2] + windows[:,:,1::2,0::2] +
@@ -372,12 +375,12 @@ class FDBasicTransformerBlock(BasicTransformerBlock):
             x_k = torch.cat([LH_up , HL_up, HH_up], dim=1)  # (B*4,64*3,8,8)
 
             # 4. 合并窗口
-            x_q = x_q.view(B,4,64,8,8) # (B,4,64,8,8)
-            x_q = x_q.permute(0,1,3,4,2).contiguous() # (B,4,8,8,64)
-            x_q = x_q.view(B, 256, 64) # (B,256,64)
-            x_k = x_k.view(B,4,64*3,8,8) # (B,4,64*3,8,8)
-            x_k = x_k.permute(0,1,3,4,2).contiguous() # (B,4,8,8,64*3)
-            x_k = x_k.view(B, 256, 64*3) # (B,256,64*3)
+            x_q = x_q.view(B, 4, D, H//2, W//2) # (B,4,64,8,8)
+            x_q = x_q.permute(0, 1, 3, 4, 2).contiguous() # (B,4,8,8,64)
+            x_q = x_q.view(B, N, D) # (B,256,64)
+            x_k = x_k.view(B, 4, D*3, H//2, W//2) # (B,4,64*3,8,8)
+            x_k = x_k.permute(0, 1, 3, 4, 2).contiguous() # (B,4,8,8,64*3)
+            x_k = x_k.view(B, N, D*3) # (B,256,64*3)
 
             attn_output = self.attn2(
                 # norm_hidden_states,
@@ -418,5 +421,4 @@ class FDBasicTransformerBlock(BasicTransformerBlock):
             hidden_states = hidden_states.squeeze(1)
 
         return hidden_states
-
 

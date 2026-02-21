@@ -130,8 +130,12 @@ class SyntheticPUMatNoise(Dataset):
         # cos_wrapped = multi_scale_wavelet(torch.cos(wrapped), self.wavelet_type, level=self.wavelet_level)
         # wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
-        sin_wrapped = multi_scale_wavelet(torch.sin(wrapped_noise), self.wavelet_type, level=self.wavelet_level)
-        cos_wrapped = multi_scale_wavelet(torch.cos(wrapped_noise), self.wavelet_type, level=self.wavelet_level)
+        # sin_wrapped = multi_scale_wavelet(torch.sin(wrapped_noise), self.wavelet_type, level=self.wavelet_level)
+        # cos_wrapped = multi_scale_wavelet(torch.cos(wrapped_noise), self.wavelet_type, level=self.wavelet_level)
+        # wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
+
+        sin_wrapped = torch.sin(wrapped)
+        cos_wrapped = torch.cos(wrapped)
         wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
         sample = {

@@ -1,0 +1,112 @@
+seed: 42
+
+loss_type:
+#  name: MchLoss
+  name: Pure
+#  name: WavLoss
+
+meter:
+#  name: MchMeter
+  name: WavMeter
+
+data:
+#  name: SyntheticPUMatCut32Mch
+#  name: SyntheticPUMatCut32MchTest
+#  name: SyntheticPUMat128Wav
+#  name: SyntheticPUMat128Mch
+#  name: SyntheticPUMat128Fdu
+  name: SyntheticPUMat128Noise
+#  name: SyntheticPUMat128WavTest
+#  name: SyntheticPUMat128MidTest
+  image_size: 128
+  color_channels: 1
+  num_workers: 1
+  k_min: 0
+  k_max: 7
+  wavelet_level: 3
+  wavelet_type: db4
+  mean: 10.0180
+  std: 5.7466
+  scale_alpha: 1
+  noise_snr: 10
+
+training:
+  device: cuda
+  brand_new_epochs: 100001
+  continue_training_epochs: 1000001
+#  batch_size: 128
+  batch_size: 32
+#  batch_size: 256
+#  batch_size: 64
+#  batch_size: 16
+#  batch_size: 4
+  use_all_data: false
+  amp: true
+  log_freq: 1
+  snapshot_freq: 100
+  snapshot_sampling: false
+  snapshot_sampling_freq: 100
+#  snapshot_val: true
+  snapshot_val: false
+  snapshot_val_freq: 50
+  snapshot_batch_size: 128
+  snapshot_best_loss: true
+  best_evaluate_loss: 0.05
+
+model:
+  name: FDUNet
+  sample_size: 128
+  in_channels: 1
+  out_channels: 1
+  layers_per_block: 2
+#  block_out_channels: [64, 128, 256, 512]
+#  block_out_channels: [32, 128, 128]
+#  block_out_channels: [64, 128, 256, 256]
+#  block_out_channels: [32, 32, 32, 32]
+  block_out_channels: [64, 64, 64, 64]
+#  cross_attention_dim: 1280
+#  cross_attention_dim: 320
+#  cross_attention_dim: 768 # 64 * 3 * 4
+  cross_attention_dim: 192 # 64 * 3
+
+diffusion:
+  name: FduDDPMDiffusion
+  timesteps: 1000
+#  num_train_timesteps: 1000
+  num_train_timesteps: 1000
+#  num_infer_timesteps: 100
+#  num_infer_timesteps: 1000
+  num_infer_timesteps: 5
+  conditioning_channels: 2
+  repeat_channels: 1
+
+sampling:
+  device: cuda
+  batch_size: 1
+  total_samples: 8
+  record_freq: 1
+  eps: 1e-5
+  fix_seed: true
+
+val:
+  device: cuda
+  batch_size: 128
+
+test:
+  device: cuda
+  batch_size: 128
+
+optim:
+  optimizer: Adam
+  lr: 0.0001
+  weight_decay: 0.0001
+  beta1: 0.9
+  eps: 1e-8
+  warmup: 2
+  grad_clip: 1.0
+  momentum: 0.9
+
+iio:
+  use_tensorboard: true
+  use_wandb: false
+  save_pth_to_wandb: false
