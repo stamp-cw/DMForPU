@@ -540,8 +540,9 @@ class PUNetLossType:
         self.meter = config.train_meter
 
     def __call__(self, vae):
-        # recon_loss = self.meter.batch_metric_dict['L1']
-        recon_loss = self.meter.batch_metric_dict['MSE']
+        recon_loss = self.meter.batch_metric_dict['L1']
+        # recon_loss = self.meter.batch_metric_dict['MSE']
+        # recon_loss = self.meter.batch_metric_dict['BCE']
         total_loss = recon_loss
         return total_loss
 

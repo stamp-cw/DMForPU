@@ -21,6 +21,7 @@ class ModelValidator:
         self.device = config.val.device
         self.data_loader = _DATA_LOADERS(self.config)
         self.mmodel = MModelSetup(self.config, self.logger).mmodel
+        self.save_pt = False
 
     def load_checkpoint(self):
         self.logger.info(f"Loading checkpoint from {self.config.io.val_ckpt_file_path}")
@@ -39,10 +40,11 @@ class ModelValidator:
         self.meter.acc_step = self.epoch * len(self.val_loader)
         for step, batch_dict in enumerate(tqdm.tqdm(self.val_loader, desc=f"Epoch {self.epoch} Valuating")):
             self._valuate(batch_dict)
-            if getattr(self.config.val, "save_val_batch_pt", True):
+            if self.save_pt:
                 self._save_val_batch_pt(self.save_batch, step)
         self.meter.compute_epoch_metric()
-        self._save_val_pt()
+        if self.save_pt:
+            self._save_val_pt()
         self._update_stat()
 
     def _valuate(self, batch_dict):
@@ -74,7 +76,8 @@ class ModelValidator:
         # with open(f"{self.config.io.out_val_path}/val_epoch_metric.txt", 'w', encoding='utf-8') as f:
         #     f.write(str(self.meter.epoch_metric_dict))
         self.logger.info(f"Epoch {self.epoch}, indicate: {self.meter.epoch_metric_dict}")
-        shutil.copy(self.config.logger.logger_file_path, self.config.io.out_val_path)
+        if self.save_pt:
+            shutil.copy(self.config.logger.logger_file_path, self.config.io.out_val_path)
 
     @cached_property
     def val_loader(self):

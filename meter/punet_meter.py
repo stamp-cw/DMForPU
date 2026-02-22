@@ -1,3 +1,6 @@
+import wandb
+from triton.ops import cross_entropy
+
 from selector.meter_selector import register_metric
 from utils.metrics import rmse_metric
 from utils.util import AverageMeter, wrap_phase
@@ -25,9 +28,16 @@ class PUNetMeter:
         rmse_loss = rmse_metric(self.pred, self.gt)
         nrmse_loss = rmse_loss / (self.gt.max() -self.gt.min() + 1e-8)
         mse_loss = F.mse_loss(self.gt, self.pred)
-        self.batch_metric_dict = {'L1': l1_loss, 'MSE': mse_loss,
+        # bce_loss = F.binary_cross_entropy_with_logits(self.pred, self.gt)
+        # unwrapped_pge_loss =  self.pge_loss(self.pred_unwrapped, self.gt_unwrapped)
+        self.batch_metric_dict = {'L1': l1_loss,
+                                  'MSE': mse_loss,
+                                  # 'BCE': bce_loss,
                                   'MAE': mae_loss,
-                                    'RMSE': rmse_loss,'NRMSE':nrmse_loss}
+                                  'RMSE': rmse_loss,
+                                  'NRMSE':nrmse_loss,
+                                  # 'UnwrappedPGE': unwrapped_pge_loss,
+                                  }
         self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.acc_step)
 
     def compute_epoch_metric(self):
@@ -38,8 +48,11 @@ class PUNetMeter:
         self.epoch_meter.reset()
         self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch)
 
-    def _record_metrics(self, metrics, prefix, step):
+    def _record_metrics(self, metrics, prefix, step , is_epoch=False):
         if self.is_record:
             if self.config.io.use_tensorboard:
                 for k, v in metrics.items():
-                    self.writer.add_scalar(f"{prefix}/{k}", v, step)
+                    self.writer.add_scalar(f"{prefix}/{k}", v, step )
+            if self.config.io.use_wandb and is_epoch:
+                new_metrics = {f"{prefix}/{k}": v for k, v in metrics.items()}
+                wandb.log(new_metrics, commit=True)

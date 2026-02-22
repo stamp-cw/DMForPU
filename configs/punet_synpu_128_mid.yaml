@@ -13,7 +13,7 @@ mmodel:
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
-  name: SyntheticPUMat128Wav
+  name: SyntheticPUMat128Fdu
   image_size: 128
   color_channels: 1
   num_workers: 4
@@ -25,6 +25,7 @@ data:
   mean: 10.0180
   std: 5.7466
   scale_alpha: 1
+  noise_snr: 10
 
 training:
   device: cuda
@@ -41,7 +42,11 @@ training:
   snapshot_freq: 100
   snapshot_sampling: false
   snapshot_val: false
+#  snapshot_val: true
+  snapshot_val_freq: 1
   snapshot_batch_size: 32
+  snapshot_best_loss: true
+  best_evaluate_loss: 9
 
 model:
   name: PUNet
@@ -61,7 +66,7 @@ sampling:
 
 val:
   device: cuda
-  batch_size: 32
+  batch_size: 128
 
 test:
   device: cuda

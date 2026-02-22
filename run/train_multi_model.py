@@ -30,6 +30,7 @@ class ModelTrainer:
         self.optimizer = _OPTIMIZERS(self.config)(self.mmodel.optimize_parameters)
         self.data_loader = _DATA_LOADERS(self.config)
         self.optimize_fn = OptimizerFN(self.config)
+        self.best_evaluate_loss = self.config.training.best_evaluate_loss
         if self.config.io.use_tensorboard:
             from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(self.config.io.tensorboard_path)
@@ -37,9 +38,9 @@ class ModelTrainer:
         self.meter = MeterSetup(self.config, self.logger).meter
         self.main_meter = MeterSetup(self.config, self.logger).meter
         config.train_meter = self.meter
-        self.meter.mode = 'multi_train_model'
+        self.meter.mode = 'train_multi_model'
         self.meter.is_record = False
-        self.main_meter.mode = 'multi_train_model'
+        self.main_meter.mode = 'train_multi_model'
         self.main_meter.is_record = True
         self.epoch_fn = EpochFN(optimize_fn=self.optimize_fn, config=self.config)
 
@@ -131,12 +132,20 @@ class ModelTrainer:
         self.optimizer.load_state_dict(ckpt['optimizer'])
 
     def _record_and_evaluate(self):
-        # if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
+        # # if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
+        # if self.epoch % self.config.training.log_freq == 0:
+        #     # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
+        #     self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.main_meter.epoch_metric_dict}")
+        # if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+        #     self._save_state(self.epoch)
         if self.epoch % self.config.training.log_freq == 0:
-            # self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.avg_loss:.4f}")
             self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Loss: {self.main_meter.epoch_metric_dict}")
-        if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and not self.saved and self.epoch != 0:
+        if self.epoch % self.config.training.snapshot_freq == 0 or self.epoch == self.end_epoch - 1 and self.epoch != 0:
             self._save_state(self.epoch)
+        if self.config.training.snapshot_val and self.epoch % self.config.training.snapshot_val_freq == 0 or self.epoch == self.end_epoch - 1 and self.epoch != 0:
+            self._snapshot_val(self.epoch)
+        if self.config.training.snapshot_sampling and self.epoch % self.config.training.snapshot_sampling_freq == 0 or self.epoch == self.end_epoch - 1 and self.epoch != 0:
+            self._snapshot_sampling(self.epoch)
 
     @property
     def train_loader(self):
@@ -150,17 +159,41 @@ class ModelTrainer:
     def sampling_loader(self):
         return self.data_loader.test_loader
 
-    def _snapshot_sampling(self):
-        from run.test_model import ModelTester as Tester
+    def _snapshot_sampling(self, epoch=0):
+        from run.sample_model import ModelSampler as Sampler
         self.config.sampling.batch_size = self.config.training.snapshot_batch_size
         self.config.sampling.total_samples = self.config.training.snapshot_batch_size
-        self.config.sampling.eval = True
-        sampler = Tester(self.config)
+        self.config.sampling_from_epoch = epoch
+        sampler = Sampler(self.config)
+        sampler.sampling_loader = self.sampling_loader
         sampler.mmodel = self.mmodel
         sampler.sample()
 
     def _snapshot_val(self, epoch):
-        pass
+        from run.val_model import ModelValidator as Valuator
+        self.config.val.batch_size = self.config.training.snapshot_batch_size
+        # self.config.iio.use_wandb = False
+        valuator = Valuator(self.config)
+        valuator.save_pt = False
+        valuator.epoch = epoch
+        valuator.meter = self.main_meter
+        valuator.meter.writer = self.writer if self.config.io.use_tensorboard else None
+        valuator.meter.mode = 'val_model'
+        valuator.mmodel = self.mmodel
+        valuator.val_loader = self.val_loader
+        valuator.valuate()
+        # save 最好的val_metric
+        if self.config.training.snapshot_best_loss:
+            self.evaluate_loss = self.main_meter.epoch_metric_dict['L1']
+            self._update_best_evaluate()
+        self.meter.mode = 'train_multi_model'
+        self.main_meter.mode = 'train_multi_model'
+
+    def _update_best_evaluate(self):
+        if self.evaluate_loss < self.best_evaluate_loss:
+            self._save_state(self.epoch)
+        self.best_evaluate_loss = min(self.best_evaluate_loss, self.evaluate_loss)
+        self.logger.info(f"Epoch {self.epoch}/{self.end_epoch - self.start_epoch}, Eval Loss: {self.evaluate_loss:.4f}, Best Eval Loss: {self.best_evaluate_loss:.4f}")
 
 class EpochFN:
     def __init__(self, optimize_fn, config):

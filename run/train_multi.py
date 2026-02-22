@@ -215,6 +215,8 @@ class Trainer:
         if self.config.training.snapshot_best_loss:
             self.evaluate_loss = self.main_meter.epoch_metric_dict['UnwrappedNRMSE']
             self._update_best_evaluate()
+        self.meter.mode = 'train_multi'
+        self.main_meter.mode = 'train_multi'
 
     def _update_best_evaluate(self):
         if self.evaluate_loss < self.best_evaluate_loss:
