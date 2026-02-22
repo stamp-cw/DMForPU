@@ -7,7 +7,7 @@ from diffusers.models.attention import BasicTransformerBlock, _chunked_feed_forw
 from diffusers.models.normalization import AdaLayerNorm, AdaLayerNormContinuous
 from diffusers.models.resnet import ResnetBlock2D
 from diffusers.models.attention_processor import Attention
-from diffusers.models.unets.unet_2d_blocks import UNetMidBlock2DCrossAttn
+from diffusers.models.unets.unet_2d_blocks import UNetMidBlock2DCrossAttn, CrossAttnDownBlock2D, CrossAttnUpBlock2D
 import torch
 from diffusers.utils import logging
 import torch.nn.functional as F
@@ -422,3 +422,170 @@ class FDBasicTransformerBlock(BasicTransformerBlock):
 
         return hidden_states
 
+class FDCrossAttnDownBlock2D(CrossAttnDownBlock2D):
+    def __init__(
+            self,
+            in_channels: int,
+            out_channels: int,
+            temb_channels: int,
+            dropout: float = 0.0,
+            num_layers: int = 1,
+            transformer_layers_per_block: Union[int, Tuple[int]] = 1,
+            resnet_eps: float = 1e-6,
+            resnet_time_scale_shift: str = "default",
+            resnet_act_fn: str = "swish",
+            resnet_groups: int = 32,
+            resnet_pre_norm: bool = True,
+            num_attention_heads: int = 1,
+            cross_attention_dim: int = 1280,
+            output_scale_factor: float = 1.0,
+            downsample_padding: int = 1,
+            add_downsample: bool = True,
+            dual_cross_attention: bool = False,
+            use_linear_projection: bool = False,
+            only_cross_attention: bool = False,
+            upcast_attention: bool = False,
+            attention_type: str = "default",
+    ):
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            temb_channels=temb_channels,
+            dropout=dropout,
+            num_layers=num_layers,
+            transformer_layers_per_block=transformer_layers_per_block,
+            resnet_eps=resnet_eps,
+            resnet_time_scale_shift=resnet_time_scale_shift,
+            resnet_act_fn=resnet_act_fn,
+            resnet_groups=resnet_groups,
+            resnet_pre_norm=resnet_pre_norm,
+            num_attention_heads=num_attention_heads,
+            cross_attention_dim=cross_attention_dim,
+            output_scale_factor=output_scale_factor,
+            downsample_padding=downsample_padding,
+            add_downsample=add_downsample,
+            dual_cross_attention=dual_cross_attention,
+            use_linear_projection=use_linear_projection,
+            only_cross_attention=only_cross_attention,
+            upcast_attention=upcast_attention,
+            attention_type=attention_type,
+        )
+
+        if isinstance(transformer_layers_per_block, int):
+            transformer_layers_per_block = [transformer_layers_per_block] * num_layers
+
+        attentions = []
+
+        for i in range(num_layers):
+            in_channels = in_channels if i == 0 else out_channels
+            if not dual_cross_attention:
+                attentions.append(
+                    FDTransformer2DModel(
+                        num_attention_heads,
+                        out_channels // num_attention_heads,
+                        in_channels=out_channels,
+                        num_layers=transformer_layers_per_block[i],
+                        cross_attention_dim=cross_attention_dim,
+                        norm_num_groups=resnet_groups,
+                        use_linear_projection=use_linear_projection,
+                        only_cross_attention=only_cross_attention,
+                        upcast_attention=upcast_attention,
+                        attention_type=attention_type,
+                        )
+                )
+            else:
+                attentions.append(
+                    DualTransformer2DModel(
+                        num_attention_heads,
+                        out_channels // num_attention_heads,
+                        in_channels=out_channels,
+                        num_layers=1,
+                        cross_attention_dim=cross_attention_dim,
+                        norm_num_groups=resnet_groups,
+                        )
+                )
+        self.attentions = nn.ModuleList(attentions)
+
+class FDCrossAttnUpBlock2D(CrossAttnUpBlock2D):
+    def __init__(
+            self,
+            in_channels: int,
+            out_channels: int,
+            prev_output_channel: int,
+            temb_channels: int,
+            resolution_idx: Optional[int] = None,
+            dropout: float = 0.0,
+            num_layers: int = 1,
+            transformer_layers_per_block: Union[int, Tuple[int]] = 1,
+            resnet_eps: float = 1e-6,
+            resnet_time_scale_shift: str = "default",
+            resnet_act_fn: str = "swish",
+            resnet_groups: int = 32,
+            resnet_pre_norm: bool = True,
+            num_attention_heads: int = 1,
+            cross_attention_dim: int = 1280,
+            output_scale_factor: float = 1.0,
+            add_upsample: bool = True,
+            dual_cross_attention: bool = False,
+            use_linear_projection: bool = False,
+            only_cross_attention: bool = False,
+            upcast_attention: bool = False,
+            attention_type: str = "default",
+    ):
+        super().__init__(
+            in_channels = in_channels,
+            out_channels = out_channels,
+            prev_output_channel = prev_output_channel,
+            temb_channels = temb_channels,
+            resolution_idx = resolution_idx,
+            dropout = dropout,
+            num_layers = num_layers,
+            transformer_layers_per_block = transformer_layers_per_block,
+            resnet_eps = resnet_eps,
+            resnet_time_scale_shift = resnet_time_scale_shift,
+            resnet_act_fn = resnet_act_fn,
+            resnet_groups = resnet_groups,
+            resnet_pre_norm = resnet_pre_norm,
+            num_attention_heads = num_attention_heads,
+            cross_attention_dim = cross_attention_dim,
+            output_scale_factor = output_scale_factor,
+            add_upsample = add_upsample,
+            dual_cross_attention = dual_cross_attention,
+            use_linear_projection = use_linear_projection,
+            only_cross_attention = only_cross_attention,
+            upcast_attention = upcast_attention,
+            attention_type = attention_type,
+        )
+        if isinstance(transformer_layers_per_block, int):
+            transformer_layers_per_block = [transformer_layers_per_block] * num_layers
+
+        attentions = []
+
+        for i in range(num_layers):
+            if not dual_cross_attention:
+                attentions.append(
+                    FDTransformer2DModel(
+                        num_attention_heads,
+                        out_channels // num_attention_heads,
+                        in_channels=out_channels,
+                        num_layers=transformer_layers_per_block[i],
+                        cross_attention_dim=cross_attention_dim,
+                        norm_num_groups=resnet_groups,
+                        use_linear_projection=use_linear_projection,
+                        only_cross_attention=only_cross_attention,
+                        upcast_attention=upcast_attention,
+                        attention_type=attention_type,
+                        )
+                )
+            else:
+                attentions.append(
+                    DualTransformer2DModel(
+                        num_attention_heads,
+                        out_channels // num_attention_heads,
+                        in_channels=out_channels,
+                        num_layers=1,
+                        cross_attention_dim=cross_attention_dim,
+                        norm_num_groups=resnet_groups,
+                        )
+                )
+        self.attentions = nn.ModuleList(attentions)
