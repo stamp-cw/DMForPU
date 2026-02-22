@@ -23,12 +23,14 @@ data:
   num_workers: 1
   k_min: 0
   k_max: 7
-  wavelet_level: 3
-  wavelet_type: db4
+  wavelet_level: 1
+  wavelet_type: haar
   mean: 10.0180
   std: 5.7466
   scale_alpha: 1
-  noise_snr: 10
+#  noise_snr: 10
+  noise_snr: 30
+#  noise_snr: 5
 
 training:
   device: cuda
@@ -79,6 +81,11 @@ diffusion:
   num_infer_timesteps: 5
   conditioning_channels: 2
   repeat_channels: 1
+#  use_patch_embedding: false
+  use_patch_embedding: true
+  prediction_type: "sample"
+#  prediction_type: "v_prediction"
+#  prediction_type: "epsilon"
 
 sampling:
   device: cuda

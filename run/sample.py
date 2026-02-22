@@ -69,7 +69,8 @@ class Sampler:
             #     self._save_compare_png_dfn(c_batch)
             elif self.config.diffusion.name == 'NegNormDDPMDiffusion' or self.config.diffusion.name == 'DDPMDiffusion' or self.config.diffusion.name == 'MchNegNormDDPMDiffusion' \
                     or self.config.diffusion.name == 'DphDDPMDiffusion' or self.config.diffusion.name == 'ElucidatedDiffusion' or self.config.diffusion.name == 'MchDDPMDiffusion'\
-                    or self.config.diffusion.name == 'WavDDPMDiffusion' or self.config.diffusion.name == 'CfgDDPMDiffusion' or self.config.diffusion.name == 'DfnDDPMDiffusion':
+                    or self.config.diffusion.name == 'WavDDPMDiffusion' or self.config.diffusion.name == 'CfgDDPMDiffusion' or self.config.diffusion.name == 'DfnDDPMDiffusion' \
+                    or self.config.diffusion.name == 'FduDDPMDiffusion':
                 c_batch = {
                     "wrapped": self.diffusion.wrapped,
                     "wrapped_neg_norm": batch_dict["wrapped_neg_norm"].to(self.device),

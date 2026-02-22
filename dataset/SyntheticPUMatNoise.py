@@ -44,6 +44,7 @@ class SyntheticPUMatNoise(Dataset):
 
         assert split in ['train', 'test'], "split 必须是 'train' 或 'test'"
 
+        self.mode = split
         self.snr = snr
         self.mean = mean
         self.std = std
@@ -87,16 +88,20 @@ class SyntheticPUMatNoise(Dataset):
         wrapped_norm = (wrapped + torch.pi) / (2 * torch.pi)
         # wrapped_norm = torch.clamp(wrapped_norm, 0, 1)
 
-        sigPower = torch.mean(wrapped_norm ** 2)  # ✅ 从实际图像计算
+        sigPower = torch.mean(wrapped_norm ** 2)
 
         # 2. dB转线性，计算噪声功率和标准差
         reqSNR = 10 ** (SNR / 10)
         noisePower = sigPower / reqSNR
         std = torch.sqrt(noisePower)
         # 3. 生成噪声
-        wrapped_norm_noise = std * torch.randn_like(wrapped, device=wrapped.device)
+        wrapped_norm_noise = std * torch.randn_like(wrapped_norm, device=wrapped_norm.device)
         wrapped_noise = wrapped_norm_noise * (2 * torch.pi) - torch.pi
         return wrapped_noise
+
+    def wrap_phase(self, phi: torch.Tensor) -> torch.Tensor:
+        """Wrap continuous phase to [-pi, pi]."""
+        return torch.atan2(torch.sin(phi), torch.cos(phi))
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         key = self.keys[idx]
@@ -117,7 +122,15 @@ class SyntheticPUMatNoise(Dataset):
 
         wrapped_neg_norm = wrapped / torch.pi
         # wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
-        wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
+        if self.mode == 'test':
+            wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
+        else:
+            self.snr = torch.FloatTensor(1).uniform_(0, self.snr).item()
+            wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
+
+        wrapped_noisy = wrapped + wrapped_noise
+        # wrapped_noisy = torch.clamp(wrapped_noisy, -torch.pi, torch.pi)
+        wrapped_noisy = self.wrap_phase(wrapped_noisy)
 
         # neg_norm_diffusion
         unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
@@ -134,13 +147,13 @@ class SyntheticPUMatNoise(Dataset):
         # cos_wrapped = multi_scale_wavelet(torch.cos(wrapped_noise), self.wavelet_type, level=self.wavelet_level)
         # wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
-        sin_wrapped = torch.sin(wrapped)
-        cos_wrapped = torch.cos(wrapped)
+        sin_wrapped = torch.sin(wrapped_noise)
+        cos_wrapped = torch.cos(wrapped_noise)
         wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
         sample = {
             # "wrapped": wrapped,
-            "wrapped": wrapped,
+            "wrapped":  wrapped_noisy,
             "unwrapped": unwrapped,
             "unwrapped_neg_norm": unwrapped_neg_norm,
             "wrapped_neg_norm": wrapped_neg_norm,

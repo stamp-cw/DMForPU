@@ -108,11 +108,20 @@ class Trainer:
 
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
-        state_dict = {
-            'model': self.diffusion.model.state_dict(),
-            'optimizer': self.optimizer.state_dict(),
-            'epoch': epoch
-        }
+        if self.config.diffusion.use_patch_embedding:
+            state_dict = {
+                'model': self.diffusion.model.state_dict(),
+                'optimizer': self.optimizer.state_dict(),
+                'embed': self.diffusion.phase_encoder.state_dict(),
+                'epoch': epoch
+            }
+        else:
+            state_dict = {
+                'model': self.diffusion.model.state_dict(),
+                'optimizer': self.optimizer.state_dict(),
+                'epoch': epoch
+            }
+
         torch.save(state_dict, ckpt_file_path)
         self.logger.info(f"Saved model to {ckpt_file_path}")
         if self.config.io.use_wandb and self.config.io.save_pth_to_wandb:
@@ -123,30 +132,31 @@ class Trainer:
         # if self.config.training.snapshot_sampling: self._snapshot_sampling()
         # if self.config.training.snapshot_val: self._snapshot_val(epoch)
 
-    def _load_state(self):
-        ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
-        self.diffusion.model.load_state_dict(ckpt['model'])
-        self.optimizer.load_state_dict(ckpt['optimizer'])
-
     # def _load_state(self):
     #     ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
-    #     model_ckpt = ckpt['model']
-    #     optimizer_ckpt = ckpt['optimizer']
-    #
-    #     r_key = 'module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.'
-    #     is_multi_card = any(k.startswith("module.") for k in model_ckpt.keys())
-    #     if is_multi_card:
-    #         self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
-    #         model_ckpt = {k.replace(r_key, "module.", 1): v for k, v in model_ckpt.items()}
-    #         optimizer_ckpt = {k.replace(r_key, "module.", 1): v for k, v in optimizer_ckpt.items()}
-    #     else:
-    #         self.logger.info("Detected single-card checkpoint.")
-    #
-    #
-    #     # self.diffusion.model.load_state_dict(ckpt['model'])
-    #     self.diffusion.model.load_state_dict(model_ckpt)
-    #     # self.optimizer.load_state_dict(ckpt['optimizer'])
-    #     self.optimizer.load_state_dict(optimizer_ckpt)
+    #     self.diffusion.model.load_state_dict(ckpt['model'])
+    #     self.optimizer.load_state_dict(ckpt['optimizer'])
+
+    def _load_state(self):
+        ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
+        model_ckpt = ckpt['model']
+        optimizer_ckpt = ckpt['optimizer']
+
+        # r_key = 'module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.'
+        r_key = 'module.'
+        is_multi_card = any(k.startswith("module.") for k in model_ckpt.keys())
+        if is_multi_card:
+            self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
+            model_ckpt = {k.replace(r_key, "", 1): v for k, v in model_ckpt.items()}
+            optimizer_ckpt = {k.replace(r_key, "", 1): v for k, v in optimizer_ckpt.items()}
+        else:
+            self.logger.info("Detected single-card checkpoint.")
+
+
+        # self.diffusion.model.load_state_dict(ckpt['model'])
+        self.diffusion.model.load_state_dict(model_ckpt)
+        # self.optimizer.load_state_dict(ckpt['optimizer'])
+        self.optimizer.load_state_dict(optimizer_ckpt)
 
 
 

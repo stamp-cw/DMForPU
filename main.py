@@ -239,6 +239,7 @@ if __name__ == '__main__':
     from diffusion.cfg_ddpm_diffusion import CfgDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import DfnDDPMDiffusion
     from diffusion.fdu_ddpm_diffusion import FduDDPMDiffusion
+    # from diffusion.old.fdu_ddpm_diffusion import FduDDPMDiffusion
     # Import Meter
     from meter.pure_meter import PureMeter
     from meter.mch_meter import MchMeter
