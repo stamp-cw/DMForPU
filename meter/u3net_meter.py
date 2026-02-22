@@ -1,4 +1,5 @@
 import torch
+import wandb
 
 from selector.meter_selector import register_metric
 from utils.metrics import rmse_metric
@@ -45,8 +46,11 @@ class U3NetMeter:
         self.epoch_meter.reset()
         self._record_metrics(self.epoch_metric_dict, f"{self.mode}_per_epoch", self.epoch)
 
-    def _record_metrics(self, metrics, prefix, step):
+    def _record_metrics(self, metrics, prefix, step , is_epoch=False):
         if self.is_record:
             if self.config.io.use_tensorboard:
                 for k, v in metrics.items():
-                    self.writer.add_scalar(f"{prefix}/{k}", v, step)
+                    self.writer.add_scalar(f"{prefix}/{k}", v, step )
+            if self.config.io.use_wandb and is_epoch:
+                new_metrics = {f"{prefix}/{k}": v for k, v in metrics.items()}
+                wandb.log(new_metrics, commit=True)

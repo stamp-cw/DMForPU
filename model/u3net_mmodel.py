@@ -133,7 +133,7 @@ class U3NetMModel:
         wrapped_numpy = self.wrapped.cpu().numpy()
         assert wrapped_numpy.ndim == 4, wrapped_numpy.shape  # (B,C,H,W)
 
-        snr = 0
+        snr = self.config.data.noise_snr
         noise, std = self.get_Gaussian_Noise(
             wrapped_numpy.shape[-2],
             wrapped_numpy.shape[-1],
