@@ -634,14 +634,15 @@ class U3NetLossType:
 
     def __call__(self, mmodel):
         # charbonnier_loss = self.meter.batch_metric_dict['CharbonnierLoss']
-        WGy_minus  = mmodel.WGy_minus
-        L_sr = 0
-        for j, each_x in enumerate(mmodel.pred_list):
-            # L_sr += self.Loss_SR(WGy_minus, each_x) / (len(mmodel.pred_list) - j)
-            # L_sr += self.Loss_SR(WGy_minus, each_x) / (3 - j) + 0.0 * each_x.mean()
-            L_sr += self.Loss_SR(WGy_minus, each_x) / (3 - j)
-
-        total_loss = L_sr
+        # WGy_minus  = mmodel.WGy_minus
+        # L_sr = 0
+        # for j, each_x in enumerate(mmodel.pred_list):
+        #     # L_sr += self.Loss_SR(WGy_minus, each_x) / (len(mmodel.pred_list) - j)
+        #     # L_sr += self.Loss_SR(WGy_minus, each_x) / (3 - j) + 0.0 * each_x.mean()
+        #     L_sr += self.Loss_SR(WGy_minus, each_x) / (3 - j)
+        #
+        # total_loss = L_sr
+        total_loss = self.meter.batch_metric_dict['L1']
         return total_loss
 
 class LossFN:

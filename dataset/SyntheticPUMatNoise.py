@@ -125,7 +125,9 @@ class SyntheticPUMatNoise(Dataset):
         if self.mode == 'test':
             wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
         else:
-            self.snr = torch.FloatTensor(1).uniform_(0, self.snr).item()
+            db_lst = torch.tensor([0, 5, 10, 20, 30, 100])
+            # self.snr = torch.FloatTensor(1).uniform_(0, self.snr).item()
+            self.snr = torch.randint(0, len(db_lst), (1,))
             wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
 
         wrapped_noisy = wrapped + wrapped_noise
@@ -147,8 +149,8 @@ class SyntheticPUMatNoise(Dataset):
         # cos_wrapped = multi_scale_wavelet(torch.cos(wrapped_noise), self.wavelet_type, level=self.wavelet_level)
         # wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
-        sin_wrapped = torch.sin(wrapped_noise)
-        cos_wrapped = torch.cos(wrapped_noise)
+        sin_wrapped = torch.sin(wrapped_noisy)
+        cos_wrapped = torch.cos(wrapped_noisy)
         wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
         sample = {

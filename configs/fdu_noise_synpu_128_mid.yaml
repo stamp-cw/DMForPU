@@ -29,7 +29,8 @@ data:
   std: 5.7466
   scale_alpha: 1
 #  noise_snr: 10
-  noise_snr: 30
+#  noise_snr: 30
+  noise_snr: 10
 #  noise_snr: 5
 
 training:
