@@ -79,8 +79,8 @@ class ModelTrainer:
             artifact.add_file(ckpt_file_path)
             wandb.log_artifact(artifact)
 
-        if self.config.training.snapshot_sampling: self._snapshot_sampling()
-        if self.config.training.snapshot_val: self._snapshot_val(epoch)
+        # if self.config.training.snapshot_sampling: self._snapshot_sampling()
+        # if self.config.training.snapshot_val: self._snapshot_val(epoch)
 
     def _load_state(self):
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)

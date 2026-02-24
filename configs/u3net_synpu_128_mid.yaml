@@ -41,8 +41,8 @@ training:
   log_freq: 1
   snapshot_freq: 100
   snapshot_sampling: false
-#  snapshot_val: false
-  snapshot_val: true
+  snapshot_val: false
+#  snapshot_val: true
   snapshot_val_freq: 50
   snapshot_batch_size: 32
   snapshot_best_loss: true
