@@ -30,7 +30,7 @@ data:
   scale_alpha: 1
 #  noise_snr: 10
 #  noise_snr: 30
-  noise_snr: 10
+  noise_snr: 100
 #  noise_snr: 5
 
 training:
@@ -46,7 +46,8 @@ training:
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 100
+#  snapshot_freq: 100
+  snapshot_freq: 50
   snapshot_sampling: false
   snapshot_sampling_freq: 100
 #  snapshot_val: true

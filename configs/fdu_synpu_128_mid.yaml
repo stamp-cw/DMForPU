@@ -60,12 +60,13 @@ model:
 #  block_out_channels: [64, 128, 256, 512]
 #  block_out_channels: [32, 128, 128]
 #  block_out_channels: [64, 128, 256, 256]
-#  block_out_channels: [32, 32, 32, 32]
-  block_out_channels: [64, 64, 64, 64]
+  block_out_channels: [32, 32, 32, 32]
+#  block_out_channels: [64, 64, 64, 64]
 #  cross_attention_dim: 1280
 #  cross_attention_dim: 320
 #  cross_attention_dim: 768 # 64 * 3 * 4
-  cross_attention_dim: 192 # 64 * 3
+#  cross_attention_dim: 192 # 64 * 3
+  cross_attention_dim: 96 # 32 * 3
 
 diffusion:
   name: FduDDPMDiffusion
@@ -77,10 +78,11 @@ diffusion:
   num_infer_timesteps: 5
   conditioning_channels: 2
   repeat_channels: 1
-  use_patch_embedding: true
+  use_controlnet: true
   prediction_type: "sample"
 #  prediction_type: "v_prediction"
 #  prediction_type: "epsilon"
+
 
 sampling:
   device: cuda
