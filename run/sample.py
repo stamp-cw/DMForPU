@@ -237,17 +237,20 @@ class Sampler:
             raise KeyError(f"'model' key not found in checkpoint {ckpt_path}")
 
         state_dict = checkpoint['model']
+        state_dict2 = checkpoint['controlnet_model']
 
         # 判断是否是多卡权重
         is_multi_card = any(k.startswith("module.") for k in state_dict.keys())
         if is_multi_card:
             self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
             state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+            state_dict2 = {k.replace("module.", "", 1): v for k, v in state_dict2.items()}
         else:
             self.logger.info("Detected single-card checkpoint.")
 
         # 加载到模型
         self.diffusion.model.load_state_dict(state_dict, strict=True)
+        self.diffusion.controlnet_model.load_state_dict(state_dict2, strict=True)
         self.logger.info("Checkpoint loaded successfully.")
 
     # def load_checkpoint(self):

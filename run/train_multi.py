@@ -108,11 +108,12 @@ class Trainer:
 
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
-        if self.config.diffusion.use_patch_embedding:
+        if self.config.diffusion.use_controlnet:
             state_dict = {
                 'model': self.diffusion.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
-                'embed': self.diffusion.phase_encoder.state_dict(),
+                # 'embed': self.diffusion.phase_encoder.state_dict(),
+                'controlnet_model': self.diffusion.controlnet_model.state_dict(),
                 'epoch': epoch
             }
         else:
