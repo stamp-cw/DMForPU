@@ -79,8 +79,8 @@ diffusion:
   num_infer_timesteps: 5
   conditioning_channels: 2
   repeat_channels: 1
-#  use_controlnet: true
-  use_controlnet: false
+  use_controlnet: true
+#  use_controlnet: false
   use_patch_embedding: false
   prediction_type: "sample"
 #  prediction_type: "v_prediction"

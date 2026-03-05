@@ -33,8 +33,8 @@ training:
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
 #  batch_size: 128
-#  batch_size: 32
-  batch_size: 16
+  batch_size: 32
+#  batch_size: 16
 #  batch_size: 256
 #  batch_size: 64
 #  batch_size: 16
@@ -42,12 +42,14 @@ training:
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 100
+#  snapshot_freq: 100
+  snapshot_freq: 50
   snapshot_sampling: false
   snapshot_sampling_freq: 100
-#  snapshot_val: true
-  snapshot_val: false
-  snapshot_val_freq: 1
+  snapshot_val: true
+#  snapshot_val: false
+#  snapshot_val_freq: 1
+  snapshot_val_freq: 50
   snapshot_batch_size: 128
   snapshot_best_loss: true
   best_evaluate_loss: 0.03
@@ -61,13 +63,13 @@ model:
 #  block_out_channels: [64, 128, 256, 512]
 #  block_out_channels: [32, 128, 128]
 #  block_out_channels: [64, 128, 256, 256]
-  block_out_channels: [32, 32, 32, 32]
-#  block_out_channels: [64, 64, 64, 64]
+#  block_out_channels: [32, 32, 32, 32]
+  block_out_channels: [64, 64, 64, 64]
 #  cross_attention_dim: 1280
 #  cross_attention_dim: 320
 #  cross_attention_dim: 768 # 64 * 3 * 4
-#  cross_attention_dim: 192 # 64 * 3
-  cross_attention_dim: 96 # 32 * 3
+  cross_attention_dim: 192 # 64 * 3
+#  cross_attention_dim: 96 # 32 * 3
 
 diffusion:
   name: FduDDPMDiffusion
@@ -82,9 +84,9 @@ diffusion:
 #  use_controlnet: true
   use_controlnet: false
   use_patch_embedding: false
-  prediction_type: "sample"
+#  prediction_type: "sample"
 #  prediction_type: "v_prediction"
-#  prediction_type: "epsilon"
+  prediction_type: "epsilon"
 
 
 sampling:
