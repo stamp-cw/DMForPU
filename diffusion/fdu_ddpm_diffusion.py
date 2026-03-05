@@ -47,12 +47,6 @@ class FduDDPMDiffusion:
         self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
-        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - torch.pi
-        # self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min)) - 2*torch.pi
-        # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
-        # self.pred_unwrapped = self.config.data.mean + (self.config.data.std / self.config.data.scale_alpha) * torch.atanh(self.pred_unwrapped_neg_norm)
-
-        # self.pred_unwrapped = self.config.data.mean + self.config.data.std *  self.normal.icdf(self.pred_unwrapped_norm.clamp(1e-5, 1 - 1e-5))
         self.pred_batch["pred_unwrapped"] = self.pred_unwrapped
         self.pred_batch["pred_unwrapped_neg_norm"] = self.pred_unwrapped_neg_norm
         if self.config.diffusion.prediction_type == "sample":
@@ -89,7 +83,6 @@ class FduDDPMDiffusion:
             self.pred_batch["pred"] = self.noise_pred
             self.pred_batch["gt"] = self.noise_pred
         self.scheduler.set_timesteps(self.config.diffusion.num_train_timesteps)
-
 
     @property
     def optimize_parameters(self):

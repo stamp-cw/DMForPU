@@ -84,7 +84,6 @@ class FduDDPMDiffusion:
             self.pred_batch["gt"] = self.noise_pred
         self.scheduler.set_timesteps(self.config.diffusion.num_train_timesteps)
 
-
     @property
     def optimize_parameters(self):
         return self.model.parameters()

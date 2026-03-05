@@ -36,16 +36,16 @@ class Valuator:
     #     loaded_state = torch.load(self.config.io.val_ckpt_file_path, map_location=self.device, weights_only=True)
     #     self.diffusion.model.load_state_dict(loaded_state['model'])
 
-    def load_checkpoint(self):
-        self.logger.info(f"Loading checkpoint from {self.config.io.val_ckpt_file_path}")
-        state_dict = torch.load(self.config.io.val_ckpt_file_path, map_location=self.device, weights_only=True)['model']
-        is_multi_card = any(k.startswith("module.") for k in state_dict.keys())
-        if is_multi_card:
-            self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
-            state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
-        else:
-            self.logger.info("Detected single-card checkpoint.")
-        self.diffusion.model.load_state_dict(state_dict)
+    # def load_checkpoint(self):
+    #     self.logger.info(f"Loading checkpoint from {self.config.io.val_ckpt_file_path}")
+    #     state_dict = torch.load(self.config.io.val_ckpt_file_path, map_location=self.device, weights_only=True)['model']
+    #     is_multi_card = any(k.startswith("module.") for k in state_dict.keys())
+    #     if is_multi_card:
+    #         self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
+    #         state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+    #     else:
+    #         self.logger.info("Detected single-card checkpoint.")
+    #     self.diffusion.model.load_state_dict(state_dict)
 
     # def load_checkpoint(self):
     #     self.logger.info(f"Loading checkpoint from {self.config.io.val_ckpt_file_path}")
@@ -61,6 +61,22 @@ class Valuator:
     #     self.diffusion.model.load_state_dict(state_dict)
     #     self.diffusion.controlnet_model.load_state_dict(state_dict2)
 
+    def load_checkpoint(self):
+        self.logger.info(f"Loading checkpoint from {self.config.io.val_ckpt_file_path}")
+        state_dict = torch.load(self.config.io.val_ckpt_file_path, map_location=self.device, weights_only=True)['model']
+        if self.config.diffusion.use_controlnet:
+            state_dict2 = torch.load(self.config.io.val_ckpt_file_path, map_location=self.device, weights_only=True)['controlnet_model']
+        is_multi_card = any(k.startswith("module.") for k in state_dict.keys())
+        if is_multi_card:
+            self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
+            state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+            if self.config.diffusion.use_controlnet:
+                state_dict2 = {k.replace("module.", "", 1): v for k, v in state_dict2.items()}
+        else:
+            self.logger.info("Detected single-card checkpoint.")
+        self.diffusion.model.load_state_dict(state_dict)
+        if self.config.diffusion.use_controlnet:
+            self.diffusion.controlnet_model.load_state_dict(state_dict2)
 
     def valuate(self):
         self.diffusion.setup_eval()
