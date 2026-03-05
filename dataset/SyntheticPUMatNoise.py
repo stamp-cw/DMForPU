@@ -95,6 +95,10 @@ class SyntheticPUMatNoise(Dataset):
         noisePower = sigPower / reqSNR
         std = torch.sqrt(noisePower)
         # 3. 生成噪声
+        # torch.manual_seed(42)
+        # torch.cuda.manual_seed(42)
+        # torch.cuda.manual_seed_all(42)
+
         wrapped_norm_noise = std * torch.randn_like(wrapped_norm, device=wrapped_norm.device)
         wrapped_noise = wrapped_norm_noise * (2 * torch.pi) - torch.pi
         return wrapped_noise
@@ -126,11 +130,16 @@ class SyntheticPUMatNoise(Dataset):
             wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
         else:
             db_lst = torch.tensor([0, 5, 10, 20, 30, 100])
+            # db_lst = torch.tensor([20, 100])
+            # db_lst = torch.tensor([100])
             # self.snr = torch.FloatTensor(1).uniform_(0, self.snr).item()
-            self.snr = torch.randint(0, len(db_lst), (1,))
+            self.snr = db_lst[torch.randint(0, len(db_lst), (1,))]
             wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
 
+        # wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
+
         wrapped_noisy = wrapped + wrapped_noise
+        # wrapped_noisy = wrapped
         # wrapped_noisy = torch.clamp(wrapped_noisy, -torch.pi, torch.pi)
         wrapped_noisy = self.wrap_phase(wrapped_noisy)
 
