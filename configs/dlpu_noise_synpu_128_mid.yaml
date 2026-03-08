@@ -1,7 +1,6 @@
 seed: 42
 
 loss_type:
-#  name: PHY11
   name: DLPULoss
 
 meter:
@@ -11,14 +10,11 @@ mmodel:
   name: DLPUMModel
 
 data:
-#  name: SyntheticPUMatCut32Mch
-#  name: SyntheticPUMatCut32MchTest
   name: SyntheticPUMat128Noise
   image_size: 128
   color_channels: 1
   num_workers: 4
   k_min: 0
-#  k_max: 3
   k_max: 7
   wavelet_level: 1
   wavelet_type: haar

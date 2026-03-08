@@ -140,7 +140,8 @@ class ModelTrainer:
         valuator.valuate()
         # save 最好的val_metric
         if self.config.training.snapshot_best_loss:
-            self.evaluate_loss = self.meter.epoch_metric_dict['L1']
+            # self.evaluate_loss = self.meter.epoch_metric_dict['L1']
+            self.evaluate_loss = self.meter.epoch_metric_dict['NRMSE']
             self._update_best_evaluate()
         self.meter.mode = 'train_model'
 

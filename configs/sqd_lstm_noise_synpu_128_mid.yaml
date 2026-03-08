@@ -2,26 +2,30 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-  name: U3NetLoss
+#  name: SqdLstmLoss
+  name: DLPULoss
 
 meter:
-  name: U3NetMeter
+#  name: SqdLstmMeter
+  name: SqdLstmMeter
 
 mmodel:
-  name: U3NetMModel
+#  name: SqdLstmMModel
+  name: SqdLstmMModel
 
 data:
 #  name: SyntheticPUMatCut32Mch
 #  name: SyntheticPUMatCut32MchTest
-  name: SyntheticPUMat128Fdu
+#  name: SyntheticPUMat128Wav
+  name: SyntheticPUMat128Noise
   image_size: 128
   color_channels: 1
-  num_workers: 1
+  num_workers: 4
   k_min: 0
 #  k_max: 3
-  k_max: 7
-  wavelet_level: 1
-  wavelet_type: haar
+  k_max: 6
+  wavelet_level: 3
+  wavelet_type: db4
   mean: 10.0180
   std: 5.7466
   scale_alpha: 1
@@ -33,24 +37,22 @@ training:
   continue_training_epochs: 1000001
 #  batch_size: 128
 #  batch_size: 8
-#  batch_size: 128
+#  batch_size: 1024
+#  batch_size: 256
   batch_size: 32
-#  batch_size: 8
   use_all_data: false
   amp: true
   log_freq: 1
-#  snapshot_freq: 100
-  snapshot_freq: 50
+  snapshot_freq: 100
   snapshot_sampling: false
   snapshot_val: true
-#  snapshot_val: true
-  snapshot_val_freq: 50
+  snapshot_val_freq: 100
   snapshot_batch_size: 32
   snapshot_best_loss: true
-  best_evaluate_loss: 9
+  best_evaluate_loss: 0.05
 
 model:
-  name: U3Net
+  name: SqdLstmNet
   sample_size: 128
 #  in_channels: 1
 #  out_channels: 1
@@ -67,12 +69,11 @@ sampling:
 
 val:
   device: cuda
-  batch_size: 32
+  batch_size: 128
 
 test:
   device: cuda
-  batch_size: 2
-  total_samples: 30
+  batch_size: 128
 
 optim:
   optimizer: Adam
