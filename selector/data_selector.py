@@ -650,7 +650,7 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMat128Mch','SyntheticPUMat128MchTest','SyntheticPUMat128Fdu','SyntheticPUMat128FduTest'])
+@register_data_loader(name=['SyntheticPUMat128Mch','SyntheticPUMat128MchTest','SyntheticPUMat128Fdu','SyntheticPUMat128FduTest','SyntheticPUMat128Big'])
 class SyntheticPUMatMchDataLoader(BaseDataLoader):
 
     @cached_property
@@ -702,7 +702,7 @@ class SyntheticPUMatMchDataLoader(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
-@register_data_loader(name=['SyntheticPUMat128Wav','SyntheticPUMat128WavTest','SyntheticPUMat128Big'])
+@register_data_loader(name=['SyntheticPUMat128Wav','SyntheticPUMat128WavTest'])
 class SyntheticPUMatWavDataLoader(BaseDataLoader):
 
     @cached_property
