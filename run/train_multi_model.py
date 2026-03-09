@@ -19,10 +19,20 @@ from selector.optimizer_selector import _OPTIMIZERS
 from torch.cuda.amp import autocast, GradScaler
 from accelerate import Accelerator
 
+
 class ModelTrainer:
     def __init__(self, config):
         self.config = config
-        self.accelerator = Accelerator()
+        if self.config.model.name == "U3Net":
+            from accelerate import DistributedDataParallelKwargs
+            ddp_kwargs = DistributedDataParallelKwargs(
+                find_unused_parameters=True
+            )
+            self.accelerator = Accelerator(
+                kwargs_handlers=[ddp_kwargs]
+            )
+        else:
+            self.accelerator = Accelerator()
         config.accelerator = self.accelerator
         self.logger = config.logger
         self.device = self.config.training.device

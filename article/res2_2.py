@@ -1,3 +1,4 @@
+# 对比图，第一行：GT, SNAPHU, PUNet, U3Net, DLPU, SQD-LSTM, Restormer, Uformer, Ours
 import scipy.io as sio
 import matplotlib.pyplot as plt
 from matplotlib import colors
