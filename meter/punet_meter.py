@@ -1,9 +1,10 @@
+import torch
 import wandb
 from triton.ops import cross_entropy
 
 from selector.meter_selector import register_metric
 from utils.metrics import rmse_metric
-from utils.util import AverageMeter, wrap_phase
+from utils.util import AverageMeter, wrap_phase, phase_gradient_torch
 import torch.nn.functional as F
 
 @register_metric(name='PUNetMeter')
@@ -28,16 +29,17 @@ class PUNetMeter:
         rmse_loss = rmse_metric(self.pred, self.gt)
         nrmse_loss = rmse_loss / (self.gt.max() -self.gt.min() + 1e-8)
         mse_loss = F.mse_loss(self.gt, self.pred)
-        # bce_loss = F.binary_cross_entropy_with_logits(self.pred, self.gt)
-        # unwrapped_pge_loss =  self.pge_loss(self.pred_unwrapped, self.gt_unwrapped)
-        self.batch_metric_dict = {'L1': l1_loss,
-                                  'MSE': mse_loss,
-                                  # 'BCE': bce_loss,
-                                  'MAE': mae_loss,
-                                  'RMSE': rmse_loss,
-                                  'NRMSE':nrmse_loss,
-                                  # 'UnwrappedPGE': unwrapped_pge_loss,
-                                  }
+        gt_gx, gt_gy = phase_gradient_torch(self.gt)
+        pred_gx, pred_gy = phase_gradient_torch(self.pred)
+        pge_loss = F.l1_loss(torch.concat([gt_gx, gt_gy],dim=1), torch.concat([pred_gx, pred_gy],dim=1))
+        self.batch_metric_dict = {
+            'L1': l1_loss,
+            'MSE': mse_loss,
+            'MAE': mae_loss,
+            'RMSE': rmse_loss,
+            'NRMSE':nrmse_loss,
+            'PGE': pge_loss
+        }
         self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.acc_step)
 
     def compute_epoch_metric(self):
