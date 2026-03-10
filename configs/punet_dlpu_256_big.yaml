@@ -35,7 +35,8 @@ training:
 #  snapshot_freq: 100
   snapshot_freq: 20
   snapshot_sampling: false
-  snapshot_val: true
+#  snapshot_val: true
+  snapshot_val: false
 #  snapshot_val_freq: 100
   snapshot_val_freq: 20
   snapshot_batch_size: 32

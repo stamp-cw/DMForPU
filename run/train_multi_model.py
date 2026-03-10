@@ -89,7 +89,6 @@ class ModelTrainer:
                     self.main_meter.acc_step = self.acc_batch
                 self.epoch_fn(self.accelerator, self.mmodel, self.optimizer, self.meter, self.main_meter, epoch, batch_data)
                 self.meter.epoch_meter.update(self.meter.batch_metric_dict)
-
             if self.accelerator.is_main_process:
                 self.main_meter.compute_epoch_metric()
                 self._record_and_evaluate()
