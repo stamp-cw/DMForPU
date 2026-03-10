@@ -134,6 +134,10 @@ class U3NetMModel:
         assert wrapped_numpy.ndim == 4, wrapped_numpy.shape  # (B,C,H,W)
 
         snr = self.config.data.noise_snr
+
+        # db_lst = torch.tensor([0, 5, 10, 20, 30, 100])
+        # snr = db_lst[torch.randint(0, len(db_lst), (1,))]
+
         noise, std = self.get_Gaussian_Noise(
             wrapped_numpy.shape[-2],
             wrapped_numpy.shape[-1],
