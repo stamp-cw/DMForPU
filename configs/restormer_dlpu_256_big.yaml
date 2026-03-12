@@ -1,13 +1,13 @@
 seed: 42
 
 loss_type:
-  name: DLPULoss
+  name: RestormerLoss
 
 meter:
   name: PUNetMeter
 
 mmodel:
-  name: SqdLstmMModel
+  name: RestormerMModel
 
 data:
   name: InSARDLPUMat256Big
@@ -44,7 +44,7 @@ training:
   best_evaluate_loss: 0.1
 
 model:
-  name: SqdLstmNet
+  name: Restormer
 #  sample_size: 128
   sample_size: 256
 #  in_channels: 1

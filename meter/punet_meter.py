@@ -23,7 +23,15 @@ class PUNetMeter:
         self.gt = batch_dict["gt"].to(self.device)
         self.pred = batch_dict["pred"].to(self.device)
 
+    def charbonnier_loss(self, x, y):
+        eps = 1e-3
+        diff = x - y
+        # loss = torch.sum(torch.sqrt(diff * diff + self.eps))
+        loss = torch.mean(torch.sqrt((diff * diff) + (eps*eps)))
+        return loss
+
     def compute_batch_metric(self):
+        charbonnier_loss = self.charbonnier_loss(self.pred, self.gt)
         l1_loss = F.l1_loss(self.gt, self.pred)
         mae_loss = F.l1_loss(self.gt, self.pred)
         rmse_loss = rmse_metric(self.pred, self.gt)
@@ -38,7 +46,8 @@ class PUNetMeter:
             'MAE': mae_loss,
             'RMSE': rmse_loss,
             'NRMSE':nrmse_loss,
-            'PGE': pge_loss
+            'PGE': pge_loss,
+            'CharbonnierLoss': charbonnier_loss
         }
         self._record_metrics(self.batch_metric_dict, f"{self.mode}_per_batch", self.acc_step)
 
