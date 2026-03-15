@@ -102,7 +102,7 @@ def load_article_data():
 def load_article_data_dlpu():
     # gt
     gt_mat_path = r"data_dlpu/gt/gt.mat"
-    gt_mat = sio.loadmat(gt_mat_path)['gt']
+    gt_mat = sio.loadmat(gt_mat_path)['output']
 
     # keys: wrapped, gt_unwrapped, pred_unwrapped, diff_unwrapped
     #dlpu

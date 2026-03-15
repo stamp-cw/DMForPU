@@ -33,6 +33,7 @@ python3 main.py --config wav_synpu_cut32_test.yaml --mode train --training_from_
 python3 main.py --config wav_synpu_128_mid.yaml --mode train --training_from_scratch
 
 python3 main.py --config fdu_synpu_128_mid.yaml --mode train --training_from_scratch
+python3 main.py --config fdu_dlpu_256_big.yaml --mode train --training_from_scratch
 
 python3 main.py --config fdu_noise_synpu_128_mid.yaml --mode train --training_from_scratch
 

@@ -31,6 +31,7 @@ class FduDDPMDiffusion:
         self.noise = torch.randn_like(self.gt_unwrapped_neg_norm).to(self.device)
         self.noisy = self.scheduler.add_noise(self.gt_unwrapped_neg_norm, self.noise, t).to(self.device)
         model_input = torch.cat([self.noisy] * self.config.diffusion.repeat_channels + [self.wrapped_cond], dim=1)
+        # print("model_input shape:", model_input.shape)
         self.noise_pred = self.model(
             model_input,
             t,

@@ -27,8 +27,8 @@ training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
-#  batch_size: 4
-  batch_size: 32
+  batch_size: 2
+#  batch_size: 32
   use_all_data: false
   amp: true
   log_freq: 1

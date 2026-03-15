@@ -238,8 +238,8 @@ if __name__ == '__main__':
     from diffusion.wav_ddpm_diffusion import WavDDPMDiffusion
     from diffusion.cfg_ddpm_diffusion import CfgDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import DfnDDPMDiffusion
-    # from diffusion.fdu_ddpm_diffusion import FduDDPMDiffusion
-    from diffusion.fdu_ddpm_diffusion_v1 import FduDDPMDiffusion
+    from diffusion.fdu_ddpm_diffusion import FduDDPMDiffusion
+    # from diffusion.fdu_ddpm_diffusion_v1 import FduDDPMDiffusion
     # from diffusion.fdu_ddpm_diffusion_v3 import FduDDPMDiffusion
     # from diffusion.old.fdu_ddpm_diffusion import FduDDPMDiffusion
     # Import Meter

@@ -25,9 +25,9 @@ class InSARDLPUMat(Dataset):
         k_max = 3,
         wavelet_level = 3,
         wavelet_type = 'db4',
-            mean = 10.01,
-            std = 5.74,
-            scale_alpha = 2,
+        mean = 10.01,
+        std = 5.74,
+        scale_alpha = 2,
     ):
         """
         Args:
@@ -98,8 +98,10 @@ class InSARDLPUMat(Dataset):
         unwrapped_neg_norm = unwrapped_norm * 2 - 1
 
         # wrapped_cond
-        sin_wrapped = multi_scale_wavelet(torch.sin(wrapped), self.wavelet_type, level=self.wavelet_level)
-        cos_wrapped = multi_scale_wavelet(torch.cos(wrapped), self.wavelet_type, level=self.wavelet_level)
+        # sin_wrapped = multi_scale_wavelet(torch.sin(wrapped), self.wavelet_type, level=self.wavelet_level)
+        # cos_wrapped = multi_scale_wavelet(torch.cos(wrapped), self.wavelet_type, level=self.wavelet_level)
+        sin_wrapped = torch.sin(wrapped)
+        cos_wrapped = torch.cos(wrapped)
         wrapped_cond = torch.cat([sin_wrapped, cos_wrapped], dim=0)
 
         sample = {
