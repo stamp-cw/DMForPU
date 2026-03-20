@@ -20,9 +20,13 @@ data:
   num_workers: 4
   k_min: 0
 #  k_max: 3
-  k_max: 6
-  wavelet_level: 3
-  wavelet_type: db4
+  k_max: 7
+  wavelet_level: 1
+  wavelet_type: haar
+  mean: 10.0180
+  std: 5.7466
+  scale_alpha: 1
+  noise_snr: 10
 
 training:
   device: cuda
@@ -38,7 +42,10 @@ training:
   snapshot_freq: 100
   snapshot_sampling: false
   snapshot_val: false
+  snapshot_val_freq: 1
   snapshot_batch_size: 32
+  snapshot_best_loss: true
+  best_evaluate_loss: 9
 
 model:
   name: PUNet

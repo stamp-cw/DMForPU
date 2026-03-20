@@ -808,7 +808,7 @@ class SyntheticPUMatDfnDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name=['SyntheticPUMat128Noise','SyntheticPUMat128NoiseTest'])
+@register_data_loader(name=['SyntheticPUMat128Noise','SyntheticPUMat128NoiseTest','SyntheticPUMat128BigNoise','SyntheticPUMat128BigNoiseTest'])
 class SyntheticPUMatNoiseDataLoader(BaseDataLoader):
 
     @cached_property

@@ -4,52 +4,47 @@ loss_type:
   name: U3NetLoss
 
 meter:
-  name: U3NetMeter
+  name: PUNetMeter
 
 mmodel:
   name: U3NetMModel
 
 data:
-#  name: SyntheticPUMatCut32Mch
-#  name: SyntheticPUMatCut32MchTest
-#  name: SyntheticPUMat128Fdu
-  name: SyntheticPUMat128Big
+  name: SyntheticPUMat128BigNoise
   image_size: 128
   color_channels: 1
   num_workers: 1
   k_min: 0
-#  k_max: 3
   k_max: 7
   wavelet_level: 1
   wavelet_type: haar
   mean: 10.0180
   std: 5.7466
   scale_alpha: 1
-  noise_snr: 100
+#  noise_snr: 10
+  noise_snr: 0
+#  noise_snr: 5
+#  noise_snr: 20
+#  noise_snr: 30
 
 training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
 #  batch_size: 128
-  batch_size: 64
 #  batch_size: 8
-#  batch_size: 256
-#  batch_size: 32
-#  batch_size: 8
+#  batch_size: 128
+  batch_size: 32
   use_all_data: false
   amp: true
   log_freq: 1
-#  snapshot_freq: 100
   snapshot_freq: 20
   snapshot_sampling: false
-#  snapshot_val: true
   snapshot_val: false
-  snapshot_val_freq: 10
+  snapshot_val_freq: 1
   snapshot_batch_size: 32
-#  snapshot_best_loss: true
-  snapshot_best_loss: false
-  best_evaluate_loss: 0.1
+  snapshot_best_loss: true
+  best_evaluate_loss: 9
 
 model:
   name: U3Net

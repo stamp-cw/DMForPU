@@ -12,7 +12,10 @@ data:
   color_channels: 1
   num_workers: 1
   k_min: 0
-  k_max: 7
+#  k_max: 7
+#  k_max: 100
+  k_max: 97
+#  k_max: 83
   wavelet_level: 1
   wavelet_type: haar
   mean: 10.0180
@@ -47,8 +50,8 @@ model:
 #  block_out_channels: [64, 128, 256, 512]
 #  block_out_channels: [32, 128, 128]
 #  block_out_channels: [64, 128, 256, 256]
-  block_out_channels: [32, 32, 32, 32]
-#  block_out_channels: [64, 64, 64, 64]
+#  block_out_channels: [32, 32, 32, 32]
+  block_out_channels: [64, 64, 64, 64]
 #  block_out_channels: [64, 64, 64, 64]
 #  cross_attention_dim: 1280
 #  cross_attention_dim: 320
@@ -63,6 +66,7 @@ diffusion:
   num_train_timesteps: 1000
 #  num_infer_timesteps: 100
 #  num_infer_timesteps: 1000
+#  num_infer_timesteps: 5
   num_infer_timesteps: 5
   conditioning_channels: 2
   repeat_channels: 1
@@ -84,7 +88,8 @@ sampling:
 
 val:
   device: cuda
-  batch_size: 128
+#  batch_size: 128
+  batch_size: 64
 
 test:
   device: cuda

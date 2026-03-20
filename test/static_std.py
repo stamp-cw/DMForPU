@@ -17,7 +17,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Wav', split='train')
 # train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big', split='train')
 # train_dataset = InSARDLPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat256Big', split='train')
-# test_dataset = InSARDLPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat256Big', split='test')
+test_dataset = InSARDLPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/InSARDLPUMat256Big', split='test')
 # all_dataset = torch.utils.data.ConcatDataset([train_dataset, test_dataset])
 # train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mid', split='train')
 # train_dataset = SyntheticPUMatCutMid(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMatCut32MidTest', split='train')
@@ -25,10 +25,11 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # train_dataset = SyntheticPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mch', split='train')
 # test_dataset = SyntheticPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Mch', split='test')
 
-train_dataset = SyntheticPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big', split='train')
-test_dataset = SyntheticPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big', split='test')
+# train_dataset = SyntheticPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big', split='train')
+# test_dataset = SyntheticPUMat(root='/home/lbxu/xiangyu.liu/stamp-cw/project/DMForPU/data/SyntheticPUMat128Big', split='test')
 
-all_dataset = torch.utils.data.ConcatDataset([train_dataset, test_dataset])
+# all_dataset = torch.utils.data.ConcatDataset([train_dataset, test_dataset])
+all_dataset = test_dataset
 
 data_loader = torch.utils.data.DataLoader(
     # train_dataset,

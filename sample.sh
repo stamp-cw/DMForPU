@@ -30,3 +30,4 @@ python3 main.py --config wav_synpu_128_mid.yaml --mode sample --sampling_from_ep
 python3 main.py --config wav_synpu_128_big.yaml --mode sample --sampling_from_epoch 100
 
 python3 main.py --config fdu_synpu_128_mid.yaml --mode sample --sampling_from_epoch 100
+python3 main.py --config fdu_dlpu_256_big.yaml --mode sample --sampling_from_epoch 100

@@ -129,7 +129,7 @@ class SyntheticPUMatNoise(Dataset):
         if self.mode == 'test':
             wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
         else:
-            db_lst = torch.tensor([0, 5, 10, 20, 30, 100])
+            db_lst = torch.tensor([0, 5, 10, 20, 30])
             # db_lst = torch.tensor([20, 100])
             # db_lst = torch.tensor([100])
             # self.snr = torch.FloatTensor(1).uniform_(0, self.snr).item()
