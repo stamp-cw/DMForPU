@@ -1,7 +1,6 @@
 seed: 42
 
 loss_type:
-#  name: PHY11
   name: PUNetLoss
 
 meter:
@@ -11,22 +10,18 @@ mmodel:
   name: PUNetMModel
 
 data:
-#  name: SyntheticPUMatCut32Mch
-#  name: SyntheticPUMatCut32MchTest
-#  name: SyntheticPUMat128Wav
   name: SyntheticPUMat128Big
   image_size: 128
   color_channels: 1
-  num_workers: 4
+  num_workers: 1
   k_min: 0
-#  k_max: 3
   k_max: 7
   wavelet_level: 1
   wavelet_type: haar
   mean: 10.0180
   std: 5.7466
   scale_alpha: 1
-  noise_snr: 10
+  noise_snr: 30
 
 training:
   device: cuda

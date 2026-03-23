@@ -12,3 +12,6 @@ python3 main.py --config uformer_synpu_128_mid.yaml --mode train_model --trainin
 python3 main.py --config dlpu_synpu_128_mid.yaml --mode train_model --training_from_scratch
 python3 main.py --config u3net_synpu_128_mid.yaml --mode train_model --training_from_scratch
 python3 main.py --config u3net_synpu_128_big.yaml --mode train_model --training_from_scratch
+
+
+python3 main.py --config restormer_dlpu_256_big.yaml --mode train_model --training_from_scratch

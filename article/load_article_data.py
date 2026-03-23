@@ -210,8 +210,8 @@ def load_article_ours_snr_data():
 
 def load_article_snr_data(name, snr):
     # if name=="dlpu" or name =="restormer" or name=="ours":
-    if name=="ours":
-        name = "punet"
+    # if name=="ours":
+    #     name = "punet"
     if name == "snaphu":
         snaphu_pred_path = f"data_snr/{name}_snr/{snr}db/000001.hdr"
         snaphu_mat = envi.open(snaphu_pred_path)
