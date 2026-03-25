@@ -227,3 +227,46 @@ def load_article_snr_data(name, snr):
         pred = pred_batch_pt['pred_unwrapped']
         # pred = _to_numpy_2d(pred)
         return pred
+
+def load_article_data_idx(name, idx):
+    if name=="dlpu" or name =="restormer":
+        name = "punet"
+    if name == "wrapped":
+        wrapped_mat_path = f"data/{name}/00000{idx}.mat"
+        wrapped_mat = sio.loadmat(wrapped_mat_path)['input']
+        return wrapped_mat
+    elif name == "gt":
+        wrapped_mat_path = f"data/{name}/00000{idx}.mat"
+        wrapped_mat = sio.loadmat(wrapped_mat_path)['gt']
+        return wrapped_mat
+    else:
+        if name == "ours":
+            pred_batch_path = f"data/{name}/samples_{idx-1}_{idx}.pt"
+        else:
+            pred_batch_path = f"data/{name}/samples_{idx*2-2}_{idx*2-1}.pt"
+        pred_batch_pt = torch.load(pred_batch_path)
+        pred = pred_batch_pt['pred_unwrapped']
+        # pred = _to_numpy_2d(pred)
+        return pred
+
+
+def load_article_data_dlpu_idx(name, idx):
+    if name == "ours":
+        name = "punet"
+    if name == "wrapped":
+        wrapped_mat_path = f"data_dlpu/{name}/00000{idx}.mat"
+        wrapped_mat = sio.loadmat(wrapped_mat_path)['input']
+        return wrapped_mat
+    elif name == "gt":
+        wrapped_mat_path = f"data_dlpu/{name}/00000{idx}.mat"
+        wrapped_mat = sio.loadmat(wrapped_mat_path)['output']
+        return wrapped_mat
+    else:
+        if name == "ours":
+            pred_batch_path = f"data_dlpu/{name}/samples_{idx-1}_{idx}.pt"
+        else:
+            pred_batch_path = f"data_dlpu/{name}/samples_{idx*2-2}_{idx*2-1}.pt"
+        pred_batch_pt = torch.load(pred_batch_path)
+        pred = pred_batch_pt['pred_unwrapped']
+        # pred = _to_numpy_2d(pred)
+        return pred

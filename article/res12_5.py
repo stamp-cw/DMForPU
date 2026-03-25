@@ -12,42 +12,19 @@ from load_article_data import _to_numpy_2d
 # pred = np.random.randn(2000)
 # gt = np.random.randn(2000)
 
-# dlpu_pred_batch_path = "data/dlpu/samples_0_1.pt"
-# dlpu_pred_batch_pt = torch.load(dlpu_pred_batch_path)
-# dlpu_pred = dlpu_pred_batch_pt['pred_unwrapped']
-# dlpu_pred = _to_numpy_2d(dlpu_pred)
+dlpu_pred_batch_path = "data/dlpu/samples_0_1.pt"
+dlpu_pred_batch_pt = torch.load(dlpu_pred_batch_path)
+dlpu_pred = dlpu_pred_batch_pt['pred_unwrapped']
+dlpu_pred = _to_numpy_2d(dlpu_pred)
 
-# ours_pred_batch_path = "data/ours/samples_0_1.pt"
-# ours_pred_batch_pt = torch.load(ours_pred_batch_path)
-# ours_pred = ours_pred_batch_pt['pred_unwrapped']
-# ours_pred = _to_numpy_2d(ours_pred)
-
-# gt_mat_path = r"data/gt/gt.mat"
-# gt_mat = sio.loadmat(gt_mat_path)['gt']
+gt_mat_path = r"data/gt/gt.mat"
+gt_mat = sio.loadmat(gt_mat_path)['gt']
 
 # 残差（推荐用绝对值）
 # error = np.abs(pred - gt)
-# error = np.abs(dlpu_pred - gt_mat)
-# error = np.abs(ours_pred - gt_mat)
+error = np.abs(dlpu_pred - gt_mat)
 
-clip_min = 0
-# clip_max = 16
-clip_max = 25
-
-dlpu_wrapped_mat_path = r"data_dlpu/wrapped/wrapped.mat"
-dlpu_gt_mat_path = r"data_dlpu/gt/gt.mat"
-dlpu_wrapped_mat = sio.loadmat(dlpu_wrapped_mat_path)['input']
-# gt_mat = sio.loadmat(gt_mat_path)['gt']
-dlpu_gt_mat = sio.loadmat(dlpu_gt_mat_path)['output']
-
-dlpu_dlpu_pred_batch_path = "data_dlpu/dlpu/samples_0_1.pt"
-dlpu_dlpu_pred_batch_pt = torch.load(dlpu_dlpu_pred_batch_path)
-dlpu_dlpu_pred = dlpu_dlpu_pred_batch_pt['pred_unwrapped']
-dlpu_dlpu_error = dlpu_gt_mat - _to_numpy_2d(dlpu_dlpu_pred)
-
-error = dlpu_dlpu_error
-
-error=np.abs(error).flatten()
+error=error.flatten()
 
 
 # low, high = np.percentile(error, [1, 99])
@@ -55,7 +32,7 @@ error=np.abs(error).flatten()
 # error = error[(error >= low) & (error <= high)]
 
 
-error = np.clip(error, clip_min , clip_max)
+error = np.clip(error, 0, 2)
 
 # ======================
 # 2. Seaborn风格
@@ -66,15 +43,12 @@ plt.figure(figsize=(6, 4))
 
 eps=0.005
 
-
-
 # ======================
 # 3. 直方图（百分比）
 # ======================
 ax = sns.histplot(
     error,
-    # bins=10,
-    bins=25,
+    bins=10,
     stat="percent",  # 关键：显示百分比
     edgecolor="blue",
     color="white",
@@ -120,12 +94,9 @@ def add_range_annotation(ax, low, high, y, text):
 # 6. 定义区间（你可以改这里）
 # ======================
 ranges = [
-    # (0, 0.2),
-    # (0, 0.4),
-    # (1, 2),
+    (0, 0.2),
+    (1, 2),
     # (1, None)
-    (clip_min,clip_max/10),
-    (clip_max/2,clip_max),
 ]
 
 # ======================
@@ -149,8 +120,7 @@ for i, (low, high) in enumerate(ranges):
 # ======================
 # 8. 美化
 # ======================
-# plt.xlim(0-eps, 2+eps)
-plt.xlim(clip_min-eps, clip_max+eps)
+plt.xlim(0-eps, 2+eps)
 # plt.xlim(0, 5)
 # plt.ylim(0, y_max * 1.2)
 plt.ylim(0, y_max * 1.2)
