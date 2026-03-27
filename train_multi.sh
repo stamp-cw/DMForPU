@@ -25,3 +25,13 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_dlpu_256_big
 
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_noise_synpu_128_big.yaml --mode train_multi --training_from_scratch
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_synpu_128_big.yaml --mode train_multi --training_from_scratch
+
+# abla
+#synpu
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_synpu_128_big_v1.yaml --mode train_multi --training_from_scratch
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_synpu_128_big_v2.yaml --mode train_multi --training_from_scratch
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_synpu_128_big_v3.yaml --mode train_multi --training_from_scratch
+#insardlpu
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_dlpu_256_big_v1.yaml --mode train_multi --training_from_scratch
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_dlpu_256_big_v2.yaml --mode train_multi --training_from_scratch
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config fdu_dlpu_256_big_v3.yaml --mode train_multi --training_from_scratch

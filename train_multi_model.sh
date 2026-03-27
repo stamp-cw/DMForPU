@@ -38,3 +38,5 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config restormer_noise_
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config sqd_lstm_noise_synpu_128_big.yaml --mode train_multi_model --training_from_scratch
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config u3net_noise_synpu_128_big.yaml --mode train_multi_model --training_from_scratch
 CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch main.py --config uformer_noise_synpu_128_big.yaml --mode train_multi_model --training_from_scratch
+
+

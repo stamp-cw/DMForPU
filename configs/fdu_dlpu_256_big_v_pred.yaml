@@ -77,8 +77,8 @@ diffusion:
 #  use_controlnet: true
   use_controlnet: false
   use_patch_embedding: false
-  prediction_type: "sample"
-#  prediction_type: "v_prediction"
+#  prediction_type: "sample"
+  prediction_type: "v_prediction"
 #  prediction_type: "epsilon"
 
 

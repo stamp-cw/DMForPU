@@ -229,8 +229,8 @@ def load_article_snr_data(name, snr):
         return pred
 
 def load_article_data_idx(name, idx):
-    if name=="dlpu" or name =="restormer":
-        name = "punet"
+    # if name=="dlpu" or name =="restormer":
+    #     name = "punet"
     if name == "wrapped":
         wrapped_mat_path = f"data/{name}/00000{idx}.mat"
         wrapped_mat = sio.loadmat(wrapped_mat_path)['input']
@@ -251,8 +251,8 @@ def load_article_data_idx(name, idx):
 
 
 def load_article_data_dlpu_idx(name, idx):
-    if name == "ours":
-        name = "punet"
+    # if name == "ours":
+    #     name = "punet"
     if name == "wrapped":
         wrapped_mat_path = f"data_dlpu/{name}/00000{idx}.mat"
         wrapped_mat = sio.loadmat(wrapped_mat_path)['input']

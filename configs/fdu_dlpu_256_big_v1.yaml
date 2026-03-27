@@ -7,7 +7,7 @@ meter:
   name: WavMeter
 
 data:
-  name: InSARDLPUMat256Big
+  name: InSARDLPUMat256BigV1
   image_size: 256
   color_channels: 1
   num_workers: 1

@@ -146,26 +146,26 @@ class Trainer:
     #     self.diffusion.model.load_state_dict(ckpt['model'])
     #     self.optimizer.load_state_dict(ckpt['optimizer'])
 
-    # def _load_state(self):
-    #     ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
-    #     model_ckpt = ckpt['model']
-    #     optimizer_ckpt = ckpt['optimizer']
-    #
-    #     # r_key = 'module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.'
-    #     r_key = 'module.'
-    #     is_multi_card = any(k.startswith("module.") for k in model_ckpt.keys())
-    #     if is_multi_card:
-    #         self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
-    #         model_ckpt = {k.replace(r_key, "", 1): v for k, v in model_ckpt.items()}
-    #         optimizer_ckpt = {k.replace(r_key, "", 1): v for k, v in optimizer_ckpt.items()}
-    #     else:
-    #         self.logger.info("Detected single-card checkpoint.")
-    #
-    #
-    #     # self.diffusion.model.load_state_dict(ckpt['model'])
-    #     self.diffusion.model.load_state_dict(model_ckpt)
-    #     # self.optimizer.load_state_dict(ckpt['optimizer'])
-    #     self.optimizer.load_state_dict(optimizer_ckpt)
+    def _load_state(self):
+        ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
+        model_ckpt = ckpt['model']
+        optimizer_ckpt = ckpt['optimizer']
+
+        # r_key = 'module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.module.'
+        r_key = 'module.'
+        is_multi_card = any(k.startswith("module.") for k in model_ckpt.keys())
+        if is_multi_card:
+            self.logger.info("Detected multi-card checkpoint. Stripping 'module.' prefix...")
+            model_ckpt = {k.replace(r_key, "", 1): v for k, v in model_ckpt.items()}
+            optimizer_ckpt = {k.replace(r_key, "", 1): v for k, v in optimizer_ckpt.items()}
+        else:
+            self.logger.info("Detected single-card checkpoint.")
+
+
+        # self.diffusion.model.load_state_dict(ckpt['model'])
+        self.diffusion.model.load_state_dict(model_ckpt)
+        # self.optimizer.load_state_dict(ckpt['optimizer'])
+        self.optimizer.load_state_dict(optimizer_ckpt)
 
     def _record_and_evaluate(self):
         if self.epoch % self.config.training.log_freq == 0:

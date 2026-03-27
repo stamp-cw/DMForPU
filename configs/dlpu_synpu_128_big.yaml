@@ -1,44 +1,50 @@
 seed: 42
 
 loss_type:
-#  name: PHY11
   name: DLPULoss
 
 meter:
-  name: DLPUMeter
+  name: PUNetMeter
 
 mmodel:
   name: DLPUMModel
 
 data:
-#  name: SyntheticPUMatCut32Mch
-#  name: SyntheticPUMatCut32MchTest
-#  name: SyntheticPUMat128Wav
   name: SyntheticPUMat128Big
   image_size: 128
   color_channels: 1
-  num_workers: 4
+  num_workers: 1
   k_min: 0
-#  k_max: 3
-  k_max: 6
-  wavelet_level: 3
-  wavelet_type: db4
+  k_max: 7
+  wavelet_level: 1
+  wavelet_type: haar
+  mean: 10.0180
+  std: 5.7466
+  scale_alpha: 1
+#  noise_snr: 10
+  noise_snr: 30
+#  noise_snr: 5
+#  noise_snr: 20
+#  noise_snr: 30
 
 training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
 #  batch_size: 128
-#  batch_size: 8
+  batch_size: 8
 #  batch_size: 128
-  batch_size: 32
+#  batch_size: 32
   use_all_data: false
   amp: true
   log_freq: 1
-  snapshot_freq: 100
+  snapshot_freq: 20
   snapshot_sampling: false
   snapshot_val: false
+  snapshot_val_freq: 1
   snapshot_batch_size: 32
+  snapshot_best_loss: true
+  best_evaluate_loss: 9
 
 model:
   name: DLPU

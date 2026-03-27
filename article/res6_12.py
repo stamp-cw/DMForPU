@@ -83,36 +83,53 @@ dlpu_points = {
 fig_dpi = 600
 fig_size_W = 3.5
 fig_size_H = 2.5
-# fig_size_W = 4.5
-# fig_size_H = 3
 pdf_img_path = r"res/res6/figure.pdf"
 png_img_path = r"res/res6/figure.png"
 # raw = 2 * 2
 raw = 1
-col = 1
+col = 2
 fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
-axes = axes
+axes = axes.flatten()
 
 # synpu
 #subplot 1
-ax = axes
-ax.plot(x_ours, y_ours, color=ours_color, marker='*', markersize=7)
+ax = axes[0]
+ax.plot(x_ours, y_ours, color=ours_color, marker='*', markersize=12)
 
 # ===== 散点（用Seaborn）=====
 for name, (x, y) in points.items():
     sns.scatterplot(x=[x], y=[y], color=colors[name], s=100, ax=ax)
-    ax.text(x, y, name, fontsize=5)
+    ax.text(x, y, name, fontsize=7)
 
 # ===== 标注 =====
 labels_ours = ["Ours", "Ours-W", "Ours-S", "Ours-N"]
 for x, y, label in zip(x_ours, y_ours, labels_ours):
-    ax.text(x, y, label, ha='right', fontsize=5)
+    ax.text(x, y, label, ha='right')
 
 # ===== log轴 =====
 ax.set_xscale('log')
 ax.set_ylabel("NRMSE")
-# ax.set_title("Synpu")
-ax.set_xticks([])
+ax.set_title("Synpu")
+
+# insardlpu
+#subplot 1
+ax = axes[1]
+ax.plot(dlpu_x_ours, dlpu_y_ours, color=ours_color, marker='*', markersize=12)
+
+# ===== 散点（用Seaborn）=====
+for name, (x, y) in dlpu_points.items():
+    sns.scatterplot(x=[x], y=[y], color=colors[name], s=100, ax=ax)
+    ax.text(x, y, name, fontsize=7)
+
+# ===== 标注 =====
+labels_ours = ["Ours", "Ours-W", "Ours-S", "Ours-N"]
+for x, y, label in zip(dlpu_x_ours, dlpu_y_ours, labels_ours):
+    ax.text(x, y, label, ha='right')
+
+# ===== log轴 =====
+ax.set_xscale('log')
+ax.set_ylabel("NRMSE")
+ax.set_title("InsarDLPU")
 
 fig.tight_layout()
 fig.savefig(png_img_path, dpi=fig_dpi, bbox_inches="tight", pad_inches=0)
