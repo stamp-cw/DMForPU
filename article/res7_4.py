@@ -13,6 +13,8 @@ import numpy as np
 from load_article_data import load_article_data
 from load_article_data import load_article_data_dlpu
 
+
+
 palette = {
     "GT": "black",
     "Ours": "#d62728",   # 红色
@@ -43,14 +45,13 @@ dlpu_pred=d_dict['dlpu_pred']
 punet_pred=d_dict['punet_pred']
 restormer_pred=d_dict['restormer_pred']
 # snaphu_pred=d_dict['snaphu_pred']
-# snaphu_pred=d_dict['gt']
+snaphu_pred=d_dict['gt']
 sqd_lstm_pred=d_dict['sqd_lstm_pred']
 u3net_pred=d_dict['u3net_pred']
 uformer_pred=d_dict['uformer_pred']
 ours_pred=d_dict['ours_pred']
 
-# method = ["GT", "DLPU", "PUNet", "Restormer", "SNAPHU", "SQD-LSTM", "U3Net", "Uformer", "Ours"]
-method = ["GT", "DLPU", "PUNet", "Restormer", "SQD-LSTM", "U3Net", "Uformer", "Ours"]
+method = ["GT", "DLPU", "PUNet", "Restormer", "SNAPHU", "SQD-LSTM", "U3Net", "Uformer", "Ours"]
 
 raw_line_pos = 64
 col_line_pos = 64
@@ -64,7 +65,7 @@ df['col_line'] = np.concatenate([
     dlpu_pred[col_line_pos, :],
     punet_pred[col_line_pos, :],
     restormer_pred[col_line_pos, :],
-    # snaphu_pred[col_line_pos, :],
+    snaphu_pred[col_line_pos, :],
     sqd_lstm_pred[col_line_pos, :],
     u3net_pred[col_line_pos, :],
     uformer_pred[col_line_pos, :],
@@ -76,7 +77,7 @@ df['raw_line'] = np.concatenate([
     dlpu_pred[:, raw_line_pos],
     punet_pred[:, raw_line_pos],
     restormer_pred[:, raw_line_pos],
-    # snaphu_pred[:, raw_line_pos],
+    snaphu_pred[:, raw_line_pos],
     sqd_lstm_pred[:, raw_line_pos],
     u3net_pred[:, raw_line_pos],
     uformer_pred[:, raw_line_pos],
@@ -137,14 +138,13 @@ dlpu_pred=d_dict2['dlpu_pred']
 punet_pred=d_dict2['punet_pred']
 restormer_pred=d_dict2['restormer_pred']
 # snaphu_pred=d_dict2['snaphu_pred']
-# snaphu_pred=d_dict2['gt']
+snaphu_pred=d_dict2['gt']
 sqd_lstm_pred=d_dict2['sqd_lstm_pred']
 u3net_pred=d_dict2['u3net_pred']
 uformer_pred=d_dict2['uformer_pred']
 ours_pred=d_dict2['ours_pred']
 
-# method = ["GT", "DLPU", "PUNet", "Restormer", "SNAPHU", "SQD-LSTM", "U3Net", "Uformer", "Ours"]
-method = ["GT", "DLPU", "PUNet", "Restormer", "SQD-LSTM", "U3Net", "Uformer", "Ours"]
+method = ["GT", "DLPU", "PUNet", "Restormer", "SNAPHU", "SQD-LSTM", "U3Net", "Uformer", "Ours"]
 
 raw_line_pos = 128
 col_line_pos = 128
@@ -158,7 +158,7 @@ df['col_line'] = np.concatenate([
     dlpu_pred[col_line_pos, :],
     punet_pred[col_line_pos, :],
     restormer_pred[col_line_pos, :],
-    # snaphu_pred[col_line_pos, :],
+    snaphu_pred[col_line_pos, :],
     sqd_lstm_pred[col_line_pos, :],
     u3net_pred[col_line_pos, :],
     uformer_pred[col_line_pos, :],
@@ -170,7 +170,7 @@ df['raw_line'] = np.concatenate([
     dlpu_pred[:, raw_line_pos],
     punet_pred[:, raw_line_pos],
     restormer_pred[:, raw_line_pos],
-    # snaphu_pred[:, raw_line_pos],
+    snaphu_pred[:, raw_line_pos],
     sqd_lstm_pred[:, raw_line_pos],
     u3net_pred[:, raw_line_pos],
     uformer_pred[:, raw_line_pos],

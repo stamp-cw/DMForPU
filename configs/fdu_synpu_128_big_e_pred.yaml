@@ -10,7 +10,7 @@ meter:
   name: WavMeter
 
 data:
-  name: SyntheticPUMat128Big
+  name: SyntheticPUMat128BigEpred
   image_size: 128
   color_channels: 1
   num_workers: 1

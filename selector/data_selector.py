@@ -547,7 +547,7 @@ class SyntheticPUMatCutWavDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name=['InSARDLPUMat256Big','InSARDLPUMat256Test','InSARDLPUMat256BigV2'])
+@register_data_loader(name=['InSARDLPUMat256Big','InSARDLPUMat256Test','InSARDLPUMat256BigV2','InSARDLPUMat256BigVpred','InSARDLPUMat256BigEpred'])
 class InSARDLPUMatDataLoader(BaseDataLoader):
 
     @cached_property
@@ -656,7 +656,7 @@ class InSARDLPUMatDataLoaderV1(BaseDataLoader):
 
 
 
-@register_data_loader(name=['SyntheticPUMat128Test','SyntheticPUMat128Big','SyntheticPUMat128BigV2'])
+@register_data_loader(name=['SyntheticPUMat128Test','SyntheticPUMat128Big','SyntheticPUMat128BigV2','SyntheticPUMat128BigVpred','SyntheticPUMat128BigEpred'])
 class SyntheticPUMatDataLoader(BaseDataLoader):
 
     @cached_property

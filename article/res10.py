@@ -9,7 +9,7 @@ from spectral.io import envi
 import matplotlib.patches as patches
 
 from article.load_article_data import _to_numpy_2d, pi_formatter, load_article_snr_data
-from article.res2 import snaphu_pred
+# from article.res2 import snaphu_pred
 
 wrapped_mat_path = r"data/wrapped/wrapped.mat"
 gt_mat_path = r"data/gt/gt.mat"
@@ -33,7 +33,7 @@ sqd_lstm_pred_0db = load_article_snr_data("sqd_lstm", 0)
 restormer_pred_0db = load_article_snr_data("restormer", 0)
 uformer_pred_0db = load_article_snr_data("uformer", 0)
 ours_pred_0db = load_article_snr_data("ours", 0)
-snaphu_pred_0db = load_article_snr_data("snaphu", 0)
+# snaphu_pred_0db = load_article_snr_data("snaphu", 0)
 wrapped_mat_0db = load_article_snr_data("wrapped", 0)
 
 # 5db
@@ -44,7 +44,7 @@ sqd_lstm_pred_5db = load_article_snr_data("sqd_lstm", 5)
 restormer_pred_5db = load_article_snr_data("restormer", 5)
 uformer_pred_5db = load_article_snr_data("uformer", 5)
 ours_pred_5db = load_article_snr_data("ours", 5)
-snaphu_pred_5db = load_article_snr_data("snaphu", 5)
+# snaphu_pred_5db = load_article_snr_data("snaphu", 5)
 wrapped_mat_5db = load_article_snr_data("wrapped", 5)
 
 # 10db
@@ -55,7 +55,7 @@ sqd_lstm_pred_10db = load_article_snr_data("sqd_lstm", 10)
 restormer_pred_10db = load_article_snr_data("restormer", 10)
 uformer_pred_10db = load_article_snr_data("uformer", 10)
 ours_pred_10db = load_article_snr_data("ours", 10)
-snaphu_pred_10db = load_article_snr_data("snaphu", 10)
+# snaphu_pred_10db = load_article_snr_data("snaphu", 10)
 wrapped_mat_10db = load_article_snr_data("wrapped", 10)
 
 # 20db
@@ -66,7 +66,7 @@ sqd_lstm_pred_20db = load_article_snr_data("sqd_lstm", 20)
 restormer_pred_20db = load_article_snr_data("restormer", 20)
 uformer_pred_20db = load_article_snr_data("uformer", 20)
 ours_pred_20db = load_article_snr_data("ours", 20)
-snaphu_pred_20db = load_article_snr_data("snaphu", 20)
+# snaphu_pred_20db = load_article_snr_data("snaphu", 20)
 wrapped_mat_20db = load_article_snr_data("wrapped", 20)
 
 # 30db
@@ -77,27 +77,27 @@ sqd_lstm_pred_30db = load_article_snr_data("sqd_lstm", 30)
 restormer_pred_30db = load_article_snr_data("restormer", 30)
 uformer_pred_30db = load_article_snr_data("uformer", 30)
 ours_pred_30db = load_article_snr_data("ours", 30)
-snaphu_pred_30db = load_article_snr_data("snaphu", 30)
+# snaphu_pred_30db = load_article_snr_data("snaphu", 30)
 wrapped_mat_30db = load_article_snr_data("wrapped", 30)
 
 titles = [
              # 第一行
              "(a) Wrapped",
              "(b) GT",
-             "(c) SNAPHU",
-             "(d) PUNet",
-             "(e) U3Net",
-             "(f) DLPU",
-             "(g) SQD-LSTM",
-             "(h) Restormer",
-             "(i) Uformer",
-             "(j) Ours",
+             # "(c) SNAPHU",
+             "(c) PUNet",
+             "(d) U3Net",
+             "(e) DLPU",
+             "(f) SQD-LSTM",
+             "(g) Restormer",
+             "(h) Uformer",
+             "(i) Ours",
          ] * 5
 imgs = [
            # 第一行 0db
            wrapped_mat_0db,
            gt_mat,
-           snaphu_pred_0db,
+           # snaphu_pred_0db,
            _to_numpy_2d(punet_pred_0db),
            _to_numpy_2d(u3net_pred_0db),
            _to_numpy_2d(dlpu_pred_0db),
@@ -108,7 +108,7 @@ imgs = [
             # 第二行 5db
             wrapped_mat_5db,
             gt_mat,
-            snaphu_pred_5db,
+            # snaphu_pred_5db,
             _to_numpy_2d(punet_pred_5db),
             _to_numpy_2d(u3net_pred_5db),
             _to_numpy_2d(dlpu_pred_5db),
@@ -119,7 +119,7 @@ imgs = [
             # 第三行 10db
             wrapped_mat_10db,
             gt_mat,
-            snaphu_pred_10db,
+            # snaphu_pred_10db,
             _to_numpy_2d(punet_pred_10db),
             _to_numpy_2d(u3net_pred_10db),
             _to_numpy_2d(dlpu_pred_10db),
@@ -130,7 +130,7 @@ imgs = [
             # 第四行 20db
             wrapped_mat_20db,
             gt_mat,
-            snaphu_pred_20db,
+            # snaphu_pred_20db,
             _to_numpy_2d(punet_pred_20db),
             _to_numpy_2d(u3net_pred_20db),
             _to_numpy_2d(dlpu_pred_20db),
@@ -141,7 +141,7 @@ imgs = [
             # 第五行 30db
             wrapped_mat_30db,
             gt_mat,
-            snaphu_pred_30db,
+            # snaphu_pred_30db,
             _to_numpy_2d(punet_pred_30db),
             _to_numpy_2d(u3net_pred_30db),
             _to_numpy_2d(dlpu_pred_30db),
@@ -154,7 +154,7 @@ cmaps = [
             # 第一行
             "twilight","turbo",
             "turbo","turbo","turbo","turbo",
-            "turbo","turbo","turbo","turbo",
+            "turbo","turbo","turbo",
         ] * 5
 
 fig_dpi = 600
@@ -163,7 +163,8 @@ fig_size_H = 2.5
 pdf_img_path = r"res/res10/figure.pdf"
 png_img_path = r"res/res10/figure.png"
 raw = 5
-col = 10
+# col = 10
+col = 9
 fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
 axes = axes.flatten()
 zip_list = list(zip(axes, imgs, titles, cmaps))

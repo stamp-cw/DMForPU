@@ -218,8 +218,12 @@ def load_article_snr_data(name, snr):
         snaphu_pred = snaphu_mat.load()[:,:,0].squeeze(-1)
         return snaphu_pred
     elif name == "wrapped":
-        wrapped_mat_path = f"data_snr/{name}_snr/{snr}db/wrapped.mat"
-        wrapped_mat = sio.loadmat(wrapped_mat_path)['input']
+        # wrapped_mat_path = f"data_snr/{name}_snr/{snr}db/wrapped.mat"
+        # wrapped_mat = sio.loadmat(wrapped_mat_path)['input']
+        wrapped_mat_path = f"data_snr/ours_snr/{snr}db/samples_0_1.pt"
+        pred_batch_pt = torch.load(wrapped_mat_path)
+        wrapped_mat = pred_batch_pt['wrapped']
+        wrapped_mat = _to_numpy_2d(wrapped_mat)
         return wrapped_mat
     else:
         pred_batch_path = f"data_snr/{name}_snr/{snr}db/samples_0_1.pt"

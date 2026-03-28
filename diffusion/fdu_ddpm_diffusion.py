@@ -37,14 +37,6 @@ class FduDDPMDiffusion:
             t,
             encoder_hidden_states=encoder_hidden_states,
         ).sample
-        # self.v_pred = self.noise_pred
-        # alphas_cumprod = self.scheduler.alphas_cumprod.to(self.device)
-        # alpha_bar = alphas_cumprod[t[0].cpu()].view(-1, 1, 1, 1)
-        #
-        # self.v_target = (
-        #         torch.sqrt(alpha_bar) * self.noise
-        #         - torch.sqrt(1 - alpha_bar) * self.gt_unwrapped_neg_norm
-        # )
         self.pred_unwrapped_neg_norm = self.scheduler.step(self.noise_pred, t[0].cpu(), self.noisy).pred_original_sample
         self.pred_unwrapped_norm = (self.pred_unwrapped_neg_norm + 1) / 2
         self.pred_unwrapped = self.pred_unwrapped_norm * (2 * torch.pi * (self.config.data.k_max - self.config.data.k_min))
@@ -53,9 +45,15 @@ class FduDDPMDiffusion:
         if self.config.diffusion.prediction_type == "sample":
             self.pred_batch["pred"] = self.pred_unwrapped_neg_norm
             self.pred_batch["gt"] = self.gt_unwrapped_neg_norm
-        # elif self.config.diffusion.prediction_type == "v_prediction":
-        #     self.pred_batch["pred"] = self.v_pred
-        #     self.pred_batch["gt"] = self.v_target
+        elif self.config.diffusion.prediction_type == "v_prediction":
+            self.v_pred = self.noise_pred
+            self.v_target = self.scheduler.get_velocity(
+                self.gt_unwrapped_neg_norm,
+                self.noise,
+                t
+            )
+            self.pred_batch["pred"] = self.v_pred
+            self.pred_batch["gt"] = self.v_target
         else:
             self.pred_batch["pred"] = self.noise_pred
             self.pred_batch["gt"] = self.noise
