@@ -64,13 +64,14 @@ model:
 #  block_out_channels: [32, 128, 128]
 #  block_out_channels: [64, 128, 256, 256]
 #  block_out_channels: [32, 32, 32, 32]
-  block_out_channels: [64, 64, 64, 64]
+#  block_out_channels: [64, 64, 64, 64]
+  block_out_channels: [128, 128, 128, 128]
 #  block_out_channels: [64, 64, 64, 128]
 #  cross_attention_dim: 1280
 #  cross_attention_dim: 320
 #  cross_attention_dim: 768 # 64 * 3 * 4
-  cross_attention_dim: 192 # 64 * 3
-#  cross_attention_dim: 384 # 128 * 3
+#  cross_attention_dim: 192 # 64 * 3
+  cross_attention_dim: 384 # 128 * 3
 
 diffusion:
   name: FduDDPMDiffusion
@@ -101,6 +102,7 @@ sampling:
 val:
   device: cuda
   batch_size: 128
+#  batch_size: 32
 
 test:
   device: cuda

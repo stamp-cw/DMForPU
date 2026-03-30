@@ -71,7 +71,8 @@ diffusion:
 #  num_infer_timesteps: 100
 #  num_infer_timesteps: 1000
 #  num_infer_timesteps: 5
-  num_infer_timesteps: 5
+#  num_infer_timesteps: 5
+  num_infer_timesteps: 50
   conditioning_channels: 2
   repeat_channels: 1
 #  use_controlnet: true
