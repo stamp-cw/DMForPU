@@ -95,9 +95,9 @@ class SyntheticPUMatNoise(Dataset):
         noisePower = sigPower / reqSNR
         std = torch.sqrt(noisePower)
         # 3. 生成噪声
-        # torch.manual_seed(42)
-        # torch.cuda.manual_seed(42)
-        # torch.cuda.manual_seed_all(42)
+        torch.manual_seed(42)
+        torch.cuda.manual_seed(42)
+        torch.cuda.manual_seed_all(42)
 
         wrapped_norm_noise = std * torch.randn_like(wrapped_norm, device=wrapped_norm.device)
         wrapped_noise = wrapped_norm_noise * (2 * torch.pi) - torch.pi
