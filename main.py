@@ -222,6 +222,7 @@ if __name__ == '__main__':
     from model.unet.dlpu import DLPUNet
     from model.fdunet.fdunet import FDUNet
     from model.fdunet.fdunet_v1 import FDUNetV1
+    from model.fdunet.fdunet_v2 import FDUNetV2
     # Import Diffusions
     # from diffusion.ddpm_diffusion import DDPMDiffusion
     # from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion

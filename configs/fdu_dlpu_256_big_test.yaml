@@ -7,15 +7,14 @@ meter:
   name: WavMeter
 
 data:
-  name: InSARDLPUMat256Big
+  name: InSARDLPUMat256BigTest
   image_size: 256
   color_channels: 1
   num_workers: 1
   k_min: 0
 #  k_max: 7
 #  k_max: 100
-#  k_max: 97
-  k_max: 40
+  k_max: 97
 #  k_max: 83
   wavelet_level: 1
   wavelet_type: haar
@@ -58,8 +57,7 @@ model:
 #  block_out_channels: [64, 64, 64, 64]
 #  block_out_channels: [128, 128, 128, 128, 128]
 #  block_out_channels: [64, 64, 64, 64, 128]
-#  block_out_channels: [64, 128, 256, 512]
-  block_out_channels: [128, 128, 128, 128]
+  block_out_channels: [64, 128, 256, 512]
 #  block_out_channels: [64, 64, 64, 64]
 #  cross_attention_dim: 1280
 #  cross_attention_dim: 320
