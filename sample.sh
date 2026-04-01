@@ -42,3 +42,4 @@ python3 main.py --config fdu_synpu_128_big_v_pred.yaml --mode val --sampling_fro
 python3 main.py --config fdu_synpu_128_big_e_pred.yaml --mode val --sampling_from_epoch 100
 
 
+python3 main.py --config fdu_dlpu_256_big_test.yaml --mode val --sampling_from_epoch 20

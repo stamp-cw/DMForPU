@@ -14,7 +14,8 @@ data:
   k_min: 0
 #  k_max: 7
 #  k_max: 100
-  k_max: 97
+#  k_max: 97
+  k_max: 41
 #  k_max: 83
   wavelet_level: 1
   wavelet_type: haar
@@ -28,12 +29,12 @@ training:
   continue_training_epochs: 1000001
 #  batch_size: 8
 #  batch_size: 16
-  batch_size: 4
+  batch_size: 2
   use_all_data: false
   amp: true
   log_freq: 1
 #  snapshot_freq: 100
-  snapshot_freq: 20
+  snapshot_freq: 10
   snapshot_sampling: false
   snapshot_sampling_freq: 100
 #  snapshot_val: true
@@ -57,15 +58,16 @@ model:
 #  block_out_channels: [64, 64, 64, 64]
 #  block_out_channels: [128, 128, 128, 128, 128]
 #  block_out_channels: [64, 64, 64, 64, 128]
-  block_out_channels: [64, 128, 256, 512]
+#  block_out_channels: [64, 128, 256, 512]
+  block_out_channels: [128, 128, 128, 128]
 #  block_out_channels: [64, 64, 64, 64]
 #  cross_attention_dim: 1280
 #  cross_attention_dim: 320
 #  cross_attention_dim: 768 # 64 * 3 * 4
 #  cross_attention_dim: 192 # 64 * 3
 #  cross_attention_dim: 96 # 32 * 3
-#  cross_attention_dim: 384 # 32 * 3
-  cross_attention_dim: 1536 # 32 * 3
+  cross_attention_dim: 384 # 32 * 3
+#  cross_attention_dim: 1536 # 32 * 3
 
 diffusion:
   name: FduDDPMDiffusion

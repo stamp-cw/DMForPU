@@ -15,7 +15,8 @@ data:
 #  k_max: 7
 #  k_max: 100
 #  k_max: 97
-  k_max: 40
+#  k_max: 40
+  k_max: 84
 #  k_max: 83
   wavelet_level: 1
   wavelet_type: haar
@@ -66,8 +67,8 @@ model:
 #  cross_attention_dim: 768 # 64 * 3 * 4
 #  cross_attention_dim: 192 # 64 * 3
 #  cross_attention_dim: 96 # 32 * 3
-#  cross_attention_dim: 384 # 32 * 3
-  cross_attention_dim: 1536 # 32 * 3
+  cross_attention_dim: 384 # 32 * 3
+#  cross_attention_dim: 1536 # 32 * 3
 
 diffusion:
   name: FduDDPMDiffusion
