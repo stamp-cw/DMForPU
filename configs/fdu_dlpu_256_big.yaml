@@ -1,7 +1,8 @@
 seed: 42
 
 loss_type:
-  name: Pure
+#  name: Pure
+  name: PureL1
 
 meter:
   name: WavMeter
@@ -14,9 +15,9 @@ data:
   k_min: 0
 #  k_max: 7
 #  k_max: 100
-#  k_max: 97
+  k_max: 97
 #  k_max: 40
-  k_max: 84
+#  k_max: 84
 #  k_max: 83
   wavelet_level: 1
   wavelet_type: haar
@@ -56,18 +57,18 @@ model:
 #  block_out_channels: [32, 128, 128]
 #  block_out_channels: [64, 128, 256, 256]
 #  block_out_channels: [32, 32, 32, 32]
-#  block_out_channels: [64, 64, 64, 64]
+  block_out_channels: [64, 64, 64, 64]
 #  block_out_channels: [128, 128, 128, 128, 128]
 #  block_out_channels: [64, 64, 64, 64, 128]
 #  block_out_channels: [64, 128, 256, 512]
-  block_out_channels: [128, 128, 128, 128]
+#  block_out_channels: [128, 128, 128, 128]
 #  block_out_channels: [64, 64, 64, 64]
 #  cross_attention_dim: 1280
 #  cross_attention_dim: 320
 #  cross_attention_dim: 768 # 64 * 3 * 4
 #  cross_attention_dim: 192 # 64 * 3
-#  cross_attention_dim: 96 # 32 * 3
-  cross_attention_dim: 384 # 32 * 3
+  cross_attention_dim: 96 # 32 * 3
+#  cross_attention_dim: 384 # 32 * 3
 #  cross_attention_dim: 1536 # 32 * 3
 
 diffusion:

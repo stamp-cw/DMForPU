@@ -71,6 +71,7 @@ class WavMeter:
     def compute_batch_metric(self):
         # Loss Metric
         noise_mse = F.mse_loss(self.pred, self.gt)
+        noise_l1 = F.l1_loss(self.gt, self.pred)
         charbonnier_loss = self.charbonnier_loss(self.pred_unwrapped, self.gt_unwrapped)
         wav_loss = self.wav_loss(self.pred_unwrapped, self.gt_unwrapped)
         lge_loss = self.local_gradient_energy_loss(self.pred_unwrapped, self.gt_unwrapped)
@@ -87,6 +88,7 @@ class WavMeter:
         self.batch_metric_dict = {
             # Loss Metric
             'NoiseMSE': noise_mse,
+            'NoiseL1': noise_l1,
             'CharbonnierLoss': charbonnier_loss,
             'WavLoss': wav_loss,
             'LGELoss': lge_loss,

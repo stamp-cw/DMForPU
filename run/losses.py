@@ -48,6 +48,18 @@ class PureLossType:
         total_loss = diff_loss
         return total_loss
 
+@register_loss_type(name='PureL1')
+class PureL1LossType:
+    def __init__(self, config):
+        self.config = config
+        self.name = config.loss_type.name
+        self.meter = config.train_meter
+
+    def __call__(self, diffusion):
+        diff_loss = self.meter.batch_metric_dict['NoiseL1']
+        total_loss = diff_loss
+        return total_loss
+
 
 @register_loss_type(name='PHY1')
 class PHY1LossType:
