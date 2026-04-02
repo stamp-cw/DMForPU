@@ -29,14 +29,15 @@ training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
-#  batch_size: 8
+  batch_size: 8
 #  batch_size: 16
-  batch_size: 4
+#  batch_size: 4
   use_all_data: false
   amp: true
   log_freq: 1
 #  snapshot_freq: 100
-  snapshot_freq: 20
+#  snapshot_freq: 20
+  snapshot_freq: 1
   snapshot_sampling: false
   snapshot_sampling_freq: 100
 #  snapshot_val: true
@@ -66,8 +67,8 @@ model:
 #  cross_attention_dim: 1280
 #  cross_attention_dim: 320
 #  cross_attention_dim: 768 # 64 * 3 * 4
-#  cross_attention_dim: 192 # 64 * 3
-  cross_attention_dim: 96 # 32 * 3
+  cross_attention_dim: 192 # 64 * 3
+#  cross_attention_dim: 96 # 32 * 3
 #  cross_attention_dim: 384 # 32 * 3
 #  cross_attention_dim: 1536 # 32 * 3
 
