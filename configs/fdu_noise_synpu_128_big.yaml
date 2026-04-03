@@ -2,7 +2,7 @@ seed: 42
 
 loss_type:
 #  name: MchLoss
-  name: Pure
+  name: PureL1
 #  name: WavLoss
 
 meter:
@@ -21,12 +21,12 @@ data:
   mean: 10.0180
   std: 5.7466
   scale_alpha: 1
-#  noise_snr: 30
+  noise_snr: 30
 #  noise_snr: 20
 #  noise_snr: 10
 #  noise_snr: 10
 #  noise_snr: 5
-  noise_snr: 0
+#  noise_snr: 0
 
 training:
   device: cuda

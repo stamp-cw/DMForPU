@@ -64,34 +64,34 @@ ours_e_error = gt_mat - _to_numpy_2d(ours_e_pred)
 ours_e_clip_error = np.clip(np.abs(ours_e_error).flatten(), clip_min, clip_max)
 
 
-# # insar_dlpu
-# dlpu_clip_min = 0
-# dlpu_clip_max = 25
-# # dlpu_clip_max = 24
-#
-# dlpu_wrapped_mat_path = r"data_dlpu/wrapped/wrapped.mat"
-# dlpu_gt_mat_path = r"data_dlpu/gt/gt.mat"
-# dlpu_wrapped_mat = sio.loadmat(dlpu_wrapped_mat_path)['input']
-# # gt_mat = sio.loadmat(gt_mat_path)['gt']
-# dlpu_gt_mat = sio.loadmat(dlpu_gt_mat_path)['output']
-#
-# dlpu_ours_pred_batch_path = "data_dlpu/ours/samples_0_1.pt"
-# dlpu_ours_pred_batch_pt = torch.load(dlpu_ours_pred_batch_path)
-# dlpu_ours_pred = dlpu_ours_pred_batch_pt['pred_unwrapped']
-# dlpu_ours_error = dlpu_gt_mat - _to_numpy_2d(dlpu_ours_pred)
-# dlpu_ours_clip_error = np.clip(np.abs(dlpu_ours_error).flatten(), dlpu_clip_min, dlpu_clip_max)
-#
-# dlpu_ours_v_pred_batch_path = "data_dlpu/ours_v_pred/samples_0_1.pt"
-# dlpu_ours_v_pred_batch_pt = torch.load(dlpu_ours_v_pred_batch_path)
-# dlpu_ours_v_pred = dlpu_ours_v_pred_batch_pt['pred_unwrapped']
-# dlpu_ours_v_error = dlpu_gt_mat - _to_numpy_2d(dlpu_ours_v_pred)
-# dlpu_ours_v_clip_error = np.clip(np.abs(dlpu_ours_v_error).flatten(), dlpu_clip_min, dlpu_clip_max)
-#
-# dlpu_ours_e_pred_batch_path = "data_dlpu/ours_e_pred/samples_0_1.pt"
-# dlpu_ours_e_pred_batch_pt = torch.load(dlpu_ours_e_pred_batch_path)
-# dlpu_ours_e_pred = dlpu_ours_e_pred_batch_pt['pred_unwrapped']
-# dlpu_ours_e_error = dlpu_gt_mat - _to_numpy_2d(dlpu_ours_e_pred)
-# dlpu_ours_e_clip_error = np.clip(np.abs(dlpu_ours_e_error).flatten(), dlpu_clip_min, dlpu_clip_max)
+# insar_dlpu
+dlpu_clip_min = 0
+dlpu_clip_max = 25
+# dlpu_clip_max = 24
+
+dlpu_wrapped_mat_path = r"data_dlpu/wrapped/wrapped.mat"
+dlpu_gt_mat_path = r"data_dlpu/gt/gt.mat"
+dlpu_wrapped_mat = sio.loadmat(dlpu_wrapped_mat_path)['input']
+# gt_mat = sio.loadmat(gt_mat_path)['gt']
+dlpu_gt_mat = sio.loadmat(dlpu_gt_mat_path)['output']
+
+dlpu_ours_pred_batch_path = "data_dlpu/ours/samples_0_1.pt"
+dlpu_ours_pred_batch_pt = torch.load(dlpu_ours_pred_batch_path)
+dlpu_ours_pred = dlpu_ours_pred_batch_pt['pred_unwrapped']
+dlpu_ours_error = dlpu_gt_mat - _to_numpy_2d(dlpu_ours_pred)
+dlpu_ours_clip_error = np.clip(np.abs(dlpu_ours_error).flatten(), dlpu_clip_min, dlpu_clip_max)
+
+dlpu_ours_v_pred_batch_path = "data_dlpu/ours_v_pred/samples_0_1.pt"
+dlpu_ours_v_pred_batch_pt = torch.load(dlpu_ours_v_pred_batch_path)
+dlpu_ours_v_pred = dlpu_ours_v_pred_batch_pt['pred_unwrapped']
+dlpu_ours_v_error = dlpu_gt_mat - _to_numpy_2d(dlpu_ours_v_pred)
+dlpu_ours_v_clip_error = np.clip(np.abs(dlpu_ours_v_error).flatten(), dlpu_clip_min, dlpu_clip_max)
+
+dlpu_ours_e_pred_batch_path = "data_dlpu/ours_e_pred/samples_0_1.pt"
+dlpu_ours_e_pred_batch_pt = torch.load(dlpu_ours_e_pred_batch_path)
+dlpu_ours_e_pred = dlpu_ours_e_pred_batch_pt['pred_unwrapped']
+dlpu_ours_e_error = dlpu_gt_mat - _to_numpy_2d(dlpu_ours_e_pred)
+dlpu_ours_e_clip_error = np.clip(np.abs(dlpu_ours_e_error).flatten(), dlpu_clip_min, dlpu_clip_max)
 
 
 titles = [
@@ -100,17 +100,29 @@ titles = [
     "(Sb) Ours Pred",
     "(Sc) Error",
     "(Sd) Error / rad",
+    "(Se) GT",
+    "(Sf) Ours Pred",
+    "(Sg) Error",
+    "(Sh) Error / rad",
     # 第二行
     "(Va) GT",
     "(Vb) Ours v-Pred",
     "(Vc) Error",
     "(Vd) Error / rad",
+    "(Ve) GT",
+    "(Vf) Ours v-Pred",
+    "(Vg) Error",
+    "(Vh) Error / rad",
 
     # 第三行
     "(Ea) GT",
     "(Eb) Ours e-Pred",
     "(Ec) Error",
     "(Ed) Error / rad",
+    "(Ee) GT",
+    "(Ef) Ours e-Pred",
+    "(Eg) Error",
+    "(Eh) Error / rad",
 ]
 imgs = [
     # 第一行
@@ -118,19 +130,33 @@ imgs = [
     _to_numpy_2d(ours_pred),
     ours_error,
     ours_clip_error,
+    dlpu_gt_mat,
+    _to_numpy_2d(dlpu_ours_pred),
+    dlpu_ours_error,
+    dlpu_ours_clip_error,
     # 第二行
     gt_mat,
     _to_numpy_2d(ours_v_pred),
     ours_v_error,
     ours_v_clip_error,
+    dlpu_gt_mat,
+    _to_numpy_2d(dlpu_ours_v_pred),
+    dlpu_ours_v_error,
+    dlpu_ours_v_clip_error,
     # 第三行
     gt_mat,
     _to_numpy_2d(ours_e_pred),
     ours_e_error,
     ours_e_clip_error,
+    dlpu_gt_mat,
+    _to_numpy_2d(dlpu_ours_e_pred),
+    dlpu_ours_e_error,
+    dlpu_ours_e_clip_error,
 ]
 cmaps = [
     # 第一行
+    "turbo",
+    "turbo","inferno","inferno",
     "turbo",
     "turbo","inferno","inferno",
 ] * 3
@@ -141,8 +167,7 @@ fig_size_H = 2.5
 pdf_img_path = r"res/res13/figure.pdf"
 png_img_path = r"res/res13/figure.png"
 raw = 3
-# col = 8
-col = 4
+col = 8
 fig, axes = plt.subplots(raw, col, figsize=(fig_size_W * col, fig_size_H * raw))
 axes = axes.flatten()
 zip_list = list(zip(axes, imgs, titles, cmaps))
@@ -193,6 +218,17 @@ ranges = [
     # (1, None)
 ]
 
+dlpu_ranges = [
+    # (0, 2.5),
+    # (12.5, 25),
+    # (dlpu_clip_min, clip_max / 10),
+    # (dlpu_clip_max / 2, clip_max),
+
+    (dlpu_clip_min, dlpu_clip_max / 10),
+    (dlpu_clip_max / 2, dlpu_clip_max),
+    # (1, None)
+]
+
 # ======================
 # 绘图
 # ======================
@@ -217,8 +253,23 @@ for ax, img, title, cmap in zip_list[0:1] + zip_list[col:col+1] + zip_list[2*col
     cbar.formatter = FuncFormatter(pi_formatter)
     cbar.update_ticks()
 
+color_norm = colors.Normalize(vmin=0)
+for ax, img, title, cmap in zip_list[4:5] + zip_list[col+4:col+4+1] + zip_list[2*col+4:2*col+4+1] + zip_list[5:6] + zip_list[col+5:col+6] + zip_list[2*col+5:2*col+6]:
+    im = ax.imshow(img, cmap=cmap, norm=color_norm)
+    ax.set_xlabel(title, fontsize=7, labelpad=6)
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.locator = MultipleLocator(2*np.pi)
+    cbar.formatter = FuncFormatter(pi_formatter)
+    cbar.update_ticks()
+
 # Error
 for ax, img, title, cmap in zip_list[2:3] + zip_list[col+2:col+3] + zip_list[2*col+2:2*col+3]:
+    im = ax.imshow(img, cmap=cmap)
+    ax.set_xlabel(title, fontsize=7, labelpad=6)
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+# for ax, img, title, cmap in zip_list[3*col+1:]:
+for ax, img, title, cmap in zip_list[6:7] + zip_list[col+6:col+7] + zip_list[2*col+6:2*col+7]:
     im = ax.imshow(img, cmap=cmap)
     ax.set_xlabel(title, fontsize=7, labelpad=6)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
@@ -252,6 +303,37 @@ for ax, error, title, cmap in zip_list[3:4] + zip_list[col+3:col+4] + zip_list[2
         add_range_annotation(ax, low, high, y, label)
 
     ax.set_xlim(clip_min-eps, clip_max+eps)
+    ax.set_ylim(0, y_max * 1.2)
+    ax.grid(axis='y', linestyle='--', alpha=0.5)
+
+for ax, error, title, cmap in zip_list[7:8] + zip_list[col+7:col+8] + zip_list[2*col+7:2*col+8]:
+    sns.histplot(
+        error,
+        bins=10,
+        stat="percent",  # 关键：显示百分比
+        edgecolor="blue",
+        color="white",
+        linewidth=1.5,
+        ax=ax
+    )
+    # ax.set_xlabel("Error / rad", fontsize=7, labelpad=6)
+    ax.set_xlabel(title, fontsize=7, labelpad=6)
+    ax.set_ylabel("Precent (%)", fontsize=7, labelpad=6)
+
+    # ======================
+    # 添加标注
+    # ======================
+    y_max = ax.get_ylim()[1]
+
+    for i, (low, high) in enumerate(dlpu_ranges):
+        ratio = calc_ratio(error, low, high) * 100
+        y = ratio * 0.5
+
+        label = f"{ratio:.1f}%"
+
+        add_range_annotation(ax, low, high, y, label)
+
+    ax.set_xlim(dlpu_clip_min-eps, dlpu_clip_max+eps)
     ax.set_ylim(0, y_max * 1.2)
     ax.grid(axis='y', linestyle='--', alpha=0.5)
 
