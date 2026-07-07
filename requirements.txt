@@ -1,9 +1,16 @@
-wandb
-tensorboard
+# cuda
+torch
+torchvision
+torchaudio
+# api
+diffusers
+transformers
+#plot
 scipy
 matplotlib
-diffusers
-ml_collections
-torchvision
-# extra packages
+#log
+wandb
+tensorboard
+# extra
 timm
+ml_collections
