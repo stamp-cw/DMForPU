@@ -2,6 +2,8 @@
 
 这是一个论文代码仓库，入口统一走 `main.py`，通过 `--config` 选择配置文件，通过 `--mode` 选择训练、验证、采样或测试流程。
 
+Article: WWFDiff-PU: A Wavelet Frequency Decomposed Diffusion Model For Phase Unwrapping
+
 ## 1. 环境安装
 
 先安装 PyTorch 和基础依赖：
