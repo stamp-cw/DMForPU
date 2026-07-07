@@ -37,7 +37,7 @@ training:
 #  batch_size: 256
 #  batch_size: 64
 #  batch_size: 16
-  batch_size: 4
+  batch_size: 32
   use_all_data: false
   amp: true
   log_freq: 1

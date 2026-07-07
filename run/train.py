@@ -38,6 +38,7 @@ class Trainer:
 
 
     def train(self):
+        torch.cuda.set_per_process_memory_fraction(0.9, device=0)
         if self.config.io.training_from_scratch or self.config.io.latest_checkpoint_file_path is None:
             self.start_epoch = 0
             self.acc_batch = 0
@@ -165,18 +166,18 @@ class EpochFN:
         meter.epoch = epoch
         meter.setup_data(pred_batch)
         meter.compute_batch_metric()
-        if self.config.training.amp:
-            scaler = GradScaler()
-            with autocast():
-                loss = self.loss_fn(diffusion)
-            scaler.scale(loss).backward()
-            self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch, scaler=scaler)
-            optimizer.zero_grad()
-        else:
-            loss = self.loss_fn(diffusion)
-            loss.backward()
-            self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch)
-            optimizer.zero_grad()
+        # if self.config.training.amp:
+        #     scaler = GradScaler()
+        #     with autocast():
+        #         loss = self.loss_fn(diffusion)
+        #     scaler.scale(loss).backward()
+        #     self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch, scaler=scaler)
+        #     optimizer.zero_grad()
+        # else:
+        loss = self.loss_fn(diffusion)
+        loss.backward()
+        self.optimize_fn(optimizer, diffusion.optimize_parameters, epoch=epoch)
+        optimizer.zero_grad()
         meter.batch_metric_dict["loss"] = loss.item()
         # print(meter.batch_metric_dict)
         return meter

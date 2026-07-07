@@ -13,12 +13,7 @@ data:
   color_channels: 1
   num_workers: 1
   k_min: 0
-#  k_max: 7
-#  k_max: 100
   k_max: 97
-#  k_max: 40
-#  k_max: 84
-#  k_max: 83
   wavelet_level: 1
   wavelet_type: haar
   mean: 10.0180
@@ -29,18 +24,13 @@ training:
   device: cuda
   brand_new_epochs: 100001
   continue_training_epochs: 1000001
-  batch_size: 8
-#  batch_size: 16
-#  batch_size: 4
+  batch_size: 16
   use_all_data: false
   amp: true
   log_freq: 1
-#  snapshot_freq: 100
-#  snapshot_freq: 20
   snapshot_freq: 1
   snapshot_sampling: false
   snapshot_sampling_freq: 100
-#  snapshot_val: true
   snapshot_val: false
   snapshot_val_freq: 1
   snapshot_batch_size: 128
@@ -48,48 +38,24 @@ training:
   best_evaluate_loss: 0.03
 
 model:
-#  name: FDUNetV2
   name: FDUNet
   sample_size: 256
   in_channels: 1
   out_channels: 1
   layers_per_block: 2
-#  block_out_channels: [64, 128, 256, 512]
-#  block_out_channels: [32, 128, 128]
-#  block_out_channels: [64, 128, 256, 256]
-#  block_out_channels: [32, 32, 32, 32]
-#  block_out_channels: [64, 64, 64, 64]
-#  block_out_channels: [128, 128, 128, 128, 128]
-#  block_out_channels: [64, 64, 64, 64, 128]
-#  block_out_channels: [64, 128, 256, 512]
-  block_out_channels: [128, 128, 128, 128]
-#  block_out_channels: [64, 64, 64, 64]
-#  cross_attention_dim: 1280
-#  cross_attention_dim: 320
-#  cross_attention_dim: 768 # 64 * 3 * 4
-#  cross_attention_dim: 192 # 64 * 3
-#  cross_attention_dim: 96 # 32 * 3
-  cross_attention_dim: 384 # 32 * 3
-#  cross_attention_dim: 1536 # 32 * 3
+  block_out_channels: [64, 64, 64, 64]
+  cross_attention_dim: 192
 
 diffusion:
   name: FduDDPMDiffusion
   timesteps: 1000
-#  num_train_timesteps: 1000
   num_train_timesteps: 1000
-#  num_infer_timesteps: 100
-#  num_infer_timesteps: 1000
-#  num_infer_timesteps: 5
   num_infer_timesteps: 5
   conditioning_channels: 2
   repeat_channels: 1
-#  use_controlnet: true
   use_controlnet: false
   use_patch_embedding: false
   prediction_type: "sample"
-#  prediction_type: "v_prediction"
-#  prediction_type: "epsilon"
-
 
 sampling:
   device: cuda
@@ -101,8 +67,6 @@ sampling:
 
 val:
   device: cuda
-#  batch_size: 128
-#  batch_size: 4
   batch_size: 32
 
 test:

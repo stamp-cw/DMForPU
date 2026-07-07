@@ -1,6 +1,6 @@
 import torch
 import wandb
-from triton.ops import cross_entropy
+# from triton.ops import cross_entropy
 
 from selector.meter_selector import register_metric
 from utils.metrics import rmse_metric

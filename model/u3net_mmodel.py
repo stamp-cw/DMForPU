@@ -138,14 +138,15 @@ class U3NetMModel:
         # db_lst = torch.tensor([0, 5, 10, 20, 30, 100])
         # snr = db_lst[torch.randint(0, len(db_lst), (1,))]
 
-        noise, std = self.get_Gaussian_Noise(
-            wrapped_numpy.shape[-2],
-            wrapped_numpy.shape[-1],
-            snr
-        )
+        # noise, std = self.get_Gaussian_Noise(
+        #     wrapped_numpy.shape[-2],
+        #     wrapped_numpy.shape[-1],
+        #     snr
+        # )
 
         # broadcast to (B,C,H,W)
-        noise = self.Wrap(wrapped_numpy + noise) - wrapped_numpy
+        # noise = self.Wrap(wrapped_numpy + noise) - wrapped_numpy
+        noise = 0
 
         WGy = self.Wrap(self.grad_op(wrapped_numpy))
         WGy_plus = self.Wrap(self.grad_op(wrapped_numpy + noise))

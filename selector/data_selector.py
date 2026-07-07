@@ -27,6 +27,7 @@ from dataset.SyntheticPUMatV1 import SyntheticPUMatV1
 # from dataset.SyntheticPUMatCutWav import SyntheticPUMatCutWav
 # from dataset.SyntheticPUMatMid import SyntheticPUMatMid
 from dataset.SyntheticPUMatWav import SyntheticPUMatWav
+from dataset.R2AUTif import R2AUTif
 
 
 class BaseDataLoader:
@@ -601,7 +602,7 @@ class InSARDLPUMatDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name=['InSARDLPUMat256BigV1','InSARDLPUMat256BigV3'])
+@register_data_loader(name=['InSARDLPUMat256BigV1','InSARDLPUMat256BigV3','InSARDLPUMat256BigV4','InSARDLPUMat256BigV5','InSARDLPUMat256BigV6','InSARDLPUMat256BigV7'])
 class InSARDLPUMatDataLoaderV1(BaseDataLoader):
 
     @cached_property
@@ -709,7 +710,7 @@ class SyntheticPUMatDataLoader(BaseDataLoader):
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
 
-@register_data_loader(name=['SyntheticPUMat128BigV1','SyntheticPUMat128BigV3'])
+@register_data_loader(name=['SyntheticPUMat128BigV1','SyntheticPUMat128BigV3','SyntheticPUMat128BigV4'])
 class SyntheticPUMatDataLoaderV1(BaseDataLoader):
 
     @cached_property
@@ -741,6 +742,113 @@ class SyntheticPUMatDataLoaderV1(BaseDataLoader):
                               mean = self.config.data.mean,
                               scale_alpha= self.config.data.scale_alpha,
                               )
+
+    @cached_property
+    def all_dataset(self):
+        return torch.utils.data.ConcatDataset([self.train_dataset, self.test_dataset])
+
+    @cached_property
+    def train_loader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
+                          num_workers=self.config.data.num_workers, pin_memory=True, drop_last=True)
+
+    @cached_property
+    def test_loader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+    @cached_property
+    def all_loader(self):
+        return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+@register_data_loader(name=['R2AUTif256BigV1','R2AUTif256BigV3'])
+class R2AUTifDataLoaderV1(BaseDataLoader):
+
+    @cached_property
+    def train_dataset(self):
+        return R2AUTifV1(
+            root=self.config.io.in_dataset_path, split='train',
+            transform=self.transform,
+            target_transform=self.gt_transform,
+            joint_transform=self.joint_transform,
+            k_max=self.config.data.k_max,
+            k_min=self.config.data.k_min,
+            wavelet_level=self.config.data.wavelet_level,
+            wavelet_type=self.config.data.wavelet_type,
+            std=self.config.data.std,
+            mean = self.config.data.mean,
+            scale_alpha= self.config.data.scale_alpha,
+        )
+
+    @cached_property
+    def test_dataset(self):
+        return R2AUTifV1(root=self.config.io.in_dataset_path, split='test',
+                            transform=self.transform,
+                            target_transform=self.gt_transform,
+                            joint_transform=self.joint_transform,
+                            k_max=self.config.data.k_max,
+                            k_min=self.config.data.k_min,
+                            wavelet_level=self.config.data.wavelet_level,
+                            wavelet_type=self.config.data.wavelet_type,
+                            std=self.config.data.std,
+                            mean = self.config.data.mean,
+                            scale_alpha= self.config.data.scale_alpha,
+                            )
+
+    @cached_property
+    def all_dataset(self):
+        return torch.utils.data.ConcatDataset([self.train_dataset, self.test_dataset])
+
+    @cached_property
+    def train_loader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
+                          num_workers=self.config.data.num_workers, pin_memory=True, drop_last=True)
+
+    @cached_property
+    def test_loader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+    @cached_property
+    def all_loader(self):
+        return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+
+@register_data_loader(name=['R2AUTif256Big'])
+class R2AUTifDataLoader(BaseDataLoader):
+
+    @cached_property
+    def train_dataset(self):
+        return R2AUTif(
+            root=self.config.io.in_dataset_path, split='train',
+            transform=self.transform,
+            target_transform=self.gt_transform,
+            joint_transform=self.joint_transform,
+            k_max=self.config.data.k_max,
+            k_min=self.config.data.k_min,
+            wavelet_level=self.config.data.wavelet_level,
+            wavelet_type=self.config.data.wavelet_type,
+            std=self.config.data.std,
+            mean = self.config.data.mean,
+            scale_alpha= self.config.data.scale_alpha,
+        )
+
+    @cached_property
+    def test_dataset(self):
+        return R2AUTif(root=self.config.io.in_dataset_path, split='test',
+                            transform=self.transform,
+                            target_transform=self.gt_transform,
+                            joint_transform=self.joint_transform,
+                            k_max=self.config.data.k_max,
+                            k_min=self.config.data.k_min,
+                            wavelet_level=self.config.data.wavelet_level,
+                            wavelet_type=self.config.data.wavelet_type,
+                            std=self.config.data.std,
+                            mean = self.config.data.mean,
+                            scale_alpha= self.config.data.scale_alpha,
+                            )
 
     @cached_property
     def all_dataset(self):

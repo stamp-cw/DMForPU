@@ -223,6 +223,9 @@ if __name__ == '__main__':
     from model.fdunet.fdunet import FDUNet
     from model.fdunet.fdunet_v1 import FDUNetV1
     from model.fdunet.fdunet_v2 import FDUNetV2
+    from model.fdunet.fdunet_v4 import FDUNetV4
+    from model.fdunet.fdunet_v5 import FDUNetV5
+    from model.fdunet.fdunet_v6 import FDUNetV6
     # Import Diffusions
     # from diffusion.ddpm_diffusion import DDPMDiffusion
     # from diffusion.neg_norm_ddpm_diffusion import NegNormDDPMDiffusion
@@ -241,10 +244,12 @@ if __name__ == '__main__':
     from diffusion.cfg_ddpm_diffusion import CfgDDPMDiffusion
     from diffusion.dfn_ddpm_diffusion import DfnDDPMDiffusion
     from diffusion.fdu_ddpm_diffusion import FduDDPMDiffusion
+    from diffusion.fdu_ddpm_diffusion_v5 import FduDDPMDiffusionV5
     # V1: no wwf - V2: no scp - V3: no wwf and scp
     # from diffusion.fdu_ddpm_diffusion_v1 import FduDDPMDiffusionV1
     # from diffusion.fdu_ddpm_diffusion_v2 import FduDDPMDiffusionV2
     # from diffusion.fdu_ddpm_diffusion_v3 import FduDDPMDiffusionV3
+    from diffusion.fdu_ddpm_diffusion_v4 import FduDDPMDiffusionV4
     # from diffusion.old.fdu_ddpm_diffusion import FduDDPMDiffusion
     # Import Meter
     from meter.pure_meter import PureMeter

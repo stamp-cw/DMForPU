@@ -2,3 +2,6 @@ tmp/**
 data/**
 test/**
 article/**
+article_old/**
+article_old2/**
+log/**

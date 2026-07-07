@@ -2,7 +2,7 @@ seed: 42
 
 loss_type:
 #  name: MchLoss
-  name: Pure
+  name: PureL1
 #  name: WavLoss
 
 meter:
@@ -37,13 +37,13 @@ training:
 #  batch_size: 256
 #  batch_size: 64
 #  batch_size: 16
-  batch_size: 4
+  batch_size: 32
   use_all_data: false
   amp: true
   log_freq: 1
 #  snapshot_freq: 100
 #  snapshot_freq: 50
-  snapshot_freq: 20
+  snapshot_freq: 1
   snapshot_sampling: false
   snapshot_sampling_freq: 100
 #  snapshot_val: true
