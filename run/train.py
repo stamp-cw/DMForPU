@@ -72,7 +72,6 @@ class Trainer:
         state_dict = {
             'model': self.diffusion.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-            'epoch': epoch
         }
         torch.save(state_dict, ckpt_file_path)
         self.logger.info(f"Saved model to {ckpt_file_path}")

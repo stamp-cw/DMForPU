@@ -14,3 +14,5 @@ tensorboard
 # extra
 timm
 ml_collections
+tifffile
+spectral
