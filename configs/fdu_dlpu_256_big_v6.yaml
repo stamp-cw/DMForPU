@@ -1,0 +1,89 @@
+seed: 42
+
+loss_type:
+  name: PureL1
+
+meter:
+  name: WavMeter
+
+data:
+  name: InSARDLPUMat256BigV6
+  image_size: 256
+  color_channels: 1
+  num_workers: 1
+  k_min: 0
+  k_max: 97
+  wavelet_level: 1
+  wavelet_type: haar
+  mean: 10.0180
+  std: 5.7466
+  scale_alpha: 1
+  noise_snr: 30
+
+training:
+  device: cuda
+  brand_new_epochs: 100001
+  continue_training_epochs: 1000001
+  batch_size: 8
+  use_all_data: false
+  amp: true
+  log_freq: 1
+  snapshot_freq: 1
+  snapshot_sampling: false
+  snapshot_sampling_freq: 100
+  snapshot_val: false
+  snapshot_val_freq: 50
+  snapshot_batch_size: 128
+  snapshot_best_loss: true
+  best_evaluate_loss: 0.05
+
+model:
+  name: FDUNetV6
+  sample_size: 256
+  in_channels: 1
+  out_channels: 1
+  layers_per_block: 1
+  block_out_channels: [64, 128, 256, 512, 1024]
+  cross_attention_dim: 64
+
+diffusion:
+  name: FduDDPMDiffusionV4
+  timesteps: 1000
+  num_train_timesteps: 1000
+  num_infer_timesteps: 5
+  conditioning_channels: 1
+  repeat_channels: 1
+  use_patch_embedding: false
+  use_controlnet: false
+  prediction_type: "sample"
+
+sampling:
+  device: cuda
+  batch_size: 1
+  total_samples: 8
+  record_freq: 1
+  eps: 1e-5
+  fix_seed: true
+
+val:
+  device: cuda
+  batch_size: 32
+
+test:
+  device: cuda
+  batch_size: 32
+
+optim:
+  optimizer: Adam
+  lr: 0.0001
+  weight_decay: 0.0001
+  beta1: 0.9
+  eps: 1e-8
+  warmup: 2
+  grad_clip: 1.0
+  momentum: 0.9
+
+iio:
+  use_tensorboard: true
+  use_wandb: false
+  save_pth_to_wandb: false
