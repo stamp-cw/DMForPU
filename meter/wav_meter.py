@@ -3,7 +3,7 @@ import wandb
 # from tornado.locale import load_gettext_translations
 
 from selector.meter_selector import register_metric
-from utils.metrics import l1_metric, rmse_metric
+from utils.metrics import l1_metric, rmse_metric, nrmse_metric
 from utils.util import AverageMeter, wrap_phase, multi_scale_wavelet, MultiScaleWavelet
 import torch.nn.functional as F
 import wandb
@@ -83,7 +83,7 @@ class WavMeter:
 
         unwrapped_l1_loss = F.l1_loss(self.gt_unwrapped, self.pred_unwrapped)
         unwrapped_rmse_loss = rmse_metric(self.pred_unwrapped, self.gt_unwrapped)
-        unwrapped_nrmse_loss = unwrapped_rmse_loss / (self.gt_unwrapped.max() - self.gt_unwrapped.min() + 1e-8)
+        unwrapped_nrmse_loss = nrmse_metric(self.pred_unwrapped, self.gt_unwrapped)
         unwrapped_pge_loss =  self.pge_loss(self.pred_unwrapped, self.gt_unwrapped)
 
         gt_norm = (self.gt_unwrapped - self.config.data.k_min * 2*torch.pi) / ((self.config.data.k_max - self.config.data.k_min) * 2 * torch.pi)

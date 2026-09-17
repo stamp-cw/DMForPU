@@ -1075,9 +1075,24 @@ class Uformer(nn.Module):
                  drop_rate=0., attn_drop_rate=0., drop_path_rate=0.1,
                  norm_layer=nn.LayerNorm, patch_norm=True,
                  use_checkpoint=False, token_projection='linear', token_mlp='leff',
-                 dowsample=Downsample, upsample=Upsample, shift_flag=True, modulator=False,
-                 cross_modulator=False, **kwargs):
+                 dowsample=Downsample, upsample=Upsample, shift_flag=True, modulator=True,
+                 cross_modulator=False, residual=True, **kwargs):
         super().__init__()
+
+        # The project selects Uformer through a config object, so use its
+        # declared resolution instead of silently retaining the upstream 256.
+        img_size = getattr(config.model, 'sample_size', img_size)
+        in_chans = getattr(config.model, 'out_channels', in_chans)
+        dd_in = getattr(config.model, 'in_channels', dd_in)
+        embed_dim = getattr(config.model, 'embed_dim', embed_dim)
+        depths = getattr(config.model, 'depths', depths)
+        num_heads = getattr(config.model, 'num_heads', num_heads)
+        win_size = getattr(config.model, 'win_size', win_size)
+        token_mlp = getattr(config.model, 'token_mlp', token_mlp)
+        modulator = getattr(config.model, 'modulator', modulator)
+        self.residual = getattr(config.model, 'residual', residual)
+        if self.residual and in_chans != dd_in:
+            raise ValueError('Uformer residual requires equal input/output channels')
 
         self.num_enc_layers = len(depths)//2
         self.num_dec_layers = len(depths)//2
@@ -1304,7 +1319,7 @@ class Uformer(nn.Module):
 
         # Output Projection
         y = self.output_proj(deconv3)
-        return x + y if self.dd_in ==3 else y
+        return x + y if self.residual else y
 
     def flops(self):
         flops = 0

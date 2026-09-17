@@ -1,10 +1,9 @@
 seed: 42
 
 loss_type:
-  name: DLPULoss
+  name: SqdLstmLoss
 
 meter:
-#  name: SqdLstmMeter
   name: SqdLstmMeter
 
 mmodel:

@@ -325,10 +325,12 @@ class AverageMeter:
         self.sums = defaultdict(float)
         self.counts = defaultdict(int)
 
-    def update(self, metrics: dict):
+    def update(self, metrics: dict, n=1):
         for k, v in metrics.items():
-            self.sums[k] += v
-            self.counts[k] += 1
+            if isinstance(v, torch.Tensor):
+                v = v.detach()
+            self.sums[k] += v * n
+            self.counts[k] += n
         # print(self.counts)
         # print(metrics)
         # print(self.sums)

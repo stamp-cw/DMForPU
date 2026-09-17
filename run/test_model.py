@@ -61,7 +61,7 @@ class ModelTester:
         valuator.meter = self.meter
         valuator.meter.writer = self.writer
         valuator.meter.mode = 'test'
-        valuator.diffusion = self.mmodel
+        valuator.mmodel = self.mmodel
         valuator.val_loader = self.val_loader
         valuator.valuate()
 

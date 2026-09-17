@@ -635,6 +635,11 @@ class U3NetLossType:
         loss = torch.mean(torch.square(error))
         return loss
 
+    def Loss_SD(self, target, pred):
+        target_grad = self.gradient(target)
+        pred_grad = self.gradient(pred)
+        return torch.mean(torch.abs(target_grad - pred_grad))
+
     def gradient(self, x):
         res = torch.zeros(*x.shape, 2).type_as(x)
         res[:, :, :, 1:, 0] = x[..., 1:] - x[..., :-1]
@@ -645,17 +650,20 @@ class U3NetLossType:
         return torch.remainder(x+torch.pi, torch.ones_like(x) * (2*torch.pi))-torch.pi
 
     def __call__(self, mmodel):
-        # charbonnier_loss = self.meter.batch_metric_dict['CharbonnierLoss']
-        # WGy_minus  = mmodel.WGy_minus
-        # L_sr = 0
-        # for j, each_x in enumerate(mmodel.pred_list):
-        #     # L_sr += self.Loss_SR(WGy_minus, each_x) / (len(mmodel.pred_list) - j)
-        #     # L_sr += self.Loss_SR(WGy_minus, each_x) / (3 - j) + 0.0 * each_x.mean()
-        #     L_sr += self.Loss_SR(WGy_minus, each_x) / (3 - j)
-        #
-        # total_loss = L_sr
-        total_loss = self.meter.batch_metric_dict['L1']
-        return total_loss
+        if getattr(mmodel, "is_distilling", False):
+            loss_sd = 0
+            for j, each_x in enumerate(mmodel.pred_list):
+                loss_sd += self.Loss_SD(mmodel.distill_target, each_x) / (
+                    len(mmodel.pred_list) - j
+                )
+            return loss_sd
+
+        loss_sr = 0
+        for j, each_x in enumerate(mmodel.pred_list):
+            loss_sr += self.Loss_SR(mmodel.WGy_minus, each_x) / (
+                len(mmodel.pred_list) - j
+            )
+        return loss_sr
 
 class LossFN:
     def __init__(self, config):

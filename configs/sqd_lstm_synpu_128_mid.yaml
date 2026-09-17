@@ -2,11 +2,9 @@ seed: 42
 
 loss_type:
 #  name: PHY11
-#  name: SqdLstmLoss
-  name: DLPULoss
+  name: SqdLstmLoss
 
 meter:
-#  name: SqdLstmMeter
   name: SqdLstmMeter
 
 mmodel:

@@ -2,7 +2,7 @@ import torch
 import wandb
 
 from selector.meter_selector import register_metric
-from utils.metrics import rmse_metric
+from utils.metrics import rmse_metric, nrmse_metric
 from utils.util import AverageMeter, wrap_phase, phase_gradient_torch
 import torch.nn.functional as F
 
@@ -26,7 +26,7 @@ class RestormerMeter:
         l1_loss = F.l1_loss(self.gt, self.pred)
         mae_loss = F.l1_loss(self.gt, self.pred)
         rmse_loss = rmse_metric(self.pred, self.gt)
-        nrmse_loss = rmse_loss / (self.gt.max() -self.gt.min() + 1e-8)
+        nrmse_loss = nrmse_metric(self.pred, self.gt)
         # self.batch_metric_dict = {'L1': l1_loss,
         #                             'MAE': mae_loss,
         #                                 'RMSE': rmse_loss,'NRMSE':nrmse_loss

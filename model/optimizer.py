@@ -50,17 +50,22 @@ class OptimizerFN:
         self.config = config
 
     def __call__(self, optimizer, model_parameters, epoch, scaler=None):
-        return self.optimization_fn(optimizer, model_parameters, epoch)
+        return self.optimization_fn(optimizer, model_parameters, epoch, scaler=scaler)
 
     def optimization_fn(self, optimizer, model_parameters, epoch, scaler=None):
-        if self.config.optim.warmup > 0:
+        if getattr(self.config.optim, 'scheduler', None) == 'exponential':
+            for g in optimizer.param_groups:
+                g['lr'] = self.config.optim.lr * self.config.optim.gamma ** epoch
+        elif self.config.optim.warmup > 0:
             for g in optimizer.param_groups:
                 g['lr'] = self.config.optim.lr * torch.minimum(torch.tensor(epoch) / self.config.optim.warmup,
                                                                torch.tensor(1.0))
+        if scaler is not None:
+            scaler.unscale_(optimizer)
         if self.config.optim.grad_clip >= 0:
             torch.nn.utils.clip_grad_norm_(model_parameters, max_norm=self.config.optim.grad_clip)
 
-        if scaler:
+        if scaler is not None:
             scaler.step(optimizer)
             scaler.update()
         else:

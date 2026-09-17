@@ -1,7 +1,13 @@
 tmp/**
+.venv/
+/ckpt/
 data/**
 test/**
 article/**
 article_old/**
 article_old2/**
 log/**
+/assets/SyntheticPUMat128Test/
+/assets/**/ckpt/
+/assets/**/sample/
+/experiments/results/

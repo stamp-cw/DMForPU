@@ -1,0 +1,36 @@
+satellites:
+  - {name: Sentinel-1_C, wavelength_m: 0.055465, probability: 0.60}
+  - {name: ALOS-2_L, wavelength_m: 0.2384, probability: 0.25}
+  - {name: TerraSAR-X_X, wavelength_m: 0.0311, probability: 0.15}
+geometry:
+  incidence_angle_deg: [25.0, 45.0]
+  slant_range_m: [700000.0, 900000.0]
+  perpendicular_baseline_abs_m: [20.0, 280.0]
+  max_absolute_phase_rad: 43.982297150257104  # 14*pi, model-compatible
+deformation:
+  mixture:
+    terrain_only: 0.30
+    gaussian_bowl: 0.18
+    elliptical_bowl: 0.16
+    multiple_centers: 0.12
+    linear_gradient: 0.08
+    nonlinear_smooth: 0.08
+    localized_high_gradient: 0.08
+  phase_span_cycles: [0.25, 4.0]
+coherence:
+  difficulty_mixture: {easy: 0.30, medium: 0.30, hard: 0.25, extreme: 0.15}
+  bands:
+    easy: [0.70, 0.95]
+    medium: [0.50, 0.80]
+    hard: [0.30, 0.60]
+    extreme: [0.15, 0.40]
+  correlated_field_sigma_pixels: [2.0, 10.0]
+noise:
+  mode: complex_domain
+  signal_power: 1.2589254117941673  # 10^0.1, matches GFS/RME
+  coherence_floor: 0.08
+  gaussian_phase_baseline_available: true
+phase_convention:
+  topographic_phase: "-4*pi*B_perp*h/(wavelength*slant_range*sin(incidence))"
+  deformation_phase: "+4*pi*d_LOS/wavelength; positive d_LOS is toward sensor"
+

@@ -1,0 +1,127 @@
+{
+  "title": "GFS128 and RME128 Dataset Atlas",
+  "created": "2026-09-13T19:07:02",
+  "generator": "experiments\\make_dataset_atlas.py",
+  "pdf": "output\\pdf\\dataset_atlas_gfs128_rme128.pdf",
+  "pages": [
+    "output\\pdf\\dataset_atlas_gfs128_rme128_pages\\01_cover.png",
+    "output\\pdf\\dataset_atlas_gfs128_rme128_pages\\02_gfs128_clean_gallery.png",
+    "output\\pdf\\dataset_atlas_gfs128_rme128_pages\\03_rme128_clean_gallery.png",
+    "output\\pdf\\dataset_atlas_gfs128_rme128_pages\\04_gfs128_snr_gallery.png",
+    "output\\pdf\\dataset_atlas_gfs128_rme128_pages\\05_rme128_snr_gallery.png",
+    "output\\pdf\\dataset_atlas_gfs128_rme128_pages\\06_gfs128_training_pairs.png",
+    "output\\pdf\\dataset_atlas_gfs128_rme128_pages\\07_rme128_training_pairs.png",
+    "output\\pdf\\dataset_atlas_gfs128_rme128_pages\\08_dataset_statistics.png"
+  ],
+  "selection_seed": 20240913,
+  "selected_indices": {
+    "GFS128": {
+      "representative": [
+        880,
+        603,
+        556,
+        418,
+        922,
+        998,
+        42,
+        181,
+        365,
+        259,
+        689,
+        461
+      ],
+      "snr_comparison": [
+        880,
+        585,
+        786,
+        461
+      ],
+      "training": [
+        961,
+        3637,
+        237,
+        1294,
+        117,
+        1656,
+        832,
+        1170
+      ]
+    },
+    "RME128": {
+      "representative": [
+        246,
+        769,
+        704,
+        615,
+        866,
+        204,
+        792,
+        603,
+        14,
+        871,
+        810,
+        475
+      ],
+      "snr_comparison": [
+        246,
+        147,
+        259,
+        475
+      ],
+      "training": [
+        4261,
+        2865,
+        2666,
+        794,
+        4063,
+        772,
+        4421,
+        2420
+      ]
+    }
+  },
+  "statistics": {
+    "GFS128": {
+      "phase_span_mean": 49.12194266319275,
+      "phase_span_std": 25.078391872636004,
+      "phase_std_mean": 10.323568037445108,
+      "gradient_rms_mean": 0.35487186354680333,
+      "circular_mae_by_snr": {
+        "30": 0.02830382752418518,
+        "20": 0.08951786899566651,
+        "10": 0.2831566619873047,
+        "5": 0.5034472846984863,
+        "0": 0.8913887939453125
+      },
+      "train_snr_counts": {
+        "0": 824,
+        "5": 815,
+        "10": 803,
+        "20": 860,
+        "30": 880,
+        "60": 818
+      }
+    },
+    "RME128": {
+      "phase_span_mean": 50.69273896789551,
+      "phase_span_std": 24.793814729801156,
+      "phase_std_mean": 10.440233743914302,
+      "gradient_rms_mean": 0.7102604385545798,
+      "circular_mae_by_snr": {
+        "30": 0.02830947136878967,
+        "20": 0.089496169090271,
+        "10": 0.28301997566223147,
+        "5": 0.5034999656677246,
+        "0": 0.8919513549804687
+      },
+      "train_snr_counts": {
+        "0": 856,
+        "5": 800,
+        "10": 845,
+        "20": 827,
+        "30": 801,
+        "60": 871
+      }
+    }
+  }
+}

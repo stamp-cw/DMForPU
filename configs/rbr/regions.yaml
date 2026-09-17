@@ -1,0 +1,37 @@
+dem_source: Copernicus_GLO-30_2021_AWS
+horizontal_crs: EPSG:4326
+vertical_datum: EGM2008
+elevation_unit: meter
+license_notice: "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved"
+regions:
+  - name: qilian_mountains
+    display_name: 祁连山
+    tile: N38_E098
+    bbox: [98.10, 38.10, 98.90, 38.90]
+    scene_type: steep_mountain
+    role: train_in_domain
+  - name: lanzhou_loess
+    display_name: 兰州定西黄土高原
+    tile: N35_E103
+    bbox: [103.10, 35.10, 103.90, 35.90]
+    scene_type: loess_gully
+    role: train_in_domain
+  - name: north_china_plain
+    display_name: 华北平原
+    tile: N37_E115
+    bbox: [115.10, 37.10, 115.90, 37.90]
+    scene_type: flat_plain
+    role: train_in_domain
+  - name: huainan_mining
+    display_name: 淮南矿区
+    tile: N32_E116
+    bbox: [116.10, 32.10, 116.90, 32.90]
+    scene_type: mining
+    role: train_in_domain
+  - name: sichuan_yunnan_holdout
+    display_name: 川滇植被山区
+    tile: N27_E102
+    bbox: [102.10, 27.10, 102.90, 27.90]
+    scene_type: vegetated_mountain
+    role: test_cross_region
+

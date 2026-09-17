@@ -81,27 +81,15 @@ class SyntheticPUMatNoise(Dataset):
 
     def get_Gaussian_Noise(self, wrapped, SNR):
         """
-        根据实际图像计算信号功率，生成指定SNR的高斯噪声
+        复现 Unsupervised-PU：在弧度域生成零均值高斯扰动，并返回
+        重缠绕后相对于原相位的有效扰动。
         """
-        # 1. 归一化到[0,1]并计算信号功率
-        # img_norm = image.astype(np.float64) / 255.0
-        wrapped_norm = (wrapped + torch.pi) / (2 * torch.pi)
-        # wrapped_norm = torch.clamp(wrapped_norm, 0, 1)
-
-        sigPower = torch.mean(wrapped_norm ** 2)
-
-        # 2. dB转线性，计算噪声功率和标准差
-        reqSNR = 10 ** (SNR / 10)
-        noisePower = sigPower / reqSNR
-        std = torch.sqrt(noisePower)
-        # 3. 生成噪声
-        # torch.manual_seed(42)
-        # torch.cuda.manual_seed(42)
-        # torch.cuda.manual_seed_all(42)
-
-        wrapped_norm_noise = std * torch.randn_like(wrapped_norm, device=wrapped_norm.device)
-        wrapped_noise = wrapped_norm_noise * (2 * torch.pi) - torch.pi
-        return wrapped_noise
+        snr_db = torch.as_tensor(SNR, dtype=wrapped.dtype, device=wrapped.device)
+        signal_power = torch.pow(wrapped.new_tensor(10.0), wrapped.new_tensor(0.1))
+        requested_snr = torch.pow(wrapped.new_tensor(10.0), snr_db / 10)
+        noise_std = torch.sqrt(signal_power / requested_snr)
+        phase_noise = noise_std * torch.randn_like(wrapped)
+        return self.wrap_phase(wrapped + phase_noise) - wrapped
 
     def wrap_phase(self, phi: torch.Tensor) -> torch.Tensor:
         """Wrap continuous phase to [-pi, pi]."""
@@ -127,14 +115,15 @@ class SyntheticPUMatNoise(Dataset):
         wrapped_neg_norm = wrapped / torch.pi
         # wrapped_neg_norm = torch.clamp(wrapped_neg_norm, -1, 1)
         if self.mode == 'test':
-            wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
+            sample_snr = torch.as_tensor(self.snr).float().reshape(())
+            wrapped_noise = self.get_Gaussian_Noise(wrapped, sample_snr)
         else:
             db_lst = torch.tensor([0, 5, 10, 20, 30])
             # db_lst = torch.tensor([20, 100])
             # db_lst = torch.tensor([100])
             # self.snr = torch.FloatTensor(1).uniform_(0, self.snr).item()
-            self.snr = db_lst[torch.randint(0, len(db_lst), (1,))]
-            wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
+            sample_snr = db_lst[torch.randint(0, len(db_lst), ())].float()
+            wrapped_noise = self.get_Gaussian_Noise(wrapped, sample_snr)
 
         # wrapped_noise = self.get_Gaussian_Noise(wrapped, self.snr)
 
@@ -142,6 +131,7 @@ class SyntheticPUMatNoise(Dataset):
         # wrapped_noisy = wrapped
         # wrapped_noisy = torch.clamp(wrapped_noisy, -torch.pi, torch.pi)
         wrapped_noisy = self.wrap_phase(wrapped_noisy)
+        wrapped_neg_norm = wrapped_noisy / torch.pi
 
         # neg_norm_diffusion
         unwrapped_norm = unwrapped / (2 * torch.pi * self.scale_k)
@@ -170,5 +160,6 @@ class SyntheticPUMatNoise(Dataset):
             "wrapped_neg_norm": wrapped_neg_norm,
             "wrapped_cond": wrapped_cond,
             "wrapped_noise": wrapped_noise,
+            "snr_db": sample_snr,
         }
         return sample

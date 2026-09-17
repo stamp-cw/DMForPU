@@ -7,6 +7,7 @@ diffusers
 transformers
 #plot
 scipy
+h5py
 matplotlib
 #log
 wandb
@@ -16,3 +17,5 @@ timm
 ml_collections
 tifffile
 spectral
+rasterio>=1.4,<2
+pyshp>=3.1,<4

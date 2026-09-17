@@ -4,6 +4,8 @@
 
 Article: WWFDiff-PU: A Wavelet Frequency Decomposed Diffusion Model For Phase Unwrapping
 
+> 第一次接触本项目？建议先读 [DMForPU 新手上手指南](docs/PROJECT_GUIDE.zh-CN.md)。它包含项目结构、运行链路、环境与数据准备、配置解读、最小试跑和常见报错。
+
 ## 1. 环境安装
 
 先安装 PyTorch 和基础依赖：

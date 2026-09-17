@@ -24,6 +24,14 @@ def rmse_metric(pred_unwrapped: torch.Tensor, gt_unwrapped: torch.Tensor):
     rmse = torch.sqrt((diff ** 2).mean())
     return rmse
 
+
+def nrmse_metric(pred: torch.Tensor, target: torch.Tensor):
+    """Mean per-image RMSE/range, independent of the other images in a batch."""
+    target = target.float().flatten(1)
+    error = pred.float().flatten(1) - target
+    scale = target.amax(1) - target.amin(1)
+    return (error.square().mean(1).sqrt() / (scale + 1e-8)).mean()
+
 def wrap_l1_metric(pred_unwrapped: torch.Tensor, gt_unwrapped: torch.Tensor):
     """Compute L1 metrics."""
     pred_wrapped = wrap_phase(pred_unwrapped)

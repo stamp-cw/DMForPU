@@ -56,7 +56,7 @@ class ModelValidator:
             self.meter.setup_data(pred_batch)
             self.meter.acc_step += 1
             self.meter.compute_batch_metric()
-            self.meter.epoch_meter.update(self.meter.batch_metric_dict)
+            self.meter.epoch_meter.update(self.meter.batch_metric_dict, n=pred_batch['gt'].shape[0])
             self.save_batch = self.meter.batch_metric_dict
             if getattr(self.config.val, "save_raw_batch_pt", False):
                 self.save_batch.update(pred_batch)

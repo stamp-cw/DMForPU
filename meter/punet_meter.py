@@ -3,7 +3,7 @@ import wandb
 # from triton.ops import cross_entropy
 
 from selector.meter_selector import register_metric
-from utils.metrics import rmse_metric
+from utils.metrics import rmse_metric, nrmse_metric
 from utils.util import AverageMeter, wrap_phase, phase_gradient_torch
 import torch.nn.functional as F
 
@@ -35,7 +35,7 @@ class PUNetMeter:
         l1_loss = F.l1_loss(self.gt, self.pred)
         mae_loss = F.l1_loss(self.gt, self.pred)
         rmse_loss = rmse_metric(self.pred, self.gt)
-        nrmse_loss = rmse_loss / (self.gt.max() -self.gt.min() + 1e-8)
+        nrmse_loss = nrmse_metric(self.pred, self.gt)
         mse_loss = F.mse_loss(self.gt, self.pred)
         gt_gx, gt_gy = phase_gradient_torch(self.gt)
         pred_gx, pred_gy = phase_gradient_torch(self.pred)

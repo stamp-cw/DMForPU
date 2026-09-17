@@ -16,7 +16,7 @@ from run.losses import LossFN
 from model.optimizer import OptimizerFN
 from selector.data_selector import _DATA_LOADERS
 from selector.optimizer_selector import _OPTIMIZERS
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 
 class ModelTrainer:
     def __init__(self, config):
@@ -53,13 +53,18 @@ class ModelTrainer:
     def _train(self):
         for epoch in range(self.start_epoch, self.end_epoch):
             self.epoch = epoch
+            configure_phase = getattr(self.mmodel, "configure_training_phase", None)
+            if configure_phase is not None and configure_phase(epoch):
+                # Match upstream U3Net: restart optimization when distillation starts.
+                self.optimizer = _OPTIMIZERS(self.config)(self.mmodel.optimize_parameters)
+                self.logger.info(f"Switched to distillation at epoch {epoch}")
             self.mmodel.setup_train()
             pbar = tqdm.tqdm(self.train_loader, desc=f"Epoch {epoch}/{self.end_epoch}")
             for step, batch_data in enumerate(pbar):
                 self.acc_batch += 1
                 self.meter.acc_step = self.acc_batch
                 self.meter = self.epoch_fn(self.mmodel, self.optimizer, self.meter, epoch, batch_data)
-                self.meter.epoch_meter.update(self.meter.batch_metric_dict)
+                self.meter.epoch_meter.update(self.meter.batch_metric_dict, n=batch_data['wrapped'].shape[0])
             self.meter.compute_epoch_metric()
             self.avg_loss= self.meter.epoch_metric_dict['loss']
             self._record_and_evaluate()
@@ -70,7 +75,11 @@ class ModelTrainer:
         state_dict = {
             'model': self.mmodel.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
+            'scaler': self.epoch_fn.scaler.state_dict(),
         }
+        training_state = getattr(self.mmodel, "training_state_dict", None)
+        if training_state is not None:
+            state_dict.update(training_state())
         torch.save(state_dict, ckpt_file_path)
         self.logger.info(f"Saved model to {ckpt_file_path}")
         if self.config.io.use_wandb and self.config.io.save_pth_to_wandb:
@@ -83,8 +92,13 @@ class ModelTrainer:
 
     def _load_state(self):
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
-        self.mmodel.load_state_dict(ckpt['model'])
+        self.mmodel.model.load_state_dict(ckpt['model'])
+        load_training_state = getattr(self.mmodel, "load_training_state_dict", None)
+        if load_training_state is not None:
+            load_training_state(ckpt)
         self.optimizer.load_state_dict(ckpt['optimizer'])
+        if ckpt.get('scaler'):
+            self.epoch_fn.scaler.load_state_dict(ckpt['scaler'])
 
     def _record_and_evaluate(self):
         # if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
@@ -155,30 +169,26 @@ class EpochFN:
         self.optimize_fn = optimize_fn
         self.config = config
         self.loss_fn = LossFN(self.config)
+        self.device_type = torch.device(config.training.device).type
+        self.amp_enabled = bool(config.training.amp) and self.device_type == 'cuda'
+        self.scaler = GradScaler('cuda', enabled=self.amp_enabled)
 
     def __call__(self, mmodel, optimizer, meter, epoch, batch):
         return self.epoch_fn(mmodel, optimizer, meter, epoch, batch)
 
     def epoch_fn(self, mmodel, optimizer, meter, epoch, batch):
         mmodel.setup_data(batch)
-        mmodel.train_predict(batch)
-        pred_batch = mmodel.pred_batch
-
-        meter.epoch = epoch
-        meter.setup_data(pred_batch)
-        meter.compute_batch_metric()
-        if self.config.training.amp:
-            scaler = GradScaler()
-            optimizer.zero_grad()
-            with autocast():
-                loss = self.loss_fn(mmodel)
-            scaler.scale(loss).backward()
-            self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch, scaler=scaler)
-        else:
-            optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
+        with autocast(device_type=self.device_type, enabled=self.amp_enabled):
+            mmodel.train_predict(batch)
+            meter.epoch = epoch
+            meter.setup_data(mmodel.pred_batch)
+            meter.compute_batch_metric()
             loss = self.loss_fn(mmodel)
-            loss.backward()
-            self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch)
+        self.scaler.scale(loss).backward()
+        optimization_epoch = getattr(mmodel, 'optimization_epoch', lambda value: value)(epoch)
+        self.optimize_fn(optimizer, mmodel.optimize_parameters,
+                         epoch=optimization_epoch, scaler=self.scaler)
         meter.batch_metric_dict["loss"] = loss.item()
         return meter
 

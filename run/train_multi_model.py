@@ -23,17 +23,19 @@ from accelerate import Accelerator
 class ModelTrainer:
     def __init__(self, config):
         self.config = config
+        mixed_precision = 'fp16' if self.config.training.amp else 'no'
         if self.config.model.name == "U3Net":
             from accelerate import DistributedDataParallelKwargs
             ddp_kwargs = DistributedDataParallelKwargs(
                 find_unused_parameters=True
             )
             self.accelerator = Accelerator(
-                kwargs_handlers=[ddp_kwargs]
+                kwargs_handlers=[ddp_kwargs], mixed_precision=mixed_precision
             )
         else:
-            self.accelerator = Accelerator()
+            self.accelerator = Accelerator(mixed_precision=mixed_precision)
         config.accelerator = self.accelerator
+        config.training.device = str(self.accelerator.device)
         self.logger = config.logger
         self.device = self.config.training.device
         self.mmodel = MModelSetup(self.config, self.logger).mmodel
@@ -77,6 +79,7 @@ class ModelTrainer:
         for epoch in range(self.start_epoch, self.end_epoch):
             # self.optimizer.zero_grad(set_to_none=True)
             self.epoch = epoch
+            self._configure_training_phase(epoch)
             self.mmodel.setup_train()
             pbar = tqdm.tqdm(self.m_train_loader,
                              total=len(self.m_train_loader),
@@ -91,7 +94,14 @@ class ModelTrainer:
                 self.meter.epoch_meter.update(self.meter.batch_metric_dict)
             if self.accelerator.is_main_process:
                 self.main_meter.compute_epoch_metric()
-                self._record_and_evaluate()
+                # Main-rank-only validation must not call DDP collectives.
+                prepared_model = self.mmodel.model
+                self.mmodel.model = self.accelerator.unwrap_model(prepared_model)
+                try:
+                    self._record_and_evaluate()
+                finally:
+                    self.mmodel.model = prepared_model
+            self.accelerator.wait_for_everyone()
             # self.meter.compute_epoch_metric()
             # # loss_tensor = torch.tensor(
             # #     self.meter.epoch_metric_dict["loss"],
@@ -117,13 +127,25 @@ class ModelTrainer:
     #         out[k] = accelerator.reduce(t, reduction="mean").item()
     #     return out
 
+    def _configure_training_phase(self, epoch):
+        configure_phase = getattr(self.mmodel, 'configure_training_phase', None)
+        if configure_phase is not None and configure_phase(epoch):
+            optimizer = _OPTIMIZERS(self.config)(self.mmodel.optimize_parameters)
+            self.optimizer = self.accelerator.prepare_optimizer(optimizer)
+            self.logger.info(f'Switched to distillation at epoch {epoch}')
+
     def _save_state(self, epoch):
         ckpt_file_path = os.path.join(self.config.io.out_ckpt_path, f'{self.config.io.out_ckpt_filename_prefix}_{epoch}.pth')
         state_dict = {
-            'model': self.mmodel.model.state_dict(),
+            'model': self.accelerator.unwrap_model(self.mmodel.model).state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'epoch': epoch
         }
+        training_state = getattr(self.mmodel, 'training_state_dict', None)
+        if training_state is not None:
+            state_dict.update(training_state())
+        if self.accelerator.scaler is not None:
+            state_dict['scaler'] = self.accelerator.scaler.state_dict()
         # torch.save(state_dict, ckpt_file_path)
         self.config.accelerator.save(state_dict, ckpt_file_path)
         self.logger.info(f"Saved model to {ckpt_file_path}")
@@ -137,8 +159,14 @@ class ModelTrainer:
 
     def _load_state(self):
         ckpt = torch.load(self.config.io.latest_checkpoint_file_path, map_location=self.device, weights_only=False)
-        self.mmodel.model.load_state_dict(ckpt['model'])
+        state = {k.removeprefix('module.'): v for k, v in ckpt['model'].items()}
+        self.mmodel.model.load_state_dict(state)
+        load_training_state = getattr(self.mmodel, 'load_training_state_dict', None)
+        if load_training_state is not None:
+            load_training_state(ckpt)
         self.optimizer.load_state_dict(ckpt['optimizer'])
+        if self.accelerator.scaler is not None and ckpt.get('scaler'):
+            self.accelerator.scaler.load_state_dict(ckpt['scaler'])
 
     def _record_and_evaluate(self):
         # # if self.config.io.use_tensorboard: self.writer.add_scalar("training_loss", self.avg_loss, self.epoch)
@@ -215,21 +243,22 @@ class EpochFN:
 
     def epoch_fn(self, accelerator, mmodel, optimizer, meter, main_meter, epoch, batch):
         mmodel.setup_data(batch)
-        mmodel.train_predict(batch)
-        pred_batch = mmodel.pred_batch
         if accelerator.is_main_process:
             main_meter.epoch = epoch
         meter.epoch = epoch
-        meter.setup_data(pred_batch)
-        meter.compute_batch_metric()
         with accelerator.accumulate(mmodel.model):
-            # optimizer.zero_grad()
-            loss = self.loss_fn(mmodel)
+            with accelerator.autocast():
+                mmodel.train_predict(batch)
+                meter.setup_data(mmodel.pred_batch)
+                meter.compute_batch_metric()
+                loss = self.loss_fn(mmodel)
             # loss.backward()
             accelerator.backward(loss)
             # self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch)
             if accelerator.sync_gradients:
-                self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=epoch)
+                accelerator.unscale_gradients(optimizer)
+                optimization_epoch = getattr(mmodel, 'optimization_epoch', lambda value: value)(epoch)
+                self.optimize_fn(optimizer, mmodel.optimize_parameters, epoch=optimization_epoch)
                 optimizer.zero_grad(set_to_none=True)
         # loss_all = self.config.accelerator.gather(loss.detach())
         # loss_mean = loss_all.mean()

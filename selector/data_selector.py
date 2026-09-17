@@ -28,6 +28,7 @@ from dataset.SyntheticPUMatV1 import SyntheticPUMatV1
 # from dataset.SyntheticPUMatMid import SyntheticPUMatMid
 from dataset.SyntheticPUMatWav import SyntheticPUMatWav
 from dataset.R2AUTif import R2AUTif
+from dataset.U3SyntheticH5 import U3SyntheticH5
 
 
 class BaseDataLoader:
@@ -655,6 +656,39 @@ class InSARDLPUMatDataLoaderV1(BaseDataLoader):
         return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
                           num_workers=self.config.data.num_workers, pin_memory=True)
 
+
+
+@register_data_loader(name=['GFS128','GFS64','GFS32','RME128','RME64','RME32','RBR128','RBR64','RBR32'])
+class U3SyntheticH5DataLoader(BaseDataLoader):
+    def _dataset(self, split):
+        return U3SyntheticH5(root=self.config.iio.in_dataset_path, split=split,
+                             test_snr=getattr(self.config.data, 'test_snr', 30),
+                             transform=self.transform, target_transform=self.gt_transform,
+                             joint_transform=self.joint_transform)
+
+    @cached_property
+    def train_dataset(self): return self._dataset('train')
+
+    @cached_property
+    def test_dataset(self): return self._dataset('test')
+
+    @cached_property
+    def all_dataset(self): return torch.utils.data.ConcatDataset([self.train_dataset,self.test_dataset])
+
+    @cached_property
+    def train_loader(self):
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
+                          num_workers=self.config.data.num_workers, pin_memory=True, drop_last=True)
+
+    @cached_property
+    def test_loader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
+
+    @cached_property
+    def all_loader(self):
+        return DataLoader(self.all_dataset, batch_size=self.batch_size, shuffle=False,
+                          num_workers=self.config.data.num_workers, pin_memory=True)
 
 
 @register_data_loader(name=['SyntheticPUMat128Test','SyntheticPUMat128Big','SyntheticPUMat128BigV2','SyntheticPUMat128BigVpred','SyntheticPUMat128BigEpred'])

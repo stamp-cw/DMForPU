@@ -47,6 +47,9 @@ training:
 
 model:
   name: Uformer
+  # Uformer-S with the official modulator and an explicit phase-regression residual.
+  modulator: true
+  residual: true
 #  sample_size: 128
   sample_size: 256
 #  in_channels: 1
