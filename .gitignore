@@ -11,3 +11,7 @@ log/**
 /assets/**/ckpt/
 /assets/**/sample/
 /experiments/results/
+
+# TensorBoard event logs
+**/events.out.tfevents.*
+/assets/**/tb/
