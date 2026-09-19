@@ -176,14 +176,14 @@ def evaluate(variant,seed):
     dump(output,{'variant':variant,'seed':seed,'samples':len(w),'summary':summary,'parameters':sum(p.numel() for p in net.parameters()),
                   'inference_steps':net.cfg.inference_steps,'selected_epoch':chosen_epoch,
                   'selection':'best validation; SD variants restricted to last 6 epochs',
-                  'source':'fresh HF UNet2DConditionModel, no FDU'})
+                  'source':'fresh HF UNet2DModel without cross-attention, no FDU'})
     status('evaluated',variant=variant,seed=seed);report()
 
 
 def report():
     results=[json.loads(p.read_text(encoding='utf-8')) for p in (OUT/'evaluation').glob('*.json')]
     lines=['# Chen-inspired HF diffusion 小批测试','',f'完成 {len(results)}/14 组评估。420 对 Synthetic 原始 128×128 数据：300/60/60；2 个种子；每组 20 轮，SD 最后 6 轮。',
-           '直接使用 HF UNet2DConditionModel + DDPMScheduler，不导入 FDU。监督 x₀ MSE 始终保留，不能称为无监督复现。',
+           '直接使用无交叉注意力的 HF UNet2DModel + DDPMScheduler，不导入 FDU。监督 x₀ MSE 始终保留，不能称为无监督复现。',
            '所有组使用相同固定输入噪声、扩散噪声与采样种子；每次测试 5 步、单次采样；整数 2π 对齐仅用于评价。',
            '', '| 变体 | 完成种子数 | clean MAE | 10 dB MAE | 0 dB MAE | clean PGE |','|---|---:|---:|---:|---:|---:|']
     for variant in VARIANTS:

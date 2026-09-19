@@ -658,7 +658,7 @@ class InSARDLPUMatDataLoaderV1(BaseDataLoader):
 
 
 
-@register_data_loader(name=['GFS128','GFS64','GFS32','RME128','RME64','RME32','RBR128','RBR64','RBR32'])
+@register_data_loader(name=['GFS128','GFS64','GFS32','RME128','RME64','RME32','RTS128','RTS64','RTS32'])
 class U3SyntheticH5DataLoader(BaseDataLoader):
     def _dataset(self, split):
         return U3SyntheticH5(root=self.config.iio.in_dataset_path, split=split,

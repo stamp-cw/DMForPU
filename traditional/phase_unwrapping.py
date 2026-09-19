@@ -182,6 +182,12 @@ def unwrap_dct_schofield(wrapped: Array) -> Array:
     sine, cosine = np.sin(wrapped), np.cos(wrapped)
     source = cosine * _laplacian_neumann(sine) - sine * _laplacian_neumann(cosine)
     smooth = _inverse_laplacian_dct(source)
+    # The Neumann Poisson solution has an arbitrary real-valued constant.
+    # Align that constant in the circular domain before rounding integer
+    # cycles; otherwise values near a half-cycle boundary can be rounded to
+    # different cycles at image borders.
+    circular_offset = np.angle(np.mean(np.exp(1j * (wrapped - smooth))))
+    smooth = smooth + circular_offset
     cycles = np.rint((smooth - wrapped) / (2.0 * np.pi))
     solution = wrapped + 2.0 * np.pi * cycles
     # Fix the otherwise arbitrary global integer cycle without using labels.

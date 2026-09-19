@@ -105,7 +105,7 @@ def main():
     for dataset in study.DATASETS:
         for name in list(LABEL.values())+list(CLASSICAL):
             rr={x["snr"]:x for x in rows if x["dataset"]==dataset and x["method"]==name};lines.append(f"| {dataset} | {name} | "+" | ".join(f"{rr[s]['mean_aligned_mae']:.4f}" for s in study.TEST_SNRS)+" |")
-    lines += ["","完整指标见 `comparison.csv`；逐轮曲线与定性误差图见 `figures/`。HF diffusion 与 Chen-full 都直接采用 Hugging Face UNet2DConditionModel，Chen-full 额外包含物理迭代、CAM、稀疏误差、配对再扰动和自蒸馏。"]
+    lines += ["","完整指标见 `comparison.csv`；逐轮曲线与定性误差图见 `figures/`。HF diffusion 与 Chen-full 都采用无交叉注意力的 Hugging Face UNet2DModel，Chen-full 额外包含物理迭代、CAM、稀疏误差、配对再扰动和自蒸馏；WWFCA 变体才使用交叉注意力。"]
     (OUT/"REPORT.zh-CN.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
 
 

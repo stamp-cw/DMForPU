@@ -14,7 +14,7 @@ from types import SimpleNamespace as NS
 import numpy as np
 import torch
 from torch import nn
-from diffusers import UNet2DConditionModel,DDPMScheduler
+from diffusers import UNet2DModel,DDPMScheduler
 from diffusion.chen_hf_diffusion import ChenHFConfig,ChenHFDiffusion
 import experiments.chen_hf_study as core
 from experiments.evaluate_traditional_baselines import metrics
@@ -41,10 +41,10 @@ class ComparisonModel(nn.Module):
                 diffusion=NS(repeat_channels=1,conditioning_channels=2 if self.dcc else 1))
             self.backbone=FDUNet(cfg)
         else:
-            self.backbone=UNet2DConditionModel(sample_size=128,in_channels=3 if self.dcc else 2,
-                out_channels=1,layers_per_block=layers,block_out_channels=tuple(widths),cross_attention_dim=cross_dim,
-                down_block_types=('DownBlock2D','DownBlock2D','DownBlock2D','CrossAttnDownBlock2D'),
-                up_block_types=('CrossAttnUpBlock2D','UpBlock2D','UpBlock2D','UpBlock2D'))
+            self.backbone=UNet2DModel(sample_size=128,in_channels=3 if self.dcc else 2,
+                out_channels=1,layers_per_block=layers,block_out_channels=tuple(widths),
+                down_block_types=('DownBlock2D','DownBlock2D','DownBlock2D','DownBlock2D'),
+                up_block_types=('UpBlock2D','UpBlock2D','UpBlock2D','UpBlock2D'),add_attention=False)
         self.scheduler=DDPMScheduler(num_train_timesteps=1000,prediction_type='sample',clip_sample=False)
 
     def normalize(self,phi):return phi/(14*math.pi)*2-1
@@ -55,8 +55,11 @@ class ComparisonModel(nn.Module):
         if self.variant=='dlpu':
             phi=self.backbone(w).float();return self.normalize(phi),phi,[phi]
         cond=torch.cat((w.sin(),w.cos()),1) if self.dcc else w/math.pi
-        hidden=torch.zeros(len(w),1,self.spec['cross_dim'],device=w.device,dtype=w.dtype)
-        x0=self.backbone(torch.cat((noisy,cond),1),t,encoder_hidden_states=hidden).sample.float()
+        model_input=torch.cat((noisy,cond),1)
+        if self.variant in ('fdu','wwfca_only'):
+            hidden=torch.zeros(len(w),1,self.spec['cross_dim'],device=w.device,dtype=w.dtype)
+            x0=self.backbone(model_input,t,encoder_hidden_states=hidden).sample.float()
+        else:x0=self.backbone(model_input,t).sample.float()
         phi=self.denormalize(x0);return x0,phi,[phi]
 
     @torch.no_grad()

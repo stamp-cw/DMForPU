@@ -12,13 +12,36 @@ import torch.nn.functional as F
 ROOT=Path(__file__).resolve().parents[1]; sys.path.insert(0,str(ROOT)); sys.dont_write_bytecode=True
 import experiments.formal_non_diffusion_study as nd
 from diffusion.chen_hf_diffusion import ChenHFConfig,ChenHFDiffusion,paired_recorruption,sr_loss,sd_loss
+from diffusion.dcc_wwfca_diffusion import DCCWWFCADiffusion
+from utils.phase_metrics import au_metrics_torch, u3_aligned_metrics_torch
 
 OUT=ROOT/"experiments"/"results"/"gfs_rme128"
-DATASETS=("GFS128","RME128")
-METHODS=("dlpu","punet","u3net","hf_base","chen_full","sqd_lstm","restormer","uformer")
-EPOCHS={"dlpu":100,"punet":300,"u3net":700,"hf_base":300,"chen_full":300,"sqd_lstm":100,"restormer":267,"uformer":250}
-BATCH={"dlpu":32,"punet":32,"u3net":10,"hf_base":8,"chen_full":8,"sqd_lstm":32,"restormer":4,"uformer":8}
+DATASETS=("GFS128",)
+CHEN_FLAGS={
+    "hf_base":dict(physics=False,sparse=True,adaptive=True,sr=False,sd=False),
+    "chen_physics":dict(physics=True,sparse=True,adaptive=True,sr=False,sd=False),
+    "chen_sr":dict(physics=False,sparse=True,adaptive=True,sr=True,sd=False),
+    "chen_physics_sr":dict(physics=True,sparse=True,adaptive=True,sr=True,sd=False),
+    "chen_full":dict(physics=True,sparse=True,adaptive=True,sr=True,sd=True),
+    "chen_no_sparse":dict(physics=True,sparse=False,adaptive=True,sr=True,sd=True),
+    "chen_no_cam":dict(physics=True,sparse=True,adaptive=False,sr=True,sd=True),
+}
+MATCHED_DIFFUSION=("hf_matched","dcc_only","wwfca_only","fdu","wwfca_v2_off","wwfca_v2","wwfca_v3_off","wwfca_v3","wwfca_v4_off","wwfca_v4","wwfca_v41_off","wwfca_v41_noattn","wwfca_v41","wwfca_v42_time","wwfca_v42","wwfca_v43")
+DIFFUSION_METHODS=tuple(CHEN_FLAGS)+MATCHED_DIFFUSION
+METHODS=("dlpu","punet","u3net",*DIFFUSION_METHODS,"sqd_lstm","restormer","uformer")
+EPOCHS={"dlpu":100,"punet":300,"u3net":700,"sqd_lstm":100,"restormer":267,"uformer":250,
+        **{method:300 for method in DIFFUSION_METHODS}}
+EPOCHS.update({"wwfca_v2_off":100,"wwfca_v2":100})
+EPOCHS.update({"wwfca_v3_off":50,"wwfca_v3":50})
+EPOCHS.update({"wwfca_v4_off":25,"wwfca_v4":25})
+EPOCHS.update({"wwfca_v41_off":35,"wwfca_v41":35})
+EPOCHS.update({"wwfca_v41_noattn":35})
+EPOCHS.update({"wwfca_v42_time":35,"wwfca_v42":35})
+EPOCHS.update({"wwfca_v43":35})
+BATCH={"dlpu":32,"punet":32,"u3net":10,"sqd_lstm":32,"restormer":4,"uformer":8,
+       **{method:8 for method in DIFFUSION_METHODS}}
 SEED=42; VAL_COUNT=500; TEST_SNRS=(0,5,10,20,30); TWO_PI=2*math.pi
+SELECTION_KEY="val_u3_aligned_nrmse"
 
 
 def dump(path:Path,obj:Any):
@@ -47,7 +70,11 @@ def prepare_manifest():
     source_hash=file_hash(ROOT/"data"/"DATASETS_V2.json")
     if path.exists():
         obj=json.loads(path.read_text(encoding="utf-8"))
-        if obj["source_manifest_sha256"]!=source_hash: raise RuntimeError("dataset manifest changed")
+        # DATASETS_V2 also tracks unrelated RTS/RBR families. Their later rename
+        # changed the global digest without changing these frozen GFS/RME splits.
+        for dataset in obj["datasets"].values():
+            for relative in (dataset["train"],*dataset["tests"].values()):
+                if not (ROOT/relative).exists():raise FileNotFoundError(relative)
         return obj
     order=np.random.default_rng(SEED).permutation(5000); val=sorted(order[:VAL_COUNT].tolist()); train=sorted(order[VAL_COUNT:].tolist())
     obj={"seed":SEED,"source_manifest_sha256":source_hash,"train_indices":train,"validation_indices":val,
@@ -86,6 +113,8 @@ def metric_sums(pred,target,wrapped):
       "mean_aligned_mae":mean.abs().flatten(1).mean(1),"mean_aligned_rmse":mean.square().flatten(1).mean(1).sqrt(),
       "mean_aligned_nrmse":mean.square().flatten(1).mean(1).sqrt()/target_range.clamp_min(1e-12),
       "pge":grad.abs().mean(1),"rewrap_circular_mae":cycle.abs().flatten(1).mean(1)}
+    values.update(u3_aligned_metrics_torch(pred, target))
+    values.update(au_metrics_torch(pred, target))
     return {k:float(v.sum().cpu()) for k,v in values.items()}
 
 
@@ -96,7 +125,7 @@ def u3_inputs(w,std):
 
 def infer(model,method,w,std=None,generator=None):
     if method=="u3net": return model(*u3_inputs(w,std))[0]
-    if method in ("hf_base","chen_full"): return model.sample(w,std,generator)
+    if method in DIFFUSION_METHODS: return model.sample(w,std,generator)
     return model(w)
 
 
@@ -106,7 +135,7 @@ def evaluate(model,method,split,batch,seed=9000):
     for off in range(0,len(w),batch):
         wi,ti,si=w[off:off+batch].cuda(),t[off:off+batch].cuda(),s[off:off+batch].cuda()
         std=torch.sqrt(torch.tensor(10**.1,device="cuda")/torch.pow(10.,si/10))
-        with torch.autocast("cuda",dtype=torch.float16 if method in ("hf_base","chen_full") else torch.bfloat16,
+        with torch.autocast("cuda",dtype=torch.float16 if method in DIFFUSION_METHODS else torch.bfloat16,
                             enabled=method!="u3net"):
             p=infer(model,method,wi,std,gen)
         if p.shape!=ti.shape or not torch.isfinite(p).all(): raise RuntimeError(f"invalid {method} prediction")
@@ -165,7 +194,7 @@ def train_non_diff(dataset,method):
     (train,val,tests)=data(dataset); epochs=EPOCHS[method];batch=BATCH[method]; model=non_diff_model(method)
     optimizer=nd.optimizer_for(method,model); target_updates=300000 if method=="restormer" else None
     protocol={"dataset":dataset,"method":method,"epochs":epochs,"batch":batch,"seed":SEED,"validation_count":VAL_COUNT,
-              "selection":"lowest validation mean-aligned MAE; U3Net only epochs 501-700",
+              "selection":"lowest validation U3-aligned NRMSE; U3Net only epochs 501-700",
               "target_updates":target_updates,"manifest_sha256":file_hash(OUT/"manifest.json"),"from_scratch":True}
     dump(folder/"protocol.json",protocol); history=[];best=math.inf;start=0;teacher=None;last=folder/"last.pth"
     if last.exists():
@@ -209,8 +238,12 @@ def train_non_diff(dataset,method):
 
 
 def diffusion_model(method):
+    if method in MATCHED_DIFFUSION:
+        model=DCCWWFCADiffusion(method,phase_low=-14*math.pi,phase_high=14*math.pi)
+        return model.cuda(),model.cfg
+    flags=CHEN_FLAGS[method]
     cfg=ChenHFConfig(phase_low=-14*math.pi,phase_high=14*math.pi,
-                     physics=method=="chen_full",sparse=True,adaptive=True)
+                     physics=flags["physics"],sparse=flags["sparse"],adaptive=flags["adaptive"])
     return ChenHFDiffusion(cfg).cuda(),cfg
 
 
@@ -218,58 +251,165 @@ def train_diffusion(dataset,method):
     folder=OUT/"runs"/dataset/method;folder.mkdir(parents=True,exist_ok=True)
     if (folder/"complete.json").exists():return
     train,val,tests=data(dataset);epochs=EPOCHS[method];batch=BATCH[method];seed_all();model,cfg=diffusion_model(method)
-    opt=torch.optim.AdamW(model.parameters(),lr=2e-4,weight_decay=0);scaler=torch.amp.GradScaler("cuda");teacher=None;phase=210
-    protocol={"dataset":dataset,"method":method,"epochs":epochs,"batch":batch,"seed":SEED,"distill_start":phase if method=="chen_full" else None,
-      "validation":"full 500 every 5 epochs and final; mean-aligned MAE","manifest_sha256":file_hash(OUT/"manifest.json"),"config":model.config_dict(),"from_scratch":True}
-    dump(folder/"protocol.json",protocol);history=[];best=math.inf;start=0;last=folder/"last.pth"
+    flags=CHEN_FLAGS.get(method,dict(sr=False,sd=False));is_v3=method in ("wwfca_v3_off","wwfca_v3");is_v4=method in ("wwfca_v4_off","wwfca_v4");is_v41=method in ("wwfca_v41_off","wwfca_v41_noattn","wwfca_v41");is_v42=method in ("wwfca_v42_time","wwfca_v42");is_v43=method=="wwfca_v43";is_adapter=is_v4 or is_v41 or is_v42 or is_v43
+    last=folder/"last.pth";pretrained_path=OUT/"runs"/dataset/"hf_matched"/"weights"/"epoch_299.pth"
+    if is_adapter and not last.exists():
+        pretrained=torch.load(pretrained_path,map_location="cpu",weights_only=False)["model"]
+        source={key[len("backbone."):]:value for key,value in pretrained.items() if key.startswith("backbone.")}
+        model.backbone.load_hf_backbone(source)
+    weight_decay=1e-4 if method in ("wwfca_v2_off","wwfca_v2","wwfca_v3_off","wwfca_v3","wwfca_v4_off","wwfca_v4","wwfca_v41_off","wwfca_v41_noattn","wwfca_v41","wwfca_v42_time","wwfca_v42","wwfca_v43") else 0
+    if is_adapter:
+        prefix="backbone.unet.down_blocks.2.downsamplers.0."
+        branch=[p for name,p in model.named_parameters() if name.startswith(prefix) and ".base." not in name]
+        branch_ids={id(p) for p in branch};main=[p for p in model.parameters() if id(p) not in branch_ids]
+        opt=torch.optim.AdamW([{"params":main,"lr":0.,"role":"main"},
+                               {"params":branch,"lr":1e-4,"role":"branch"}],weight_decay=weight_decay)
+    elif is_v3:
+        branch_names=("mid_block.frequency","mid_block.gate","mid_block.condition_norm")
+        branch=[p for name,p in model.named_parameters() if any(token in name for token in branch_names)]
+        branch_ids={id(p) for p in branch};main=[p for p in model.parameters() if id(p) not in branch_ids]
+        opt=torch.optim.AdamW([{"params":main,"lr":2e-4,"lr_scale":1.0},
+                               {"params":branch,"lr":2e-5,"lr_scale":0.1}],weight_decay=weight_decay)
+    else:
+        opt=torch.optim.AdamW(model.parameters(),lr=2e-4,weight_decay=weight_decay)
+    scaler=torch.amp.GradScaler("cuda");teacher=None;phase=210
+    protocol={"dataset":dataset,"method":method,"epochs":epochs,"batch":batch,"seed":SEED,"distill_start":phase if flags["sd"] else None,
+      "validation":"full fixed 500-image validation split every epoch; all unified metrics","selection":"lowest validation U3-aligned NRMSE (U3Net min-max range alignment)","checkpointing":"model weights every epoch; resumable optimizer/scaler in last.pth","manifest_sha256":file_hash(OUT/"manifest.json"),"config":model.config_dict(),"from_scratch":not is_adapter}
+    if is_v3:
+        protocol["v3_training"]={"epochs":50,"base_lr":2e-4,"branch_lr_ratio":0.1,"weight_decay":1e-4,
+                                  "gate_regularization_weight":0.01,"gate_off_epochs":10,
+                                  "gate_ramp_epochs":20,"validation_seed":20000}
+    if is_v4:
+        protocol["v4_training"]={"pretrained_checkpoint":str(pretrained_path.relative_to(ROOT)),"pretrained_sha256":file_hash(pretrained_path),
+                                  "adapter_only_epochs":5,"joint_epochs":20,"adapter_lr_first":1e-4,
+                                  "adapter_lr_joint":5e-5,"backbone_lr_joint":1e-5,"energy_limit":0.01,
+                                  "weight_decay":1e-4,"validation_seed":20000}
+    if is_v41:
+        protocol["v41_training"]={"pretrained_checkpoint":str(pretrained_path.relative_to(ROOT)),"pretrained_sha256":file_hash(pretrained_path),
+                                   "adapter_only_epochs":15,"joint_epochs":20,"adapter_lr_first":1e-4,
+                                   "adapter_lr_joint":5e-5,"backbone_lr_joint":1e-6,
+                                   "loss":"unchanged HF clean-x0 MSE; energy ratio monitored but not optimized",
+                                   "attention":"disabled; fixed G=0.5" if method=="wwfca_v41_noattn" else ("enabled" if method=="wwfca_v41" else "branch disabled"),
+                                   "energy_limit_monitor":0.01,"weight_decay":1e-4,"validation_seed":20000}
+    if is_v42:
+        protocol["v42_training"]={"pretrained_checkpoint":str(pretrained_path.relative_to(ROOT)),"pretrained_sha256":file_hash(pretrained_path),
+                                   "adapter_only_epochs":15,"joint_epochs":20,"adapter_lr_first":1e-4,
+                                   "adapter_lr_joint":5e-5,"backbone_lr_joint":1e-6,
+                                   "loss":"unchanged HF clean-x0 MSE; energy ratio monitored but not optimized",
+                                   "gate":"gamma(t,sigma)" if method=="wwfca_v42" else "gamma(t)",
+                                   "weight_decay":1e-4,"validation_seed":20000}
+    if is_v43:
+        protocol["v43_training"]={"pretrained_checkpoint":str(pretrained_path.relative_to(ROOT)),"pretrained_sha256":file_hash(pretrained_path),
+                                   "adapter_only_epochs":15,"joint_epochs":20,"adapter_lr_first":1e-4,
+                                   "adapter_lr_joint":5e-5,"backbone_lr_joint":1e-6,
+                                   "loss":"unchanged HF clean-x0 MSE; energy ratio monitored but not optimized",
+                                   "attention_order":"H queries X for validation, then X queries validated H for retrieval",
+                                   "residual":"validated H local skip plus scaled retrieval, then learned-gamma injection",
+                                   "weight_decay":1e-4,"validation_seed":20000}
+    dump(folder/"protocol.json",protocol);history=[];best=math.inf;start=0
     if last.exists():
         st=torch.load(last,map_location="cpu",weights_only=False)
-        if st["protocol"]!=protocol:raise RuntimeError("resume protocol mismatch")
+        stored_protocol=dict(st["protocol"]);stored_protocol.pop("selection",None)
+        expected_protocol=dict(protocol);expected_protocol.pop("selection",None)
+        if stored_protocol!=expected_protocol:raise RuntimeError("resume protocol mismatch")
         model.load_state_dict(st["model"]);opt.load_state_dict(st["optimizer"]);scaler.load_state_dict(st["scaler"]);history=st["history"];best=st["best"];start=st["epoch"]+1
         if st.get("teacher") is not None:teacher=copy.deepcopy(model).eval().requires_grad_(False);teacher.load_state_dict(st["teacher"])
+        eligible=[row for row in history if SELECTION_KEY in row and (not flags["sd"] or row.get("phase")=="distillation")]
+        if eligible:
+            selected=min(eligible,key=lambda row:row[SELECTION_KEY]);best=selected[SELECTION_KEY]
+            selected_state=torch.load(folder/"weights"/f"epoch_{selected['epoch']:03d}.pth",map_location="cpu",weights_only=False)
+            selected_state["protocol"]=protocol;save(folder/"best.pth",selected_state)
     for epoch in range(start,epochs):
-        if method=="chen_full" and epoch>=phase and teacher is None:teacher=copy.deepcopy(model).eval().requires_grad_(False)
+        if flags["sd"] and epoch>=phase and teacher is None:teacher=copy.deepcopy(model).eval().requires_grad_(False)
         model.train();order=torch.randperm(len(train[0]),generator=torch.Generator().manual_seed(SEED+epoch));gen=torch.Generator(device="cuda").manual_seed(SEED*100000+epoch)
+        lr=2e-4*min(1.0,(epoch+1)/10) if method in ("wwfca_v2_off","wwfca_v2","wwfca_v3_off","wwfca_v3") else 2e-4
+        if is_adapter:
+            for group in opt.param_groups:
+                freeze_epochs=15 if (is_v41 or is_v42 or is_v43) else 5
+                main_lr=1e-6 if (is_v41 or is_v42 or is_v43) else 1e-5
+                group["lr"]=(0. if epoch<freeze_epochs else main_lr) if group["role"]=="main" else (1e-4 if epoch<freeze_epochs else 5e-5)
+            lr=max(group["lr"] for group in opt.param_groups)
+        else:
+            for group in opt.param_groups:group["lr"]=lr*group.get("lr_scale",1.0)
+        gate_scale=0.0 if epoch<10 else min(1.0,(epoch-9)/20.0)
+        if is_v3:model.backbone.set_gate_scale(gate_scale)
         ts=torch.randint(cfg.train_steps,(len(train[0]),),generator=gen,device="cuda");dn=torch.randn(train[1].shape,generator=gen,device="cuda");rn=torch.randn(train[0].shape,generator=gen,device="cuda")
-        sums={"total":0.,"supervised":0.,"sr":0.,"sd":0.};seen=updates=0;begin=time.perf_counter();torch.cuda.reset_peak_memory_stats()
+        sums={"total":0.,"supervised":0.,"sr":0.,"sd":0.}
+        if is_v3:sums["gate_reg"]=0.
+        if is_adapter:sums["energy_reg"]=0.
+        gate_diag={"gate_mean_abs":0.,"gate_max_abs":0.,"gate_saturated_fraction":0.,"frequency_residual_rms_ratio":0.}
+        adapter_diag={"gamma":0.,"residual_rms_ratio":0.,"attention_entropy":0.}
+        if is_v41:adapter_diag.update({"gate_spatial_std":0.,"temperature":0.,"distance_strength":0.})
+        if is_v42:adapter_diag.update({"gamma_min":0.,"gamma_max":0.,"time_strength":0.,"noise_strength":0.,
+                                      "gate_spatial_std":0.,"temperature":0.,"distance_strength":0.})
+        if is_v43:adapter_diag.update({"validation_entropy":0.,"retrieval_entropy":0.,"validation_gate_mean":0.,
+                                      "validation_gate_spatial_std":0.,"validation_scale":0.,"retrieval_scale":0.})
+        seen=updates=0;begin=time.perf_counter();torch.cuda.reset_peak_memory_stats()
         for off in range(0,len(order),batch):
             idx=order[off:off+batch];w,t,s=(x[idx].cuda() for x in train);std=torch.sqrt(torch.tensor(10**.1,device="cuda")/torch.pow(10.,s/10));x0=model.normalize(t);xt=model.scheduler.add_noise(x0,dn[idx],ts[idx]);opt.zero_grad(set_to_none=True)
             with torch.autocast("cuda",dtype=torch.float16):
                 estimate,phi,_=model(xt,w,ts[idx],std);supervised=(estimate-x0).square().mean();sr=supervised.new_zeros(());sd=supervised.new_zeros(())
-                if method=="chen_full":
+                if flags["sr"] or teacher is not None:
                     plus,negative=paired_recorruption(w,std,rn[idx]);_,_,stages=model(xt,plus,ts[idx],std);weights=[1/(len(stages)-j) for j in range(len(stages))]
-                    sr=sum(sr_loss(p,negative)*q for p,q in zip(stages,weights))/sum(weights)
+                    if flags["sr"]:sr=sum(sr_loss(p,negative)*q for p,q in zip(stages,weights))/sum(weights)
                     if teacher is not None:
                         with torch.no_grad():_,pseudo,_=teacher(xt,plus,ts[idx],std)
                         sd=sd_loss(phi,pseudo)
-                loss=supervised+.05*sr+.05*sd
+                gate_reg=model.backbone.gate_regularization() if is_v3 else supervised.new_zeros(())
+                energy_reg=model.backbone.energy_penalty() if is_adapter else supervised.new_zeros(())
+                # v4.1 is a structure-only ablation: its optimization objective
+                # must remain the same clean-x0 MSE as HF. The energy value is
+                # logged as a diagnostic and is not added to the v4.1 loss.
+                loss=supervised+.05*sr+.05*sd+(.01*gate_reg if is_v3 else 0.)+(energy_reg if is_v4 else 0.)
             if not torch.isfinite(loss):raise RuntimeError(f"nonfinite {dataset}/{method}/{epoch+1}")
             scaler.scale(loss).backward();scaler.unscale_(opt);torch.nn.utils.clip_grad_norm_(model.parameters(),1.);before=scaler.get_scale();scaler.step(opt);scaler.update();updates+=int(scaler.get_scale()>=before)
             n=len(w);seen+=n
-            for k,v in zip(sums,(loss,supervised,sr,sd)):sums[k]+=float(v.detach())*n
-        do_val=(epoch==0 or (epoch+1)%5==0 or epoch+1==epochs);vm=evaluate(model,method,val,batch,seed=20000+epoch) if do_val else None;seconds=time.perf_counter()-begin
-        row={"epoch":epoch+1,"phase":"distillation" if teacher is not None else "diffusion","lr":2e-4,**{f"train_{k}":v/seen for k,v in sums.items()},
-             "val_mean_aligned_mae":None if vm is None else vm["mean_aligned_mae"],"updates":updates,"samples":seen,"seconds":seconds,"samples_per_second":seen/seconds,"gpu_peak_allocated_mib":torch.cuda.max_memory_allocated()/2**20}
+            components={"total":loss,"supervised":supervised,"sr":sr,"sd":sd}
+            if is_v3:components["gate_reg"]=gate_reg
+            if is_adapter:components["energy_reg"]=energy_reg
+            for k,v in components.items():sums[k]+=float(v.detach())*n
+            if is_v3:
+                diagnostics=model.backbone.gate_diagnostics()
+                for k,v in diagnostics.items():
+                    gate_diag[k]=max(gate_diag[k],v) if k=="gate_max_abs" else gate_diag[k]+v*n
+            if is_adapter:
+                diagnostics=model.backbone.diagnostics()
+                for k,v in diagnostics.items():adapter_diag[k]+=v*n
+        validation_seed=20000 if method in ("wwfca_v2_off","wwfca_v2","wwfca_v3_off","wwfca_v3","wwfca_v4_off","wwfca_v4","wwfca_v41_off","wwfca_v41_noattn","wwfca_v41","wwfca_v42_time","wwfca_v42","wwfca_v43") else 20000+epoch
+        vm=evaluate(model,method,val,batch,seed=validation_seed);seconds=time.perf_counter()-begin
+        row={"epoch":epoch+1,"phase":"distillation" if teacher is not None else "diffusion","lr":lr,**{f"train_{k}":v/seen for k,v in sums.items()},
+             **{f"val_{key}":value for key,value in vm.items()},"updates":updates,"samples":seen,"seconds":seconds,"samples_per_second":seen/seconds,"gpu_peak_allocated_mib":torch.cuda.max_memory_allocated()/2**20}
+        if is_v3:
+            row["gate_scale"]=gate_scale
+            row.update({k:(v if k=="gate_max_abs" else v/seen) for k,v in gate_diag.items()})
+        if is_adapter:
+            freeze_epochs=15 if (is_v41 or is_v42 or is_v43) else 5
+            row["phase"]="adapter_only" if epoch<freeze_epochs else "joint_finetune"
+            row.update({k:v/seen for k,v in adapter_diag.items()})
         history.append(row);write_history(folder,history);cp={"epoch":epoch,"model":state_cpu(model),"protocol":protocol,"metrics":row};save(folder/"weights"/f"epoch_{epoch+1:03d}.pth",cp)
-        eligible=vm is not None and (method!="chen_full" or teacher is not None)
-        if eligible and vm["mean_aligned_mae"]<best:best=vm["mean_aligned_mae"];save(folder/"best.pth",cp)
+        eligible=not flags["sd"] or teacher is not None
+        if eligible and row[SELECTION_KEY]<best:best=row[SELECTION_KEY];save(folder/"best.pth",cp)
         save(last,{**cp,"optimizer":opt.state_dict(),"scaler":scaler.state_dict(),"teacher":None if teacher is None else state_cpu(teacher),"history":history,"best":best})
         dump(folder/"status.json",{"state":"training","epoch":epoch+1,"epochs":epochs,
                                    "best_val":finite_or_none(best)})
-        print(f"{dataset} {method} {epoch+1}/{epochs} loss={row['train_total']:.5f} val={row['val_mean_aligned_mae']} {seconds:.1f}s",flush=True)
+        print(f"{dataset} {method} {epoch+1}/{epochs} loss={row['train_total']:.5f} val_u3_nrmse={row[SELECTION_KEY]:.6f} {seconds:.1f}s",flush=True)
     finish(dataset,method,model,folder,tests,history,best)
 
 
 def finish(dataset,method,model,folder,tests,history,best):
     st=torch.load(folder/"best.pth",map_location="cpu",weights_only=False);model.load_state_dict(st["model"])
-    result={"dataset":dataset,"method":method,"selected_epoch":st["epoch"]+1,"best_validation_mean_aligned_mae":best,
+    result={"dataset":dataset,"method":method,"selected_epoch":st["epoch"]+1,"selection_metric":"u3_aligned_nrmse","best_validation_u3_aligned_nrmse":best,
             "epochs_completed":len(history),"parameters":sum(p.numel() for p in model.parameters()),"tests":{},"total_seconds":sum(x["seconds"] for x in history)}
     for snr in TEST_SNRS:result["tests"][str(snr)]=evaluate(model,method,(tests[snr][0][:,None],tests[snr][1][:,None],tests[snr][2]),BATCH[method],seed=30000+snr)
+    clean_path=ROOT/"data"/dataset/"test_clean.h5"
+    if clean_path.exists():
+        clean=read_h5(clean_path)
+        result["tests"]["clean"]=evaluate(model,method,(clean[0][:,None],clean[1][:,None],clean[2]),BATCH[method],seed=31000)
     dump(folder/"complete.json",result);dump(folder/"status.json",{"state":"complete",**result})
 
 
 def train(dataset,method):
-    if method in ("hf_base","chen_full"):train_diffusion(dataset,method)
+    if method in DIFFUSION_METHODS:train_diffusion(dataset,method)
     else:train_non_diff(dataset,method)
 
 
@@ -278,7 +418,7 @@ def smoke():
     for method in METHODS:
         seed_all();w=actual[0][:2].cuda();t=actual[1][:2].cuda();s=actual[2][:2].cuda()
         std=torch.sqrt(torch.tensor(10**.1,device="cuda")/torch.pow(10.,s/10))
-        if method in ("hf_base","chen_full"):
+        if method in DIFFUSION_METHODS:
             m,cfg=diffusion_model(method);ts=torch.randint(cfg.train_steps,(2,),device="cuda");x0=m.normalize(t);xt=m.scheduler.add_noise(x0,torch.randn_like(x0),ts);p,_,_=m(xt,w,ts,std);loss=F.mse_loss(p,x0)
         else:
             m=non_diff_model(method)

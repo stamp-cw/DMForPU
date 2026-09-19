@@ -13,6 +13,48 @@ from diffusers.utils import logging
 import torch.nn.functional as F
 logger = logging.get_logger(__name__)
 
+
+def _partition_windows(x: torch.Tensor, window_size: int) -> Tuple[torch.Tensor, int, int]:
+    """Split BCHW features into correctly ordered, non-overlapping windows."""
+    if x.ndim != 4:
+        raise ValueError(f"WWFCA expects BCHW features, got shape {tuple(x.shape)}")
+    batch, channels, height, width = x.shape
+    if window_size <= 0 or height % window_size or width % window_size:
+        raise ValueError(f"WWFCA window_size={window_size} must divide feature size {height}x{width}")
+    num_h, num_w = height // window_size, width // window_size
+    windows = x.unfold(2, window_size, window_size).unfold(3, window_size, window_size)
+    # unfold gives B,C,nH,nW,M,M. A direct view interleaves channels and windows.
+    windows = windows.permute(0, 2, 3, 1, 4, 5).contiguous()
+    return windows.view(batch * num_h * num_w, channels, window_size, window_size), num_h, num_w
+
+
+def _merge_windows(windows: torch.Tensor, batch_size: int, num_h: int, num_w: int) -> torch.Tensor:
+    """Inverse of :func:`_partition_windows`."""
+    if windows.ndim != 4:
+        raise ValueError(f"WWFCA expects BCHW windows, got shape {tuple(windows.shape)}")
+    expected = batch_size * num_h * num_w
+    if windows.shape[0] != expected:
+        raise ValueError(f"Expected {expected} windows, got {windows.shape[0]}")
+    _, channels, window_h, window_w = windows.shape
+    x = windows.view(batch_size, num_h, num_w, channels, window_h, window_w)
+    return x.permute(0, 3, 1, 4, 2, 5).contiguous().view(
+        batch_size, channels, num_h * window_h, num_w * window_w
+    )
+
+
+def _haar_dwt2(x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Orthonormal 2-D Haar DWT returning LL, LH, HL and HH subbands."""
+    if x.ndim != 4 or x.shape[-2] % 2 or x.shape[-1] % 2:
+        raise ValueError(f"Haar DWT requires an even BCHW tensor, got shape {tuple(x.shape)}")
+    x00, x01 = x[:, :, 0::2, 0::2], x[:, :, 0::2, 1::2]
+    x10, x11 = x[:, :, 1::2, 0::2], x[:, :, 1::2, 1::2]
+    # Two normalized 1-D Haar filters produce a 1/2 scale in 2-D.
+    ll = (x00 + x01 + x10 + x11) * 0.5
+    lh = (-x00 - x01 + x10 + x11) * 0.5
+    hl = (-x00 + x01 - x10 + x11) * 0.5
+    hh = (x00 - x01 - x10 + x11) * 0.5
+    return ll, lh, hl, hh
+
 class FDUNetMidBlock2DCrossAttn(UNetMidBlock2DCrossAttn):
     def __init__(
             self,
@@ -190,6 +232,15 @@ class FDTransformer2DModel(Transformer2DModel):
         else:
             self.proj_out = torch.nn.Conv2d(self.inner_dim, self.out_channels, kernel_size=1, stride=1, padding=0)
 
+    def forward(self, hidden_states: torch.Tensor, *args, cross_attention_kwargs=None, **kwargs):
+        """Pass the true feature-map shape through the diffusers transformer."""
+        if hidden_states.ndim == 4:
+            cross_attention_kwargs = dict(cross_attention_kwargs or {})
+            cross_attention_kwargs["_wwfca_spatial_shape"] = tuple(hidden_states.shape[-2:])
+        return super().forward(
+            hidden_states, *args, cross_attention_kwargs=cross_attention_kwargs, **kwargs
+        )
+
 class FDBasicTransformerBlock(BasicTransformerBlock):
     def __init__(
             self,
@@ -242,6 +293,60 @@ class FDBasicTransformerBlock(BasicTransformerBlock):
             ff_bias=ff_bias,
             attention_out_bias=attention_out_bias,
         )
+        self.wwfca_window_size = 8
+        self.wwfca_output_norm = nn.LayerNorm(
+            dim, eps=norm_eps, elementwise_affine=norm_elementwise_affine
+        )
+        self.wwfca_output_dropout = nn.Dropout(dropout)
+
+    def _select_window_size(self, height: int, width: int) -> int:
+        """Choose the largest even window up to M=8 that tiles the feature map."""
+        upper = min(self.wwfca_window_size, height, width)
+        for size in range(upper, 1, -1):
+            if size % 2 == 0 and height % size == 0 and width % size == 0:
+                return size
+        raise ValueError(f"WWFCA cannot tile feature size {height}x{width} with even windows")
+
+    def _frequency_cross_attention(
+            self,
+            norm_hidden_states: torch.Tensor,
+            spatial_shape: Tuple[int, int],
+            cross_attention_kwargs: Dict[str, Any],
+    ) -> torch.Tensor:
+        """Implement Eqs. (17)-(24): LL queries channel-concatenated high bands."""
+        batch_size, num_tokens, channels = norm_hidden_states.shape
+        height, width = spatial_shape
+        if height * width != num_tokens:
+            raise ValueError(f"WWFCA shape {height}x{width} does not match {num_tokens} tokens")
+
+        feature_map = norm_hidden_states.transpose(1, 2).reshape(batch_size, channels, height, width)
+        window_size = self._select_window_size(height, width)
+        windows, num_h, num_w = _partition_windows(feature_map, window_size)
+        ll, lh, hl, hh = _haar_dwt2(windows)
+
+        query = ll.flatten(2).transpose(1, 2)
+        high_frequency = torch.cat((lh, hl, hh), dim=1)
+        context = high_frequency.flatten(2).transpose(1, 2)
+        expected_context_dim = getattr(self.attn2, "cross_attention_dim", context.shape[-1])
+        if expected_context_dim != context.shape[-1]:
+            raise ValueError(
+                "WWFCA requires cross_attention_dim == 3 * feature channels; "
+                f"got {expected_context_dim} for {channels} channels"
+            )
+
+        attended = self.attn2(
+            query,
+            encoder_hidden_states=context,
+            attention_mask=None,
+            **cross_attention_kwargs,
+        )
+        attended = self.wwfca_output_dropout(self.wwfca_output_norm(attended))
+
+        reduced_size = window_size // 2
+        attended = attended.transpose(1, 2).reshape(-1, channels, reduced_size, reduced_size)
+        attended = F.interpolate(attended, size=(window_size, window_size), mode="nearest")
+        attended = _merge_windows(attended, batch_size, num_h, num_w)
+        return attended.flatten(2).transpose(1, 2)
 
     def forward(
             self,
@@ -291,6 +396,7 @@ class FDBasicTransformerBlock(BasicTransformerBlock):
 
         # 1. Prepare GLIGEN inputs
         cross_attention_kwargs = cross_attention_kwargs.copy() if cross_attention_kwargs is not None else {}
+        spatial_shape = cross_attention_kwargs.pop("_wwfca_spatial_shape", None)
         gligen_kwargs = cross_attention_kwargs.pop("gligen", None)
 
         attn_output = self.attn1(
@@ -337,58 +443,15 @@ class FDBasicTransformerBlock(BasicTransformerBlock):
             # print(f"encoder_hidden_states_shape: {encoder_hidden_states.shape}")
             # print("="*100)
 
-            x = norm_hidden_states
-
-            B, N, D = x.shape  # (32,256,64)
-            H, W = int(sqrt(N)), int(sqrt(N))
-
-            # 1. BND → BCHW
-            x = x.transpose(1,2).contiguous()
-            x = x.view(B, D, H, W) # (32,64,8,8)
-
-            # 2. window partition
-            window_size, window_stride = int(sqrt(N))//2, int(sqrt(N))//2
-            windows = x.unfold(2, window_size, window_stride).unfold(3, window_size, window_stride) # (32,64,2,2,8,8)
-            windows = windows.contiguous().view(B*4, D, H//2, W//2) # (32*4,64,8,8)
-
-            # 3. Haar DWT
-            LL = (windows[:,:,0::2,0::2] + windows[:,:,1::2,0::2] +
-                  windows[:,:,0::2,1::2] + windows[:,:,1::2,1::2]) / 4
-
-            LH = (windows[:,:,0::2,0::2] - windows[:,:,1::2,0::2] +
-                  windows[:,:,0::2,1::2] - windows[:,:,1::2,1::2]) / 4
-
-            HL = (windows[:,:,0::2,0::2] + windows[:,:,1::2,0::2] -
-                  windows[:,:,0::2,1::2] - windows[:,:,1::2,1::2]) / 4
-
-            HH = (windows[:,:,0::2,0::2] - windows[:,:,1::2,0::2] -
-                  windows[:,:,0::2,1::2] + windows[:,:,1::2,1::2]) / 4
-
-            LL_up = F.interpolate(LL, scale_factor=2, mode='nearest')
-            LH_up = F.interpolate(LH, scale_factor=2, mode='nearest')
-            HL_up = F.interpolate(HL, scale_factor=2, mode='nearest')
-            HH_up = F.interpolate(HH, scale_factor=2, mode='nearest')
-
-            # x_q = LL
-            x_q = LL_up
-            # x_k = torch.cat([LH, HL, HH], dim=1)  # (B*4,64*3,8,8)
-            x_k = torch.cat([LH_up , HL_up, HH_up], dim=1)  # (B*4,64*3,8,8)
-
-            # 4. 合并窗口
-            x_q = x_q.view(B, 4, D, H//2, W//2) # (B,4,64,8,8)
-            x_q = x_q.permute(0, 1, 3, 4, 2).contiguous() # (B,4,8,8,64)
-            x_q = x_q.view(B, N, D) # (B,256,64)
-            x_k = x_k.view(B, 4, D*3, H//2, W//2) # (B,4,64*3,8,8)
-            x_k = x_k.permute(0, 1, 3, 4, 2).contiguous() # (B,4,8,8,64*3)
-            x_k = x_k.view(B, N, D*3) # (B,256,64*3)
-
-            attn_output = self.attn2(
-                # norm_hidden_states,
-                x_q,
-                # encoder_hidden_states=encoder_hidden_states,
-                encoder_hidden_states=x_k,
-                attention_mask=encoder_attention_mask,
-                **cross_attention_kwargs,
+            if spatial_shape is None:
+                side = int(sqrt(norm_hidden_states.shape[1]))
+                if side * side != norm_hidden_states.shape[1]:
+                    raise ValueError(
+                        "WWFCA needs the original spatial shape for a non-square token sequence"
+                    )
+                spatial_shape = (side, side)
+            attn_output = self._frequency_cross_attention(
+                norm_hidden_states, spatial_shape, cross_attention_kwargs
             )
             hidden_states = attn_output + hidden_states
 

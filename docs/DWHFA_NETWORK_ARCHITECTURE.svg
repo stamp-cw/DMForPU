@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#34495e"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2878b5"/></marker>
+    <linearGradient id="blue" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#eaf4fb"/><stop offset="1" stop-color="#c9e3f5"/></linearGradient>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fff6dc"/><stop offset="1" stop-color="#f6d989"/></linearGradient>
+    <linearGradient id="green" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#edf8ef"/><stop offset="1" stop-color="#bfe3c4"/></linearGradient>
+    <linearGradient id="purple" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f3edfb"/><stop offset="1" stop-color="#d6c4ef"/></linearGradient>
+    <style>
+      .title{font:700 26px Arial, sans-serif;fill:#17202a}.subtitle{font:400 14px Arial, sans-serif;fill:#566573}
+      .label{font:600 15px Arial, sans-serif;fill:#17202a}.small{font:400 12px Arial, sans-serif;fill:#34495e}
+      .tiny{font:400 11px Arial, sans-serif;fill:#566573}.box{stroke:#34495e;stroke-width:1.5}.arrow{stroke:#34495e;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .bluearrow{stroke:#2878b5;stroke-width:2;fill:none;marker-end:url(#arrowBlue)}.dashed{stroke-dasharray:7 5}
+    </style>
+  </defs>
+  <rect width="1600" height="960" fill="#ffffff"/>
+  <text x="800" y="42" text-anchor="middle" class="title">Directional Wavelet High-Frequency Attention (DWHFA) Diffusion UNet</text>
+  <text x="800" y="68" text-anchor="middle" class="subtitle">SCI-style architecture schematic | identity-preserving directional high-frequency calibration</text>
+
+  <!-- overall pipeline -->
+  <rect x="35" y="105" width="180" height="82" rx="10" fill="url(#blue)" class="box"/>
+  <text x="125" y="132" text-anchor="middle" class="label">Diffusion inputs</text><text x="125" y="156" text-anchor="middle" class="small">xₜ, wrapped phase ψ</text><text x="125" y="174" text-anchor="middle" class="tiny">128×128</text>
+  <rect x="260" y="105" width="190" height="82" rx="10" fill="url(#blue)" class="box"/>
+  <text x="355" y="132" text-anchor="middle" class="label">Condition fusion</text><text x="355" y="156" text-anchor="middle" class="small">Concat(xₜ, ψ/π)</text><text x="355" y="174" text-anchor="middle" class="tiny">B×2×128×128</text>
+  <path d="M215 146 H260" class="arrow"/>
+  <rect x="495" y="105" width="260" height="82" rx="10" fill="url(#green)" class="box"/>
+  <text x="625" y="132" text-anchor="middle" class="label">HF diffusion UNet encoder</text><text x="625" y="156" text-anchor="middle" class="small">Down blocks 1–2</text><text x="625" y="174" text-anchor="middle" class="tiny">128→64→32 spatial scale</text>
+  <path d="M450 146 H495" class="arrow"/>
+  <rect x="800" y="105" width="300" height="82" rx="10" fill="url(#gold)" class="box"/>
+  <text x="950" y="132" text-anchor="middle" class="label">DWHFA calibration</text><text x="950" y="156" text-anchor="middle" class="small">before penultimate downsample</text><text x="950" y="174" text-anchor="middle" class="tiny">X: B×128×32×32 → Y: B×128×32×32</text>
+  <path d="M755 146 H800" class="bluearrow"/>
+  <rect x="1145" y="105" width="220" height="82" rx="10" fill="url(#green)" class="box"/>
+  <text x="1255" y="132" text-anchor="middle" class="label">UNet bottleneck</text><text x="1255" y="156" text-anchor="middle" class="small">native downsample + mid</text><text x="1255" y="174" text-anchor="middle" class="tiny">no cross-attention</text>
+  <path d="M1100 146 H1145" class="arrow"/>
+  <rect x="1410" y="105" width="155" height="82" rx="10" fill="url(#purple)" class="box"/>
+  <text x="1487" y="132" text-anchor="middle" class="label">UNet decoder</text><text x="1487" y="156" text-anchor="middle" class="small">ε̂ or x̂₀</text><text x="1487" y="174" text-anchor="middle" class="tiny">1 output channel</text>
+  <path d="M1365 146 H1410" class="arrow"/>
+
+  <!-- DWHFA inset -->
+  <rect x="35" y="245" width="1530" height="650" rx="16" fill="#fbfcfd" stroke="#8a9aa9" stroke-width="1.5"/>
+  <text x="65" y="282" class="label">DWHFA module (inserted at the 32×32 feature level)</text>
+  <text x="65" y="305" class="small">The LL band is discarded; directional high-frequency features generate a channel-spatial modulation map.</text>
+
+  <rect x="75" y="360" width="145" height="72" rx="8" fill="url(#blue)" class="box"/>
+  <text x="147" y="386" text-anchor="middle" class="label">X</text><text x="147" y="408" text-anchor="middle" class="small">B×128×32×32</text>
+  <path d="M220 396 H270" class="bluearrow"/>
+  <rect x="270" y="348" width="165" height="96" rx="8" fill="url(#gold)" class="box"/>
+  <text x="352" y="378" text-anchor="middle" class="label">Haar DWT</text><text x="352" y="400" text-anchor="middle" class="small">LL, LH, HL, HH</text><text x="352" y="421" text-anchor="middle" class="tiny">each 16×16</text>
+  <path d="M435 365 H492" class="arrow"/><path d="M435 385 H492" class="arrow"/><path d="M435 405 H492" class="arrow"/>
+  <text x="472" y="355" text-anchor="end" class="tiny">LL discarded</text>
+
+  <!-- three directional branches -->
+  <rect x="492" y="323" width="180" height="58" rx="8" fill="#fce4e4" class="box"/>
+  <text x="582" y="347" text-anchor="middle" class="label">LH branch</text><text x="582" y="366" text-anchor="middle" class="small">DW 3×1 → PW 1×1 → GN → SiLU</text>
+  <rect x="492" y="389" width="180" height="58" rx="8" fill="#fce4e4" class="box"/>
+  <text x="582" y="413" text-anchor="middle" class="label">HL branch</text><text x="582" y="432" text-anchor="middle" class="small">DW 1×3 → PW 1×1 → GN → SiLU</text>
+  <rect x="492" y="455" width="180" height="58" rx="8" fill="#fce4e4" class="box"/>
+  <text x="582" y="479" text-anchor="middle" class="label">HH branch</text><text x="582" y="498" text-anchor="middle" class="small">DW 3×3 → PW 1×1 → GN → SiLU</text>
+  <path d="M672 352 H720 M672 418 H720 M672 484 H720" class="arrow"/>
+  <rect x="720" y="375" width="190" height="104" rx="8" fill="url(#green)" class="box"/>
+  <text x="815" y="405" text-anchor="middle" class="label">Directional fusion</text><text x="815" y="428" text-anchor="middle" class="small">Concat [LH,HL,HH]</text><text x="815" y="448" text-anchor="middle" class="small">1×1 Conv → GN → SiLU</text><text x="815" y="468" text-anchor="middle" class="tiny">H: B×128×16×16</text>
+  <path d="M910 427 H960" class="arrow"/>
+  <rect x="960" y="365" width="235" height="128" rx="8" fill="url(#gold)" class="box"/>
+  <text x="1077" y="394" text-anchor="middle" class="label">Channel-spatial calibration</text><text x="1077" y="418" text-anchor="middle" class="small">1×1 Conv (zero init)</text><text x="1077" y="439" text-anchor="middle" class="small">bilinear upsample 16→32</text><text x="1077" y="460" text-anchor="middle" class="small">A = sigmoid(logits)</text><text x="1077" y="480" text-anchor="middle" class="tiny">M = 2A − 1</text>
+  <path d="M1195 429 H1245" class="arrow"/>
+  <rect x="1245" y="365" width="260" height="128" rx="8" fill="url(#purple)" class="box"/>
+  <text x="1375" y="397" text-anchor="middle" class="label">Identity-preserving injection</text><text x="1375" y="423" text-anchor="middle" class="small">Y = X + α · X ⊙ M</text><text x="1375" y="447" text-anchor="middle" class="small">α learnable, α₀ = 0.1</text><text x="1375" y="471" text-anchor="middle" class="tiny">Y: B×128×32×32</text>
+  <path d="M1505 429 H1535 V560 H147 V432" class="bluearrow dashed"/>
+  <text x="1518" y="548" text-anchor="end" class="tiny">calibrated feature returns to native downsampler</text>
+
+  <!-- output and legend -->
+  <rect x="200" y="610" width="305" height="108" rx="10" fill="url(#green)" class="box"/>
+  <text x="352" y="640" text-anchor="middle" class="label">Native UNet downsampling</text><text x="352" y="664" text-anchor="middle" class="small">D(Y): 32×32 → 16×16</text><text x="352" y="688" text-anchor="middle" class="small">then bottleneck and decoder</text>
+  <path d="M147 432 V610 H200" class="bluearrow"/>
+  <rect x="575" y="610" width="340" height="108" rx="10" fill="#f8f9f9" class="box"/>
+  <text x="745" y="640" text-anchor="middle" class="label">Diffusion prediction head</text><text x="745" y="664" text-anchor="middle" class="small">ε prediction for epsilon experiments</text><text x="745" y="688" text-anchor="middle" class="small">standard DDPM scheduler and sampling</text>
+  <path d="M505 664 H575" class="arrow"/>
+  <rect x="985" y="610" width="430" height="108" rx="10" fill="#f8f9f9" class="box"/>
+  <text x="1200" y="640" text-anchor="middle" class="label">Design constraints</text><text x="1200" y="664" text-anchor="middle" class="small">No Q/K/V cross-attention · no window partition</text><text x="1200" y="688" text-anchor="middle" class="small">No IDWT reconstruction · LL not used in calibration</text>
+  <text x="65" y="790" class="label">Notation</text><text x="65" y="816" class="small">DW: depthwise convolution   PW: pointwise convolution   GN: GroupNorm   ⊙: element-wise multiplication</text>
+  <text x="65" y="842" class="small">Blue arrows: main feature flow   Dashed blue arrow: calibrated feature returned to the native UNet path</text>
+  <text x="65" y="872" class="tiny">Implementation correspondence: model/fdunet/dwhfa.py · diffusion/dcc_wwfca_diffusion.py</text>
+</svg>

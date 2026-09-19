@@ -1,2 +1,1 @@
-"""Real-terrain Based Reconstruction (RBR) dataset generator."""
-
+"""Reserved interfaces for a future Real-data Based Reconstruction (RBR) dataset."""

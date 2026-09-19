@@ -8,7 +8,7 @@ import math
 import torch
 from torch import nn
 import torch.nn.functional as F
-from diffusers import UNet2DConditionModel, DDPMScheduler
+from diffusers import UNet2DModel, DDPMScheduler
 
 
 def wrap(x):
@@ -55,6 +55,8 @@ class ChenHFConfig:
     adaptive:bool=True
     stages:int=3
     inner_steps:int=3
+    backbone:str="UNet2DModel"
+    cross_attention:bool=False
 
 
 class GradientUnroll(nn.Module):
@@ -102,12 +104,11 @@ The data correction has zero spatial mean and cannot infer an absolute offset.
 class ChenHFDiffusion(nn.Module):
     def __init__(self,cfg=None):
         super().__init__();self.cfg=cfg or ChenHFConfig();cfg=self.cfg
-        # Direct HF class, never a local FDUNet subclass.
-        self.unet=UNet2DConditionModel(sample_size=cfg.image_size,in_channels=2,out_channels=1,
+        # Direct, unconditional HF denoiser. Wrapped phase conditioning is channel-concatenated.
+        self.unet=UNet2DModel(sample_size=cfg.image_size,in_channels=2,out_channels=1,
             layers_per_block=1,block_out_channels=tuple(cfg.channels),norm_num_groups=8,
-            cross_attention_dim=32,attention_head_dim=8,
-            down_block_types=('DownBlock2D','DownBlock2D','CrossAttnDownBlock2D'),
-            up_block_types=('CrossAttnUpBlock2D','UpBlock2D','UpBlock2D'))
+            down_block_types=('DownBlock2D','DownBlock2D','DownBlock2D'),
+            up_block_types=('UpBlock2D','UpBlock2D','UpBlock2D'),add_attention=False)
         self.physics=GradientUnroll(cfg) if cfg.physics else None
         self.scheduler=DDPMScheduler(num_train_timesteps=cfg.train_steps,prediction_type='sample',clip_sample=False)
 
@@ -115,8 +116,7 @@ class ChenHFDiffusion(nn.Module):
     def denormalize(self,x):return self.cfg.phase_low+(x+1)*(self.cfg.phase_high-self.cfg.phase_low)/2
 
     def forward(self,noisy,w,t,sigma):
-        hidden=torch.zeros(len(w),1,32,device=w.device,dtype=w.dtype)
-        raw=self.unet(torch.cat((noisy,w/math.pi),1),t,encoder_hidden_states=hidden).sample.float()
+        raw=self.unet(torch.cat((noisy,w/math.pi),1),t).sample.float()
         phi=self.denormalize(raw)
         if self.physics:phi,stages=self.physics(phi,w,sigma)
         else:stages=[phi]

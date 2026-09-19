@@ -1,6 +1,6 @@
 import unittest
 import torch
-from diffusers import UNet2DConditionModel
+from diffusers import UNet2DModel
 from diffusion.chen_hf_diffusion import (ChenHFConfig,ChenHFDiffusion,GradientUnroll,
     gradient,adjoint,wrap,paired_recorruption,sr_loss,sd_loss)
 
@@ -32,7 +32,8 @@ class ChenHFTests(unittest.TestCase):
     def test_direct_hf_backbone_training_and_seeded_sampling(self):
         torch.manual_seed(5);cfg=ChenHFConfig(image_size=16,channels=(8,16,16),inner_steps=1)
         model=ChenHFDiffusion(cfg)
-        self.assertIs(type(model.unet),UNet2DConditionModel)
+        self.assertIs(type(model.unet),UNet2DModel)
+        self.assertFalse(any("CrossAttn" in type(module).__name__ for module in model.unet.modules()))
         x=torch.randn(2,1,16,16);w=wrap(x);sigma=torch.tensor([0.,.2])
         norm,phi,_=model(x,w,torch.tensor([10,30]),sigma)
         loss=norm.square().mean()+sr_loss(phi,gradient(w));loss.backward()

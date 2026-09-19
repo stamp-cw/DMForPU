@@ -1,7 +1,9 @@
 """Generate the GFS (U3Net MoGR) and RME phase-unwrapping datasets.
 
-The CVPR 2024 protocol uses 5,000 training scenes with SNR sampled from
-{0,5,10,20,30,60} and 1,000 test scenes at each of {0,5,10,20,30} dB.
+This project extension keeps U3Net's 5,000/1,000 sample counts while replacing
+the approximate-clean 60 dB training condition with an exactly noise-free one.
+Training conditions are {clean,0,5,10,20,30}; each test condition has 1,000
+matched scenes.
 Scene parameters are shared across requested resolutions; phase is rendered
 and re-wrapped separately at every resolution.
 """
@@ -19,7 +21,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-TRAIN_SNRS = np.asarray([0, 5, 10, 20, 30, 60], dtype=np.float32)
+TRAIN_SNRS = np.asarray([np.inf, 0, 5, 10, 20, 30], dtype=np.float32)
 TEST_SNRS = (0, 5, 10, 20, 30)
 SIZES = (128, 64, 32)
 FAMILIES = ("GFS", "RME")
@@ -79,9 +81,11 @@ def noise_rng(seed: int, family: str, split: str, size: int, snr: float, index: 
         [seed, 311 if family == "GFS" else 449, 71 if split == "train" else 89, size, int(snr), index]))
 
 
-def render(family: str, size: int, split: str, index: int, snr: float, seed: int):
+def render(family: str, size: int, split: str, index: int, snr: float | None, seed: int):
     rng = scene_rng(seed, family, split, index)
     phi, params = gfs_phase(size, rng) if family == "GFS" else rme_phase(size, rng)
+    if snr is None or math.isinf(float(snr)):
+        return wrap(phi), phi, params
     std = math.sqrt(SIGNAL_POWER / (10 ** (float(snr) / 10)))
     noise = noise_rng(seed, family, split, size, snr, index).normal(0, std, phi.shape).astype(np.float32)
     return wrap(phi + noise), phi, params
@@ -95,13 +99,14 @@ def sha256(path: Path) -> str:
 
 
 def write_file(path: Path, family: str, size: int, split: str, count: int,
-               seed: int, fixed_snr: int | None) -> dict:
+               seed: int, fixed_snr: int | None, noise_free: bool = False) -> dict:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".h5.tmp")
     if tmp.exists(): tmp.unlink()
     # Keep the train SNR assigned to a scene identical across resolutions.
     snr_rng = np.random.default_rng(np.random.SeedSequence([seed, 991, 1 if family == "GFS" else 2]))
-    snrs = (snr_rng.choice(TRAIN_SNRS, count, replace=True).astype(np.float32)
+    snrs = (np.full(count, np.inf, np.float32) if noise_free else
+            snr_rng.choice(TRAIN_SNRS, count, replace=True).astype(np.float32)
             if fixed_snr is None else np.full(count, fixed_snr, np.float32))
     with h5py.File(tmp, "w") as f:
         chunks = (min(32, count), size, size)
@@ -110,20 +115,36 @@ def write_file(path: Path, family: str, size: int, split: str, count: int,
         f.create_dataset("snr", data=snrs, dtype="f4")
         f.create_dataset("scene_id", data=np.arange(count,dtype=np.int64))
         f.attrs.update(family=family, source_name="MoGR" if family=="GFS" else "RME",
-                       split=split, image_size=size, seed=seed, generator_version="1.0")
+                       split=split, image_size=size, seed=seed, generator_version="2.0",
+                       noise_free=noise_free,
+                       contains_noise_free=bool(np.isposinf(snrs).any()),
+                       snr_label="clean" if noise_free else
+                       ("mixed" if fixed_snr is None else str(fixed_snr)))
         p_values=[]
         for i in range(count):
-            w,t,params=render(family,size,split,i,float(snrs[i]),seed)
+            sample_snr=None if noise_free or np.isposinf(snrs[i]) else float(snrs[i])
+            w,t,params=render(family,size,split,i,sample_snr,seed)
             psi[i],phi[i]=w,t; p_values.append(params["p"])
             if (i+1)%500==0: print(f"{family}{size} {path.name}: {i+1}/{count}",flush=True)
         f.attrs["p_histogram"] = json.dumps({str(p):p_values.count(p) for p in range(1,8)})
     tmp.replace(path)
     with h5py.File(path,"r") as f:
-        circular = np.angle(np.exp(1j*np.asarray(f["psi"][:min(32,count)])))
-        audit=dict(samples=count,shape=list(f["psi"].shape),psi_min=float(f["psi"][:].min()),
-                   psi_max=float(f["psi"][:].max()),phi_min=float(f["phi"][:].min()),
-                   phi_max=float(f["phi"][:].max()),finite=bool(np.isfinite(f["psi"][:]).all() and np.isfinite(f["phi"][:]).all()),
-                   wrapped_range_valid=bool(np.max(np.abs(circular-np.asarray(f["psi"][:min(32,count)])))<1e-5))
+        psi_values = np.asarray(f["psi"][:])
+        phi_values = np.asarray(f["phi"][:])
+        stored_snrs = np.asarray(f["snr"][:])
+        circular = np.angle(np.exp(1j * psi_values[:min(32,count)]))
+        clean_mask = np.isposinf(stored_snrs)
+        condition_counts = {"clean": int(clean_mask.sum())}
+        condition_counts.update({str(v): int(np.sum(stored_snrs == v)) for v in TEST_SNRS})
+        clean_wrap_error = (float(np.max(np.abs(
+            psi_values[clean_mask] - wrap(phi_values[clean_mask])))) if clean_mask.any() else None)
+        audit=dict(samples=count,shape=list(f["psi"].shape),psi_min=float(psi_values.min()),
+                   psi_max=float(psi_values.max()),phi_min=float(phi_values.min()),
+                   phi_max=float(phi_values.max()),
+                   finite=bool(np.isfinite(psi_values).all() and np.isfinite(phi_values).all()),
+                   wrapped_range_valid=bool(np.max(np.abs(circular-psi_values[:min(32,count)]))<1e-5),
+                   condition_counts=condition_counts,
+                   max_clean_wrap_error=clean_wrap_error)
     audit.update(file=str(path.relative_to(ROOT)),bytes=path.stat().st_size,sha256=sha256(path))
     return audit
 
@@ -131,21 +152,28 @@ def write_file(path: Path, family: str, size: int, split: str, count: int,
 def generate(output: Path, train_count: int, test_count: int, seed: int,
              families=FAMILIES, sizes=SIZES) -> None:
     output = output.resolve()
+    existing_path = output / "DATASETS_V2.json"
+    existing = json.loads(existing_path.read_text(encoding="utf-8")) if existing_path.exists() else {}
     started=time.time(); manifest={"schema_version":1,"generator":"experiments/generate_u3_datasets.py",
-        "seed":seed,"families":{},"protocol":{"train_count":train_count,"train_snrs":TRAIN_SNRS.tolist(),
-        "test_count_per_snr":test_count,"test_snrs":list(TEST_SNRS),"sizes":list(sizes),
+        "seed":seed,"families":{},"protocol":{"train_count":train_count,"train_conditions":["clean",0,5,10,20,30],
+        "test_count_per_condition":test_count,"test_snrs":list(TEST_SNRS),
+        "test_conditions":["clean",*TEST_SNRS],"sizes":list(sizes),
         "noise_power":"10^0.1 / 10^(SNR/10)","GFS_alias":"MoGR"}}
     for family in families:
         manifest["families"][family]={}
         for size in sizes:
             folder=output/f"{family}{size}"; entries={}
             entries["train"]=write_file(folder/"train.h5",family,size,"train",train_count,seed,None)
+            entries["test_clean"]=write_file(folder/"test_clean.h5",family,size,"test",test_count,seed,None,noise_free=True)
             for snr in TEST_SNRS:
                 entries[f"test_{snr}dB"]=write_file(folder/f"test_{snr}dB.h5",family,size,"test",test_count,seed,snr)
             manifest["families"][family][str(size)]=entries
             atomic=folder/"manifest.json"; atomic.write_text(json.dumps(entries,indent=2,ensure_ascii=False),encoding="utf-8")
-    manifest["families"]["RBR"] = {"status":"pending user-provided acquisition method",
-                                      "sizes":[128,64,32], "generated":False}
+    if "RTS" in existing.get("families", {}):
+        manifest["families"]["RTS"] = existing["families"]["RTS"]
+    manifest["families"]["RBR"] = existing.get("families", {}).get("RBR", {
+        "name":"Real-data Based Reconstruction", "status":"reserved; not generated",
+        "generated":False, "note":"Reserved for a future LiCSAR-based dataset."})
     manifest["elapsed_seconds"]=time.time()-started
     (output/"DATASETS_V2.json").write_text(json.dumps(manifest,indent=2,ensure_ascii=False),encoding="utf-8")
 

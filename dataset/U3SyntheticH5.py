@@ -1,4 +1,4 @@
-"""Lazy, multi-worker-safe reader for the GFS/RME/RBR HDF5 datasets."""
+"""Lazy, multi-worker-safe reader for the GFS/RME/RTS HDF5 datasets."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,8 +12,11 @@ class U3SyntheticH5(Dataset):
     def __init__(self, root, split="train", test_snr=30,
                  transform: Callable | None=None, target_transform: Callable | None=None,
                  joint_transform: Callable | None=None, **_):
-        self.root=Path(root); self.split=split; self.test_snr=int(test_snr)
-        self.path=self.root/("train.h5" if split=="train" else f"test_{self.test_snr}dB.h5")
+        self.root=Path(root); self.split=split
+        clean = str(test_snr).strip().lower() in {"clean", "none", "inf", "noise_free"}
+        self.test_snr = "clean" if clean else int(test_snr)
+        test_name = "test_clean.h5" if clean else f"test_{self.test_snr}dB.h5"
+        self.path=self.root/("train.h5" if split=="train" else test_name)
         if not self.path.exists(): raise FileNotFoundError(self.path)
         with h5py.File(self.path,"r") as f:
             self.length=len(f["psi"]); self.image_size=int(f.attrs["image_size"])

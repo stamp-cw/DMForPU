@@ -27,6 +27,7 @@ from traditional.phase_unwrapping import (  # noqa: E402
     unwrap_quality_guided,
     wrap_phase,
 )
+from utils.phase_metrics import au_metrics_numpy, u3_aligned_metrics_numpy  # noqa: E402
 
 OUT = ROOT / "experiments" / "results" / "gfs_rme128" / "traditional_lsqgdct"
 SHARDS = OUT / "shards"
@@ -63,7 +64,7 @@ def metrics(prediction: np.ndarray, target: np.ndarray, wrapped: np.ndarray) -> 
     target_range = max(float(np.ptp(target)), 1e-12)
     gradient_error = np.concatenate((np.diff(mean, axis=0).ravel(), np.diff(mean, axis=1).ravel()))
     cycle = wrap_phase(wrap_phase(prediction) - wrapped)
-    return {
+    values = {
         "raw_mae": float(np.mean(np.abs(raw))),
         "raw_rmse": float(np.sqrt(np.mean(raw * raw))),
         "integer_aligned_mae": float(np.mean(np.abs(integer))),
@@ -74,6 +75,11 @@ def metrics(prediction: np.ndarray, target: np.ndarray, wrapped: np.ndarray) -> 
         "pge": float(np.mean(np.abs(gradient_error))),
         "rewrap_circular_mae": float(np.mean(np.abs(cycle))),
     }
+    values.update({key: float(value[0]) for key, value in
+                   u3_aligned_metrics_numpy(prediction, target).items()})
+    values.update({key: float(value[0]) for key, value in
+                   au_metrics_numpy(prediction, target).items()})
+    return values
 
 
 def evaluate_chunk(task: tuple[str, int, str, int, int]) -> list[dict]:
@@ -140,7 +146,9 @@ def aggregate(all_rows: list[dict], split_wall: dict[tuple[str, int, str], float
     metric_names = [
         "raw_mae", "raw_rmse", "integer_aligned_mae", "integer_aligned_rmse",
         "mean_aligned_mae", "mean_aligned_rmse", "mean_aligned_nrmse", "pge",
-        "rewrap_circular_mae", "algorithm_wall_ms", "algorithm_cpu_ms",
+        "rewrap_circular_mae", "u3_aligned_mae", "u3_aligned_rmse",
+        "u3_aligned_nrmse", "u3_aligned_ssim", "raw_au", "integer_aligned_au",
+        "range_aligned_au", "algorithm_wall_ms", "algorithm_cpu_ms",
     ]
     for dataset in DATASETS:
         for method in METHODS:
